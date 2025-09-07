@@ -1,3 +1,4 @@
+
 # Inventory Store - Production-Grade E-commerce Monolith
 
 A complete inventory management and e-commerce solution built with Next.js 14, featuring catalog → cart → checkout → order → WhatsApp integration → seller dashboard, plus comprehensive inventory management with suppliers, purchase orders, receiving, stock ledger, and reorder suggestions.
