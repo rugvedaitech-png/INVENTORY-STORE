@@ -1,0 +1,142 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  stores    Store[]
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id          String    @id @default(cuid())
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id])
+  name        String
+  slug        String    @unique
+  whatsapp    String?   // digits only, e.g., 9198xxxxxx
+  upiId       String?
+  currency    String    @default("INR")
+  products    Product[]
+  orders      Order[]
+  suppliers   Supplier[]
+  stockLedger StockLedger[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id           String    @id @default(cuid())
+  storeId      String
+  store       Store      @relation(fields: [storeId], references: [id])
+  title        String
+  description  String?
+  sku          String?   @unique
+  price        Int       // selling price (paise)
+  costPrice    Int?      // moving-average cost (paise)
+  stock        Int       @default(0)
+  reorderPoint Int       @default(0)
+  reorderQty   Int       @default(0)
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+  images       String    @default("[]") // JSON string array
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Order {
+  id            String       @id @default(cuid())
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
+  buyerName     String
+  phone         String
+  address       String
+  status        OrderStatus  @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentRef    String?
+  totalAmount   Int          // paise
+  items         OrderItem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  qty       Int
+  priceSnap Int     // price at purchase (paise)
+}
+
+model Supplier {
+  id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id])
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  leadTimeDays Int      @default(3)
+  products     Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PurchaseOrder {
+  id         String     @id @default(cuid())
+  storeId    String
+  store      Store      @relation(fields: [storeId], references: [id])
+  supplierId String
+  supplier   Supplier   @relation(fields: [supplierId], references: [id])
+  code       String     @unique  // e.g., PO-2025-0001
+  status     POStatus   @default(DRAFT)
+  notes      String?
+  subtotal   Int        @default(0)
+  taxTotal   Int        @default(0)
+  total      Int        @default(0)
+  placedAt   DateTime?
+  items      PurchaseOrderItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model PurchaseOrderItem {
+  id         String        @id @default(cuid())
+  poId       String
+  po         PurchaseOrder @relation(fields: [poId], references: [id])
+  productId  String
+  product    Product       @relation(fields: [productId], references: [id])
+  qty        Int
+  costPaise  Int
+  receivedQty Int          @default(0)
+}
+
+model StockLedger {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  refType   StockRef
+  refId     String   // orderId or poId
+  delta     Int      // +in, -out
+  unitCost  Int?
+  createdAt DateTime @default(now())
+}
+
+enum OrderStatus { PENDING CONFIRMED SHIPPED DELIVERED CANCELLED }
+enum PaymentMethod { COD UPI CARD }
+enum POStatus { DRAFT SENT PARTIAL RECEIVED CLOSED CANCELLED }
+enum StockRef { SALE PO_RECEIPT ADJUSTMENT }
+

@@ -1,0 +1,197 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(STORE_OWNER)
+  phone     String?
+  stores    Store[]
+  customers Customer[]
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  phone     String
+  address   String?
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  storeId   Int      // Required - customer must belong to a store
+  store     Store    @relation(fields: [storeId], references: [id])
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  name        String
+  slug        String   @unique
+  whatsapp    String?  // digits only, e.g., 9198xxxxxx
+  upiId       String?
+  currency    String   @default("INR")
+  products    Product[]
+  orders      Order[]
+  customers   Customer[]
+  suppliers   Supplier[]
+  purchaseOrders PurchaseOrder[]
+  stockLedger StockLedger[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id           Int       @id @default(autoincrement())
+  storeId      Int
+  store        Store     @relation(fields: [storeId], references: [id])
+  title        String
+  description  String?
+  sku          String?   @unique
+  price        Int       // selling price (paise)
+  costPrice    Int?      // moving-average cost (paise)
+  stock        Int       @default(0)
+  reorderPoint Int       @default(0)
+  reorderQty   Int       @default(0)
+  supplierId   Int?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+  images       String    @default("[]") // JSON string array
+  active       Boolean   @default(true)
+  orderItems   OrderItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  stockLedger  StockLedger[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Order {
+  id            Int          @id @default(autoincrement())
+  storeId       Int
+  store         Store        @relation(fields: [storeId], references: [id])
+  customerId    Int?
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+  buyerName     String
+  phone         String
+  address       String
+  status        OrderStatus  @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentRef    String?
+  totalAmount   Int          // paise
+  items         OrderItem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  qty       Int
+  priceSnap Int     // price at purchase (paise)
+}
+
+model Supplier {
+  id           Int      @id @default(autoincrement())
+  storeId      Int
+  store        Store    @relation(fields: [storeId], references: [id])
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  leadTimeDays Int      @default(3)
+  products     Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PurchaseOrder {
+  id         Int        @id @default(autoincrement())
+  storeId    Int
+  store      Store      @relation(fields: [storeId], references: [id])
+  supplierId Int
+  supplier   Supplier   @relation(fields: [supplierId], references: [id])
+  code       String     @unique  // e.g., PO-2025-0001
+  status     POStatus   @default(DRAFT)
+  notes      String?
+  subtotal   Int        @default(0)
+  taxTotal   Int        @default(0)
+  total      Int        @default(0)
+  placedAt   DateTime?
+  items      PurchaseOrderItem[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model PurchaseOrderItem {
+  id         Int           @id @default(autoincrement())
+  poId       Int
+  po         PurchaseOrder @relation(fields: [poId], references: [id])
+  productId  Int
+  product    Product       @relation(fields: [productId], references: [id])
+  qty        Int
+  costPaise  Int
+  receivedQty Int          @default(0)
+}
+
+model StockLedger {
+  id        Int      @id @default(autoincrement())
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  refType   StockRef
+  refId     Int      // orderId or poId
+  delta     Int      // +in, -out
+  unitCost  Int?
+  createdAt DateTime @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  UPI
+  CARD
+}
+
+enum POStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  RECEIVED
+  CLOSED
+  CANCELLED
+}
+
+enum StockRef {
+  SALE
+  PO_RECEIPT
+  ADJUSTMENT
+}
+
+enum UserRole {
+  STORE_OWNER
+  SUPPLIER
+  CUSTOMER
+}
