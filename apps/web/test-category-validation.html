@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Category Validation for Bulk Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+        .csv-preview { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        .category-section { background: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .category-checkbox { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test Category Validation for Bulk Product Upload</h1>
+    
+    <div class="test-section">
+        <h3>1. Get Available Categories</h3>
+        <p>First, let's get the available categories for your store</p>
+        <button onclick="getCategories()">Get Categories</button>
+        <div id="categoriesResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Select Categories for Filtering</h3>
+        <p>Select which categories you want to restrict the upload to:</p>
+        <div id="categorySelection" class="category-section" style="display: none;">
+            <!-- Categories will be populated here -->
+        </div>
+        <button onclick="downloadFilteredSample()" id="downloadBtn" style="display: none;">Download Sample CSV with Selected Categories</button>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test CSV Upload with Category Validation</h3>
+        <p>Upload a CSV file to test the category validation:</p>
+        <input type="file" id="csvFile" accept=".csv" style="margin-bottom: 10px;">
+        <br>
+        <button onclick="testUploadWithValidation()" id="uploadBtn" style="display: none;">Test Upload with Category Validation</button>
+        <div id="uploadResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Sample CSV Format</h3>
+        <p>Here's what the CSV should look like (with category validation):</p>
+        <div class="csv-preview" id="sampleCsv">Select categories above to see filtered sample...</div>
+    </div>
+
+    <script>
+        let availableCategories = [];
+        let selectedCategoryIds = [];
+
+        async function getCategories() {
+            try {
+                const response = await fetch('/api/categories?active=true')
+                const data = await response.json()
+                
+                if (response.ok) {
+                    availableCategories = data.categories || data;
+                    displayCategories();
+                    document.getElementById('categoriesResult').textContent = `Found ${availableCategories.length} categories`
+                    document.getElementById('categoriesResult').className = 'result success'
+                    document.getElementById('categoriesResult').style.display = 'block'
+                } else {
+                    throw new Error(data.error || 'Failed to fetch categories')
+                }
+            } catch (error) {
+                document.getElementById('categoriesResult').textContent = `Error: ${error.message}`
+                document.getElementById('categoriesResult').className = 'result error'
+                document.getElementById('categoriesResult').style.display = 'block'
+            }
+        }
+
+        function displayCategories() {
+            const container = document.getElementById('categorySelection');
+            container.innerHTML = '<h4>Select Categories:</h4>';
+            
+            availableCategories.forEach(category => {
+                const div = document.createElement('div');
+                div.className = 'category-checkbox';
+                div.innerHTML = `
+                    <label>
+                        <input type="checkbox" value="${category.id}" onchange="toggleCategory(${category.id})">
+                        ${category.name}
+                    </label>
+                `;
+                container.appendChild(div);
+            });
+            
+            container.style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+            document.getElementById('uploadBtn').style.display = 'inline-block';
+        }
+
+        function toggleCategory(categoryId) {
+            const checkbox = document.querySelector(`input[value="${categoryId}"]`);
+            if (checkbox.checked) {
+                selectedCategoryIds.push(categoryId);
+            } else {
+                selectedCategoryIds = selectedCategoryIds.filter(id => id !== categoryId);
+            }
+            updateSampleCsv();
+        }
+
+        function updateSampleCsv() {
+            const sampleDiv = document.getElementById('sampleCsv');
+            if (selectedCategoryIds.length === 0) {
+                sampleDiv.textContent = 'Select categories above to see filtered sample...';
+                return;
+            }
+
+            const selectedCategories = availableCategories.filter(cat => 
+                selectedCategoryIds.includes(cat.id)
+            );
+            
+            const sampleData = [
+                {
+                    title: 'Sample Product 1',
+                    description: 'This is a sample product description',
+                    sku: 'SKU001',
+                    price: '99.99',
+                    costPrice: '50.00',
+                    stock: '100',
+                    reorderPoint: '10',
+                    reorderQty: '50',
+                    categoryName: selectedCategories[0]?.name || 'Electronics',
+                    images: '["https://example.com/image1.jpg", "https://example.com/image2.jpg"]',
+                    active: 'true'
+                },
+                {
+                    title: 'Sample Product 2',
+                    description: 'Another sample product',
+                    sku: 'SKU002',
+                    price: '149.50',
+                    costPrice: '75.00',
+                    stock: '50',
+                    reorderPoint: '5',
+                    reorderQty: '25',
+                    categoryName: selectedCategories[1]?.name || selectedCategories[0]?.name || 'Clothing',
+                    images: 'https://example.com/image3.jpg,https://example.com/image4.jpg',
+                    active: 'true'
+                }
+            ];
+
+            const headers = Object.keys(sampleData[0]);
+            const csvContent = [
+                headers.join(','),
+                ...sampleData.map(row => 
+                    headers.map(header => {
+                        const value = row[header];
+                        if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                            return `"${value.replace(/"/g, '""')}"`;
+                        }
+                        return value;
+                    }).join(',')
+                )
+            ].join('\n');
+
+            sampleDiv.textContent = csvContent;
+        }
+
+        async function downloadFilteredSample() {
+            try {
+                let url = '/api/products/bulk-upload';
+                if (selectedCategoryIds.length > 0) {
+                    url += `?allowedCategoryIds=${JSON.stringify(selectedCategoryIds)}`;
+                }
+                
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = 'products_sample_filtered.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+            } catch (error) {
+                alert(`Error downloading sample CSV: ${error.message}`);
+            }
+        }
+
+        async function testUploadWithValidation() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('uploadResult').textContent = 'Please select a CSV file first';
+                document.getElementById('uploadResult').className = 'result error';
+                document.getElementById('uploadResult').style.display = 'block';
+                return;
+            }
+
+            try {
+                document.getElementById('uploadResult').textContent = 'Uploading with category validation...';
+                document.getElementById('uploadResult').className = 'result';
+                document.getElementById('uploadResult').style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                if (selectedCategoryIds.length > 0) {
+                    formData.append('allowedCategoryIds', JSON.stringify(selectedCategoryIds));
+                }
+
+                const response = await fetch('/api/products/bulk-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    let resultText = `Upload completed with category validation!\n\n`;
+                    resultText += `Message: ${result.message}\n`;
+                    resultText += `Success: ${result.results.success} products created\n`;
+                    resultText += `Failed: ${result.results.failed} products failed\n\n`;
+                    
+                    if (selectedCategoryIds.length > 0) {
+                        const selectedCategoryNames = availableCategories
+                            .filter(cat => selectedCategoryIds.includes(cat.id))
+                            .map(cat => cat.name);
+                        resultText += `Allowed categories: ${selectedCategoryNames.join(', ')}\n\n`;
+                    }
+                    
+                    if (result.results.errors.length > 0) {
+                        resultText += `Errors:\n`;
+                        result.results.errors.forEach(error => {
+                            resultText += `Row ${error.row}: ${error.error}\n`;
+                        });
+                    }
+                    
+                    document.getElementById('uploadResult').textContent = resultText;
+                    document.getElementById('uploadResult').className = 'result success';
+                } else {
+                    document.getElementById('uploadResult').textContent = `Error: ${result.error || 'Upload failed'}`;
+                    document.getElementById('uploadResult').className = 'result error';
+                }
+            } catch (error) {
+                document.getElementById('uploadResult').textContent = `Network error: ${error.message}`;
+                document.getElementById('uploadResult').className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

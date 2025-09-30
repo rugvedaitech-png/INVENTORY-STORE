@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COD Order Confirmation Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #3b82f6;
+            background-color: #f8fafc;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .code {
+            background-color: #f1f5f9;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .success {
+            color: #059669;
+            font-weight: bold;
+        }
+        .warning {
+            color: #d97706;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 COD Order Confirmation Flow Test</h1>
+        <p>This test demonstrates the complete COD order confirmation workflow implemented in the inventory store system.</p>
+
+        <div class="step">
+            <h3>1. Customer Places COD Order</h3>
+            <p>When a customer selects "Cash on Delivery" during checkout:</p>
+            <ul>
+                <li>Order is created with status <span class="highlight">AWAITING_CONFIRMATION</span></li>
+                <li>Stock is <strong>NOT</strong> immediately deducted (reserved for confirmation)</li>
+                <li>Customer sees confirmation request page with WhatsApp link</li>
+            </ul>
+            <div class="code">
+                POST /api/orders?store=store-slug<br>
+                {<br>
+                &nbsp;&nbsp;"paymentMethod": "COD",<br>
+                &nbsp;&nbsp;"buyerName": "John Doe",<br>
+                &nbsp;&nbsp;"phone": "9876543210",<br>
+                &nbsp;&nbsp;"address": "123 Main St, City",<br>
+                &nbsp;&nbsp;"items": [...]<br>
+                }
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>2. WhatsApp Confirmation Request</h3>
+            <p>Customer clicks WhatsApp button to send confirmation request to store owner:</p>
+            <ul>
+                <li>Generates WhatsApp deep-link with pre-filled message</li>
+                <li>Message includes order details, customer info, and confirmation instructions</li>
+                <li>Store owner receives notification with "CONFIRM" or "REJECT" options</li>
+            </ul>
+            <div class="code">
+                WhatsApp Message:<br>
+                🛍️ Store Name - Order #123<br>
+                👤 Customer: John Doe<br>
+                📱 Phone: 9876543210<br>
+                💳 Payment: COD<br>
+                📊 Status: AWAITING_CONFIRMATION<br>
+                <br>
+                📦 Order Items:<br>
+                • Product A x2 — ₹100.00<br>
+                • Product B x1 — ₹50.00<br>
+                <br>
+                💰 Total: ₹150.00<br>
+                <br>
+                ⚠️ ACTION REQUIRED:<br>
+                This COD order needs your confirmation.<br>
+                Please check stock availability and confirm.<br>
+                <br>
+                ✅ Reply "CONFIRM" to approve<br>
+                ❌ Reply "REJECT" to decline
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>3. Store Owner Reviews Order</h3>
+            <p>Store owner accesses the seller dashboard to review pending orders:</p>
+            <ul>
+                <li>Orders page shows all orders with status badges</li>
+                <li>COD orders show <span class="highlight">AWAITING_CONFIRMATION</span> status</li>
+                <li>Order details include customer info, items, and stock availability</li>
+                <li>Confirmation actions are displayed for pending orders</li>
+            </ul>
+            <div class="code">
+                GET /api/orders<br>
+                Returns orders with status filtering and detailed information
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>4. Stock Availability Check</h3>
+            <p>Before confirming, the system checks stock availability:</p>
+            <ul>
+                <li>Compares required quantity with available stock for each item</li>
+                <li>Shows warning if insufficient stock is detected</li>
+                <li>Prevents confirmation if stock is unavailable</li>
+            </ul>
+            <div class="code">
+                Stock Check Logic:<br>
+                for each item in order.items:<br>
+                &nbsp;&nbsp;if item.product.stock < item.qty:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;show "Insufficient stock" warning<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;disable confirm button
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>5. Order Confirmation/Rejection</h3>
+            <p>Store owner can either confirm or reject the order:</p>
+            <ul>
+                <li><span class="success">Confirm:</span> Updates status to CONFIRMED, deducts stock, creates ledger entries</li>
+                <li><span class="warning">Reject:</span> Updates status to REJECTED, no stock changes</li>
+            </ul>
+            <div class="code">
+                POST /api/orders/{id}/confirm<br>
+                {<br>
+                &nbsp;&nbsp;"action": "confirm" | "reject",<br>
+                &nbsp;&nbsp;"notes": "Optional notes"<br>
+                }
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>6. Post-Confirmation Actions</h3>
+            <p>After confirmation, the system:</p>
+            <ul>
+                <li>Updates order status to CONFIRMED</li>
+                <li>Deducts stock quantities from inventory</li>
+                <li>Creates stock ledger entries for audit trail</li>
+                <li>Order appears in confirmed orders list</li>
+            </ul>
+            <div class="code">
+                Database Transaction:<br>
+                1. Update order.status = 'CONFIRMED'<br>
+                2. For each item:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Decrement product.stock<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;- Create stockLedger entry<br>
+                3. Commit transaction
+            </div>
+        </div>
+
+        <h2>🔧 Technical Implementation</h2>
+        <div class="step">
+            <h3>Database Schema Changes</h3>
+            <ul>
+                <li>Added <span class="highlight">AWAITING_CONFIRMATION</span> and <span class="highlight">REJECTED</span> statuses</li>
+                <li>Orders table supports new status workflow</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>API Endpoints</h3>
+            <ul>
+                <li><code>POST /api/orders</code> - Creates orders with COD status handling</li>
+                <li><code>GET /api/orders</code> - Lists orders for store owners</li>
+                <li><code>GET /api/orders/{id}</code> - Gets individual order details</li>
+                <li><code>POST /api/orders/{id}/confirm</code> - Confirms/rejects orders</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>WhatsApp Integration</h3>
+            <ul>
+                <li>Enhanced message generation for confirmation requests</li>
+                <li>Deep-link generation with order details</li>
+                <li>Status-specific messaging</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>UI Components</h3>
+            <ul>
+                <li>Updated success page with COD-specific messaging</li>
+                <li>Enhanced orders page with confirmation actions</li>
+                <li>OrderConfirmationActions component for store owners</li>
+            </ul>
+        </div>
+
+        <h2>🚀 How to Test</h2>
+        <ol>
+            <li>Start the development server: <code>npm run dev</code></li>
+            <li>Visit a store page (e.g., <code>/demo-boutique</code>)</li>
+            <li>Add products to cart and proceed to checkout</li>
+            <li>Select "Cash on Delivery" as payment method</li>
+            <li>Complete the order form and submit</li>
+            <li>On success page, click "Request Confirmation via WhatsApp"</li>
+            <li>Login as store owner and visit <code>/seller/orders</code></li>
+            <li>Review the order and click "Confirm Order" or "Reject Order"</li>
+        </ol>
+
+        <div class="step">
+            <h3>Expected Results</h3>
+            <ul>
+                <li>✅ COD orders are created with AWAITING_CONFIRMATION status</li>
+                <li>✅ Stock is not deducted until confirmation</li>
+                <li>✅ WhatsApp messages include confirmation instructions</li>
+                <li>✅ Store owners can see and manage pending orders</li>
+                <li>✅ Stock availability is checked before confirmation</li>
+                <li>✅ Confirmed orders update stock and create ledger entries</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

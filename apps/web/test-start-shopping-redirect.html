@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Shopping Redirect Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .test-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .test-description { color: #666; margin-bottom: 15px; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; }
+        .button:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Start Shopping Button Redirect Test</h1>
+            <p>Testing that all "Start Shopping" buttons redirect to the correct shop page</p>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card">
+                <div class="test-title">📋 Order Tracking Page</div>
+                <div class="test-description">
+                    When no orders are found, the "Start Shopping" button should redirect to <code>/customer/shop</code>
+                </div>
+                <div class="code">
+                    <strong>Before:</strong> href="/"<br>
+                    <strong>After:</strong> href="/customer/shop"
+                </div>
+                <a href="http://localhost:3000/customer/order-tracking" class="button" target="_blank">
+                    Test Order Tracking Page
+                </a>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">📊 Order Summary Page</div>
+                <div class="test-description">
+                    When no orders are found, the "Start Shopping" button should redirect to <code>/customer/shop</code>
+                </div>
+                <div class="code">
+                    <strong>Before:</strong> href="/"<br>
+                    <strong>After:</strong> href="/customer/shop"
+                </div>
+                <a href="http://localhost:3000/customer/order-summary" class="button" target="_blank">
+                    Test Order Summary Page
+                </a>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">❤️ Wishlist Page</div>
+                <div class="test-description">
+                    When wishlist is empty, the "Start Shopping" button should redirect to <code>/customer/shop</code>
+                </div>
+                <div class="code">
+                    <strong>Before:</strong> href="/"<br>
+                    <strong>After:</strong> href="/customer/shop"
+                </div>
+                <a href="http://localhost:3000/customer/wishlist" class="button" target="_blank">
+                    Test Wishlist Page
+                </a>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">🏠 Customer Dashboard</div>
+                <div class="test-description">
+                    When no orders are found, the "Start Shopping" button should redirect to <code>/customer/shop</code>
+                </div>
+                <div class="code">
+                    <strong>Before:</strong> href="/"<br>
+                    <strong>After:</strong> href="/customer/shop"
+                </div>
+                <a href="http://localhost:3000/customer" class="button" target="_blank">
+                    Test Customer Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>✅ Changes Made</h2>
+            <div class="test-description">
+                <p><strong>Updated the following pages:</strong></p>
+                <ul>
+                    <li><strong>Order Tracking Page</strong> - <code>/customer/order-tracking</code></li>
+                    <li><strong>Order Summary Page</strong> - <code>/customer/order-summary</code></li>
+                    <li><strong>Wishlist Page</strong> - <code>/customer/wishlist</code></li>
+                    <li><strong>Customer Dashboard</strong> - <code>/customer</code></li>
+                </ul>
+                
+                <p><strong>All "Start Shopping" buttons now redirect to:</strong></p>
+                <div class="code">
+                    /customer/shop
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>🧪 Testing Instructions</h2>
+            <ol>
+                <li><strong>Navigate to each page</strong> using the test buttons above</li>
+                <li><strong>Look for "Start Shopping" buttons</strong> (usually shown when no orders/items are found)</li>
+                <li><strong>Click the "Start Shopping" button</strong></li>
+                <li><strong>Verify redirect</strong> - should go to <code>http://localhost:3000/customer/shop</code></li>
+                <li><strong>Check URL</strong> - ensure it shows <code>/customer/shop</code> in the address bar</li>
+            </ol>
+        </div>
+
+        <div class="header">
+            <h2>🔧 Technical Details</h2>
+            <div class="test-description">
+                <p><strong>Files Modified:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/customer/order-tracking/page.tsx</code></li>
+                    <li><code>apps/web/src/app/customer/order-summary/page.tsx</code></li>
+                    <li><code>apps/web/src/app/customer/wishlist/page.tsx</code></li>
+                    <li><code>apps/web/src/app/customer/page.tsx</code></li>
+                </ul>
+                
+                <p><strong>Change Made:</strong></p>
+                <div class="code">
+                    // Before
+                    href="/"
+                    
+                    // After  
+                    href="/customer/shop"
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test function to verify redirects
+        function testRedirects() {
+            const testPages = [
+                'http://localhost:3000/customer/order-tracking',
+                'http://localhost:3000/customer/order-summary', 
+                'http://localhost:3000/customer/wishlist',
+                'http://localhost:3000/customer'
+            ];
+            
+            alert('Redirect test ready!\n\nClick the test buttons above to verify that all "Start Shopping" buttons redirect to /customer/shop\n\nExpected behavior:\n• Click "Start Shopping" button\n• Should redirect to /customer/shop\n• URL should show /customer/shop in address bar');
+        }
+        
+        // Auto-run test on page load
+        window.onload = testRedirects;
+    </script>
+</body>
+</html>

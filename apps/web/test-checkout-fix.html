@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .before, .after { padding: 15px; border-radius: 4px; }
+        .before { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .after { background: #d4edda; border: 1px solid #c3e6cb; }
+        .checkout-item { display: flex; align-items: center; gap: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0; }
+        .checkout-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; background: #f0f0f0; }
+        .checkout-item-details { flex: 1; }
+        .checkout-item-price { font-weight: bold; }
+        .form-section { background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .form-field { margin: 10px 0; }
+        .form-field label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-field input, .form-field textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .radio-group { margin: 10px 0; }
+        .radio-option { margin: 5px 0; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-primary:disabled { background: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Checkout Fix Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Issue Fixed</h3>
+            <p>The checkout page was showing "₹NaN" for prices and "Unknown Product" for titles because it was using the old cart structure. This has been fixed by updating the checkout page to work with the new cart structure that includes full product data.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Root Cause</h3>
+            <div class="code">
+// BEFORE (Broken)
+interface CartItem {
+  id: string
+  title: string
+  price: number
+  stock: number
+  images: string
+  qty: number
+}
+
+// Cart loading - expecting old structure
+const savedCart = localStorage.getItem(`cart-${storeSlug}`)
+setCartItems(JSON.parse(savedCart))  // Missing product data!
+
+// Display - trying to access direct properties
+{item.title}  // undefined
+{item.price}  // undefined
+{item.images} // undefined
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Solution Applied</h3>
+            <div class="code">
+// AFTER (Fixed)
+interface CartItem {
+  id: number
+  qty: number
+  product: {
+    id: number
+    title: string
+    price: number
+    stock: number
+    images: string[]
+  }
+}
+
+// Cart loading - handles new structure
+const savedCart = localStorage.getItem(`cart-${storeSlug}`)
+const cart = JSON.parse(savedCart)
+setCartItems(cart)  // Now includes product data!
+
+// Display - accessing nested product properties
+{item.product?.title || 'Unknown Product'}
+{item.product?.price ? formatCurrency(item.product.price) : '₹0.00'}
+{item.product?.images?.length > 0 ? ... : ...}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Before vs After</h3>
+            
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Before (Broken)</h4>
+                    <div class="checkout-item">
+                        <div style="width: 48px; height: 48px; background: #f0f0f0; border-radius: 4px;"></div>
+                        <div class="checkout-item-details">
+                            <h5>Unknown Product</h5>
+                            <p>₹NaN × 2</p>
+                        </div>
+                        <div class="checkout-item-price">₹NaN</div>
+                    </div>
+                    <p><strong>Issues:</strong></p>
+                    <ul>
+                        <li>Product title shows "Unknown Product"</li>
+                        <li>Price shows "₹NaN"</li>
+                        <li>Total shows "₹NaN"</li>
+                        <li>Order submission fails</li>
+                    </ul>
+                </div>
+
+                <div class="after">
+                    <h4>✅ After (Fixed)</h4>
+                    <div class="checkout-item">
+                        <div style="width: 48px; height: 48px; background: #f0f0f0; border-radius: 4px;"></div>
+                        <div class="checkout-item-details">
+                            <h5>Basmati Rice (1kg)</h5>
+                            <p>₹120.00 × 2</p>
+                        </div>
+                        <div class="checkout-item-price">₹240.00</div>
+                    </div>
+                    <p><strong>Fixed:</strong></p>
+                    <ul>
+                        <li>Product title shows correctly</li>
+                        <li>Price shows correctly (₹120.00)</li>
+                        <li>Total shows correctly (₹240.00)</li>
+                        <li>Order submission works</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Files Updated</h3>
+            
+            <div class="code">
+apps/web/src/app/(public)/[store]/checkout/page.tsx
+├── CartItem interface - Updated to match new cart structure
+├── Cart loading logic - Updated to handle new structure
+├── getTotalAmount() - Updated to use item.product.price
+├── Order data mapping - Updated to use item.product.id
+└── Order summary display - Updated to use product data
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Checkout Flow</h3>
+            
+            <div class="form-section">
+                <h4>1. Cart to Checkout</h4>
+                <p>Customer clicks "Proceed to Checkout" from cart page</p>
+                <ul>
+                    <li>✅ Cart data loads correctly with product information</li>
+                    <li>✅ Order summary shows correct product details</li>
+                    <li>✅ Total amount calculates correctly</li>
+                </ul>
+            </div>
+
+            <div class="form-section">
+                <h4>2. Checkout Form</h4>
+                <div class="form-field">
+                    <label>Full Name *</label>
+                    <input type="text" placeholder="Enter your full name" />
+                </div>
+                <div class="form-field">
+                    <label>Phone Number *</label>
+                    <input type="tel" placeholder="Enter your 10-digit phone number" />
+                </div>
+                <div class="form-field">
+                    <label>Delivery Address *</label>
+                    <textarea rows="4" placeholder="Enter your complete delivery address"></textarea>
+                </div>
+                <div class="form-field">
+                    <label>Payment Method *</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="payment" value="COD" checked> Cash on Delivery (COD)
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="payment" value="UPI"> UPI Payment
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="payment" value="CARD"> Credit/Debit Card
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>3. Order Summary</h4>
+                <div class="checkout-item">
+                    <div style="width: 48px; height: 48px; background: #f0f0f0; border-radius: 4px;"></div>
+                    <div class="checkout-item-details">
+                        <h5>Basmati Rice (1kg)</h5>
+                        <p>₹120.00 × 2</p>
+                    </div>
+                    <div class="checkout-item-price">₹240.00</div>
+                </div>
+                <div style="border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
+                        <span>Total</span>
+                        <span>₹240.00</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 15px;">Place Order</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Scenarios</h3>
+            
+            <div class="test-section">
+                <h4>Scenario 1: Checkout with Products</h4>
+                <ol>
+                    <li>Customer adds products to cart from browse page</li>
+                    <li>Customer clicks "Proceed to Checkout" from cart</li>
+                    <li>Checkout page loads with correct product information</li>
+                    <li>Order summary shows correct prices and totals</li>
+                </ol>
+            </div>
+
+            <div class="test-section">
+                <h4>Scenario 2: Order Submission</h4>
+                <ol>
+                    <li>Customer fills out delivery information</li>
+                    <li>Customer selects payment method</li>
+                    <li>Customer clicks "Place Order"</li>
+                    <li>Order is created with correct product IDs and quantities</li>
+                    <li>Customer is redirected to success page</li>
+                </ol>
+            </div>
+
+            <div class="test-section">
+                <h4>Scenario 3: Empty Cart</h4>
+                <ol>
+                    <li>Customer tries to access checkout with empty cart</li>
+                    <li>Checkout page shows "Your cart is empty" message</li>
+                    <li>Customer is redirected to start shopping</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Expected Results</h3>
+            <ul>
+                <li>✅ Product titles display correctly in order summary</li>
+                <li>✅ Product prices display correctly (₹120.00, not ₹NaN)</li>
+                <li>✅ Total amounts calculate correctly</li>
+                <li>✅ Product images display correctly</li>
+                <li>✅ Order submission works with correct product IDs</li>
+                <li>✅ Form validation works properly</li>
+                <li>✅ Empty cart handling works</li>
+            </ul>
+        </div>
+
+        <div class="test-section warning">
+            <h3>⚠️ Testing Notes</h3>
+            <ul>
+                <li>Test with different products and quantities</li>
+                <li>Verify order submission creates correct order data</li>
+                <li>Test form validation with invalid inputs</li>
+                <li>Verify cart is cleared after successful order</li>
+                <li>Test with products that have no images</li>
+                <li>Verify total calculations are accurate</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Related Fixes</h3>
+            <p>This checkout fix is part of the broader cart system fix that also includes:</p>
+            <ul>
+                <li>✅ <strong>Browse Page</strong> - Fixed cart storage to include full product data</li>
+                <li>✅ <strong>Cart Page</strong> - Fixed cart display to show correct product information</li>
+                <li>✅ <strong>Checkout Page</strong> - Fixed checkout to work with new cart structure</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

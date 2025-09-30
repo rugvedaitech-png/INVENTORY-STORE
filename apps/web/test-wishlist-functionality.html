@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .feature-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .feature-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .feature-description { color: #666; margin-bottom: 15px; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; }
+        .button:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        .fix-item { background: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #28a745; }
+        .feature-item { background: #e3f2fd; padding: 10px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #2196f3; }
+        .heart-icon { color: #e91e63; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💖 Wishlist Functionality Implementation</h1>
+            <p>Complete wishlist system with heart icons, reorder functionality, and seamless cart integration</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-title">💖 Heart Icon Functionality</div>
+                <div class="feature-description">
+                    Heart icons on product cards now work as wishlist toggles:
+                </div>
+                <div class="feature-item">
+                    <strong>Visual States:</strong><br>
+                    • Empty heart = Not in wishlist<br>
+                    • Filled red heart = In wishlist<br>
+                    • Loading spinner = Processing
+                </div>
+                <div class="feature-item">
+                    <strong>Interactive Features:</strong><br>
+                    • Click to add/remove from wishlist<br>
+                    • Hover effects and animations<br>
+                    • Real-time state updates
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🗄️ Database Schema</div>
+                <div class="feature-description">
+                    New wishlist table with proper relationships:
+                </div>
+                <div class="code">
+                    model Wishlist {
+                      id        Int      @id @default(autoincrement())
+                      userId    Int
+                      user      User     @relation("UserWishlist")
+                      productId Int
+                      product   Product  @relation(fields: [productId])
+                      createdAt DateTime @default(now())
+                      
+                      @@unique([userId, productId])
+                      @@index([userId])
+                    }
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🔌 API Endpoints</div>
+                <div class="feature-description">
+                    Complete REST API for wishlist management:
+                </div>
+                <div class="feature-item">
+                    <strong>GET /api/wishlist</strong><br>
+                    Fetch user's wishlist with pagination
+                </div>
+                <div class="feature-item">
+                    <strong>POST /api/wishlist</strong><br>
+                    Add product to wishlist
+                </div>
+                <div class="feature-item">
+                    <strong>DELETE /api/wishlist</strong><br>
+                    Remove product from wishlist
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🎣 useWishlist Hook</div>
+                <div class="feature-description">
+                    Custom React hook for wishlist state management:
+                </div>
+                <div class="feature-item">
+                    ✅ Fetch wishlist data<br>
+                    ✅ Add/remove products<br>
+                    ✅ Toggle wishlist status<br>
+                    ✅ Check if product is in wishlist<br>
+                    ✅ Loading and error states
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🛒 Reorder Functionality</div>
+                <div class="feature-description">
+                    Easy reordering from wishlist page:
+                </div>
+                <div class="feature-item">
+                    <strong>Individual Reorder:</strong><br>
+                    • "Reorder" button on each item<br>
+                    • Adds single item to cart<br>
+                    • Handles out-of-stock items
+                </div>
+                <div class="feature-item">
+                    <strong>Bulk Reorder:</strong><br>
+                    • "Reorder All" button in header<br>
+                    • Adds all available items to cart<br>
+                    • Shows success count
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🎨 Enhanced UI/UX</div>
+                <div class="feature-description">
+                    Beautiful and intuitive wishlist interface:
+                </div>
+                <div class="feature-item">
+                    ✅ Responsive grid layout<br>
+                    ✅ Product images and details<br>
+                    ✅ Stock status indicators<br>
+                    ✅ Loading states and animations<br>
+                    ✅ Empty state with call-to-action
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>🧪 Testing Instructions</h2>
+            <div class="feature-description">
+                <p><strong>Test the complete wishlist flow:</strong></p>
+                <ol>
+                    <li><strong>Shop Page:</strong> <code>http://localhost:3000/customer/shop</code>
+                        <ul>
+                            <li>Click heart icons on products to add/remove from wishlist</li>
+                            <li>Verify heart fills when added, empties when removed</li>
+                            <li>Check loading states during API calls</li>
+                        </ul>
+                    </li>
+                    <li><strong>Wishlist Page:</strong> <code>http://localhost:3000/customer/wishlist</code>
+                        <ul>
+                            <li>View all wishlist items in grid layout</li>
+                            <li>Test individual "Reorder" buttons</li>
+                            <li>Test "Reorder All" functionality</li>
+                            <li>Remove items with trash icon</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cart Integration:</strong>
+                        <ul>
+                            <li>Verify reordered items appear in cart</li>
+                            <li>Check cart quantities and totals</li>
+                            <li>Test checkout flow with reordered items</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>📋 Files Created/Modified</h2>
+            <div class="feature-description">
+                <p><strong>Database:</strong></p>
+                <ul>
+                    <li><code>apps/web/prisma/schema.prisma</code> - Added Wishlist model and relations</li>
+                </ul>
+                
+                <p><strong>API:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/api/wishlist/route.ts</code> - Wishlist CRUD endpoints</li>
+                </ul>
+                
+                <p><strong>Hooks:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/hooks/useWishlist.ts</code> - Wishlist state management</li>
+                </ul>
+                
+                <p><strong>Components:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/components/ProductCard.tsx</code> - Added heart icon functionality</li>
+                    <li><code>apps/web/src/app/customer/wishlist/page.tsx</code> - Complete wishlist page with reorder</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>✨ Key Features</h2>
+            <div class="feature-description">
+                <div class="feature-item">
+                    <strong>Heart Icon Toggle:</strong> Click heart icons on product cards to add/remove from wishlist
+                </div>
+                <div class="feature-item">
+                    <strong>Visual Feedback:</strong> Heart fills red when in wishlist, empty when not
+                </div>
+                <div class="feature-item">
+                    <strong>One-Click Reorder:</strong> Easy reordering with individual and bulk options
+                </div>
+                <div class="feature-item">
+                    <strong>Stock Awareness:</strong> Handles out-of-stock items gracefully
+                </div>
+                <div class="feature-item">
+                    <strong>Real-time Updates:</strong> Wishlist state updates immediately across pages
+                </div>
+                <div class="feature-item">
+                    <strong>Cart Integration:</strong> Seamless integration with existing cart system
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>🎯 Expected Results</h2>
+            <div class="feature-description">
+                <p><strong>Users should be able to:</strong></p>
+                <ul>
+                    <li>✅ Click heart icons to add/remove products from wishlist</li>
+                    <li>✅ View their wishlist with all saved items</li>
+                    <li>✅ Reorder individual items with one click</li>
+                    <li>✅ Reorder all available items at once</li>
+                    <li>✅ Remove unwanted items from wishlist</li>
+                    <li>✅ See real-time updates across all pages</li>
+                    <li>✅ Handle out-of-stock items gracefully</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testWishlistAPI() {
+            fetch('/api/wishlist')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Wishlist API Response:', data);
+                    if (data.wishlist && Array.isArray(data.wishlist)) {
+                        alert(`✅ Wishlist API Working!\n\nItems: ${data.wishlist.length}\nFormat: Correct`);
+                    } else {
+                        alert(`❌ API Issue:\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    alert(`❌ API Error: ${error.message}`);
+                });
+        }
+
+        function testAddToWishlist() {
+            const productId = prompt('Enter product ID to add to wishlist:');
+            if (productId) {
+                fetch('/api/wishlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: parseInt(productId) })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        alert(`✅ Added to wishlist!\n\nProduct ID: ${data.productId}\nWishlist ID: ${data.id}`);
+                    } else {
+                        alert(`❌ Error: ${data.error || 'Failed to add to wishlist'}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`❌ Error: ${error.message}`);
+                });
+            }
+        }
+
+        function testAllPages() {
+            const pages = [
+                'http://localhost:3000/customer/shop',
+                'http://localhost:3000/customer/wishlist'
+            ];
+            
+            alert('Wishlist Functionality Test:\n\nTest these pages:\n' + pages.join('\n') + '\n\n1. Click heart icons on shop page\n2. Check wishlist page for reorder functionality');
+        }
+    </script>
+</body>
+</html>

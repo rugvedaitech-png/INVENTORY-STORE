@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const storeId = searchParams.get('storeId')
     const status = searchParams.get('status')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
 
     if (!storeId) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 })
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user owns the store
     const store = await db.store.findFirst({
-      where: { id: storeId, ownerId: session.user.id },
+      where: { id: parseInt(storeId), ownerId: parseInt(session.user.id) },
     })
 
     if (!store) {
@@ -29,26 +31,39 @@ export async function GET(request: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: { storeId: string; status?: any } = { storeId }
+    const where: { storeId: number; status?: any } = { storeId: parseInt(storeId) }
     if (status) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where.status = status as any
     }
 
-    const purchaseOrders = await db.purchaseOrder.findMany({
-      where,
-      include: {
-        supplier: true,
-        items: {
-          include: {
-            product: true,
+    const [purchaseOrders, total] = await Promise.all([
+      db.purchaseOrder.findMany({
+        where,
+        include: {
+          supplier: true,
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.purchaseOrder.count({ where }),
+    ])
 
-    return NextResponse.json(purchaseOrders)
+    return NextResponse.json({
+      purchaseOrders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    })
   } catch (error) {
     console.error('Error fetching purchase orders:', error)
     return NextResponse.json(
@@ -70,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Get user's store
     const store = await db.store.findFirst({
-      where: { ownerId: session.user.id },
+      where: { ownerId: parseInt(session.user.id) },
     })
 
     if (!store) {
@@ -86,11 +101,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    // Generate PO code
-    const poCount = await db.purchaseOrder.count({
-      where: { storeId: store.id },
-    })
-    const poCode = `PO-${new Date().getFullYear()}-${String(poCount + 1).padStart(4, '0')}`
+    // Generate unique PO code
+    let poCode: string
+    let isUnique = false
+    let attempts = 0
+    const maxAttempts = 10
+
+    while (!isUnique && attempts < maxAttempts) {
+      const poCount = await db.purchaseOrder.count({
+        where: { storeId: store.id },
+      })
+      const timestamp = Date.now().toString().slice(-6) // Last 6 digits of timestamp
+      poCode = `PO-${new Date().getFullYear()}-${String(poCount + 1).padStart(4, '0')}-${timestamp}`
+      
+      // Check if code already exists
+      const existingPO = await db.purchaseOrder.findFirst({
+        where: { code: poCode },
+      })
+      
+      if (!existingPO) {
+        isUnique = true
+      }
+      attempts++
+    }
+
+    if (!isUnique) {
+      return NextResponse.json(
+        { error: 'Failed to generate unique PO code' },
+        { status: 500 }
+      )
+    }
 
     // Calculate totals
     let subtotal = 0
@@ -108,13 +148,15 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const itemTotal = item.qty * item.costPaise
+      // Set default cost to 0 since supplier will provide pricing
+      const costPaise = 0
+      const itemTotal = item.qty * costPaise
       subtotal += itemTotal
 
       items.push({
         productId: item.productId,
         qty: item.qty,
-        costPaise: item.costPaise,
+        costPaise: costPaise,
       })
     }
 

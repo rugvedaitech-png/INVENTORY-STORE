@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Orders Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .feature-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .feature-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .feature-description { color: #666; margin-bottom: 15px; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; }
+        .button:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        .fix-item { background: #e8f5e8; padding: 10px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Customer Orders Error Fix</h1>
+            <p>Fixed the "Cannot read properties of undefined (reading 'total')" error in customer orders page</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-title">❌ Original Error</div>
+                <div class="feature-description">
+                    <strong>Error Type:</strong> Runtime TypeError<br>
+                    <strong>Error Message:</strong> Cannot read properties of undefined (reading 'total')<br>
+                    <strong>Location:</strong> CustomerOrdersPage component
+                </div>
+                <div class="code">
+                    // Error occurred here:
+                    {pagination.total} order{pagination.total !== 1 ? 's' : ''} total
+                    
+                    // pagination was undefined because API didn't return pagination data
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🔍 Root Cause Analysis</div>
+                <div class="feature-description">
+                    The error occurred because:
+                </div>
+                <ul>
+                    <li>❌ Customer orders API only returned orders array</li>
+                    <li>❌ Frontend expected orders + pagination object</li>
+                    <li>❌ No error handling for undefined pagination</li>
+                    <li>❌ Missing safety checks in JSX</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">✅ API Fix</div>
+                <div class="feature-description">
+                    Updated customer orders API to return proper format:
+                </div>
+                <div class="code">
+                    // Before:
+                    return NextResponse.json(orders)
+                    
+                    // After:
+                    return NextResponse.json({
+                      orders,
+                      pagination: {
+                        page,
+                        limit,
+                        total,
+                        pages: Math.ceil(total / limit)
+                      }
+                    })
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">✅ Frontend Safety Checks</div>
+                <div class="feature-description">
+                    Added comprehensive error handling:
+                </div>
+                <div class="code">
+                    // Safe pagination access:
+                    {pagination?.total || 0} order{(pagination?.total || 0) !== 1 ? 's' : ''} total
+                    
+                    // Safe pagination component:
+                    {pagination && pagination.pages > 1 && (
+                      <Pagination ... />
+                    )}
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🛡️ Error Handling</div>
+                <div class="feature-description">
+                    Added robust error handling:
+                </div>
+                <div class="fix-item">
+                    ✅ Default values for orders and pagination
+                </div>
+                <div class="fix-item">
+                    ✅ Proper error logging
+                </div>
+                <div class="fix-item">
+                    ✅ Graceful fallback on API errors
+                </div>
+                <div class="fix-item">
+                    ✅ Safe property access with optional chaining
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">🧪 Testing Instructions</div>
+                <div class="feature-description">
+                    To test the fix:
+                </div>
+                <ol>
+                    <li>Navigate to <code>http://localhost:3000/customer/orders</code></li>
+                    <li>Verify no runtime errors in console</li>
+                    <li>Check pagination works correctly</li>
+                    <li>Test with no orders (empty state)</li>
+                    <li>Test with multiple pages of orders</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>📋 Files Modified</h2>
+            <div class="feature-description">
+                <p><strong>Backend API Fix:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/api/customer/orders/route.ts</code> - Added pagination data to response</li>
+                </ul>
+                
+                <p><strong>Frontend Safety Fixes:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/customer/orders/page.tsx</code> - Added error handling and safety checks</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>✨ Expected Results</h2>
+            <div class="feature-description">
+                <p><strong>After the fix, the customer orders page should:</strong></p>
+                <ul>
+                    <li>✅ Load without runtime errors</li>
+                    <li>✅ Display order count correctly</li>
+                    <li>✅ Show pagination when there are multiple pages</li>
+                    <li>✅ Handle empty orders gracefully</li>
+                    <li>✅ Handle API errors gracefully</li>
+                    <li>✅ Work with all order statuses</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>🎯 Key Improvements</h2>
+            <div class="feature-description">
+                <div class="fix-item">
+                    <strong>API Consistency:</strong> Customer orders API now returns same format as other APIs
+                </div>
+                <div class="fix-item">
+                    <strong>Error Resilience:</strong> Frontend handles undefined/null data gracefully
+                </div>
+                <div class="fix-item">
+                    <strong>User Experience:</strong> No more crashes, smooth loading experience
+                </div>
+                <div class="fix-item">
+                    <strong>Code Quality:</strong> Added proper TypeScript safety checks
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testAPI() {
+            fetch('/api/customer/orders')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Response:', data);
+                    if (data.orders && data.pagination) {
+                        alert(`✅ API Fix Working!\n\nOrders: ${data.orders.length}\nTotal: ${data.pagination.total}\nPages: ${data.pagination.pages}`);
+                    } else {
+                        alert(`❌ API Issue:\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    alert(`❌ API Error: ${error.message}`);
+                });
+        }
+
+        function testPage() {
+            alert('Customer Orders Page Test:\n\n1. Go to http://localhost:3000/customer/orders\n2. Check browser console for errors\n3. Verify pagination works\n4. Test with different order counts\n\nShould work without any runtime errors!');
+        }
+    </script>
+</body>
+</html>

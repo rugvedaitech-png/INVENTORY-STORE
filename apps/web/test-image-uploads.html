@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Test Suite</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .image-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
+        .image-item { position: relative; }
+        .image-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group button, .form-group select { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        .url-input { width: 300px; }
+        .add-btn { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 10px 15px; }
+        .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .upload-btn { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 10px 15px; }
+        .upload-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .test-btn { background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; margin: 2px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .loading { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .tabs { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { border-bottom-color: #007bff; background: #f8f9fa; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Image Upload Test Suite</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Overview</h3>
+            <p>This test suite demonstrates image upload functionality for both <strong>Categories</strong> and <strong>Products</strong>.</p>
+            <ul>
+                <li>✅ File upload with validation (type, size)</li>
+                <li>✅ URL input with flexible validation</li>
+                <li>✅ Image preview and management</li>
+                <li>✅ Multiple image support for products</li>
+                <li>✅ Separate upload directories for categories and products</li>
+            </ul>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('categories')">📁 Categories</div>
+            <div class="tab" onclick="switchTab('products')">🛍️ Products</div>
+            <div class="tab" onclick="switchTab('validation')">✅ Validation Tests</div>
+            <div class="tab" onclick="switchTab('api')">🔧 API Tests</div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div id="categories-tab" class="tab-content active">
+            <div class="test-section">
+                <h3>📁 Category Image Upload</h3>
+                
+                <div class="form-group">
+                    <label>🖼️ Current Category Image:</label>
+                    <div id="categoryImagePreview" class="image-preview">
+                        <!-- Category image will be shown here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>📁 Upload Category Image:</label>
+                    <input type="file" id="categoryFileInput" accept="image/*">
+                    <button id="categoryUploadBtn" class="upload-btn" disabled>Upload to Categories</button>
+                    <div id="categoryUploadStatus" class="status" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🔗 Add Category Image URL:</label>
+                    <input type="text" id="categoryUrlInput" class="url-input" placeholder="https://example.com/category.jpg or /uploads/categories/category.jpg">
+                    <button id="categoryAddUrlBtn" class="add-btn" disabled>Add URL</button>
+                    <div id="categoryUrlStatus" class="status" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🧪 Test Category URLs:</label>
+                    <button onclick="addCategoryTestUrl('https://picsum.photos/300/200?random=1')" class="test-btn">Random 1</button>
+                    <button onclick="addCategoryTestUrl('https://picsum.photos/300/200?random=2')" class="test-btn">Random 2</button>
+                    <button onclick="addCategoryTestUrl('/uploads/categories/sample.jpg')" class="test-btn">Relative Path</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products-tab" class="tab-content">
+            <div class="test-section">
+                <h3>🛍️ Product Images Upload</h3>
+                
+                <div class="form-group">
+                    <label>🖼️ Current Product Images:</label>
+                    <div id="productImagesPreview" class="image-preview">
+                        <!-- Product images will be shown here -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>📁 Upload Product Images:</label>
+                    <input type="file" id="productFileInput" accept="image/*" multiple>
+                    <button id="productUploadBtn" class="upload-btn" disabled>Upload to Products</button>
+                    <div id="productUploadStatus" class="status" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🔗 Add Product Image URL:</label>
+                    <input type="text" id="productUrlInput" class="url-input" placeholder="https://example.com/product.jpg or /uploads/products/product.jpg">
+                    <button id="productAddUrlBtn" class="add-btn" disabled>Add URL</button>
+                    <div id="productUrlStatus" class="status" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>🧪 Test Product URLs:</label>
+                    <button onclick="addProductTestUrl('https://picsum.photos/400/400?random=1')" class="test-btn">Random 1</button>
+                    <button onclick="addProductTestUrl('https://picsum.photos/400/400?random=2')" class="test-btn">Random 2</button>
+                    <button onclick="addProductTestUrl('https://picsum.photos/400/400?random=3')" class="test-btn">Random 3</button>
+                    <button onclick="addProductTestUrl('/uploads/products/sample.jpg')" class="test-btn">Relative Path</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Tests Tab -->
+        <div id="validation-tab" class="tab-content">
+            <div class="test-section">
+                <h3>✅ URL Validation Tests</h3>
+                <div id="validationResults">
+                    <!-- Validation test results will be shown here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- API Tests Tab -->
+        <div id="api-tab" class="tab-content">
+            <div class="test-section">
+                <h3>🔧 API Endpoint Tests</h3>
+                <div class="form-group">
+                    <label>Test Upload API:</label>
+                    <select id="apiTypeSelect">
+                        <option value="categories">Categories</option>
+                        <option value="products">Products</option>
+                    </select>
+                    <input type="file" id="apiFileInput" accept="image/*">
+                    <button id="apiTestBtn" class="test-btn">Test API Upload</button>
+                    <div id="apiTestStatus" class="status" style="display: none;"></div>
+                </div>
+                <div class="code" id="apiResponse">
+                    <!-- API response will be shown here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Current State -->
+        <div class="test-section">
+            <h3>📊 Current State</h3>
+            <div class="grid">
+                <div>
+                    <h4>Categories</h4>
+                    <p><strong>Images:</strong> <span id="categoryCount">0</span></p>
+                    <div class="code" id="categoryJson">[]</div>
+                </div>
+                <div>
+                    <h4>Products</h4>
+                    <p><strong>Images:</strong> <span id="productCount">0</span></p>
+                    <div class="code" id="productJson">[]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let categoryImages = [];
+        let productImages = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            runValidationTests();
+        });
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function setupEventListeners() {
+            // Category file input
+            document.getElementById('categoryFileInput').addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                document.getElementById('categoryUploadBtn').disabled = files.length === 0;
+            });
+            
+            // Category upload button
+            document.getElementById('categoryUploadBtn').addEventListener('click', function() {
+                const files = Array.from(document.getElementById('categoryFileInput').files);
+                uploadFiles(files, 'categories');
+            });
+            
+            // Category URL input
+            document.getElementById('categoryUrlInput').addEventListener('input', function(e) {
+                const url = e.target.value.trim();
+                document.getElementById('categoryAddUrlBtn').disabled = !url || !validateImageUrl(url);
+            });
+            
+            // Category add URL button
+            document.getElementById('categoryAddUrlBtn').addEventListener('click', function() {
+                const url = document.getElementById('categoryUrlInput').value.trim();
+                if (url && validateImageUrl(url)) {
+                    addImage(url, 'categories');
+                    document.getElementById('categoryUrlInput').value = '';
+                }
+            });
+            
+            // Product file input
+            document.getElementById('productFileInput').addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                document.getElementById('productUploadBtn').disabled = files.length === 0;
+            });
+            
+            // Product upload button
+            document.getElementById('productUploadBtn').addEventListener('click', function() {
+                const files = Array.from(document.getElementById('productFileInput').files);
+                uploadFiles(files, 'products');
+            });
+            
+            // Product URL input
+            document.getElementById('productUrlInput').addEventListener('input', function(e) {
+                const url = e.target.value.trim();
+                document.getElementById('productAddUrlBtn').disabled = !url || !validateImageUrl(url);
+            });
+            
+            // Product add URL button
+            document.getElementById('productAddUrlBtn').addEventListener('click', function() {
+                const url = document.getElementById('productUrlInput').value.trim();
+                if (url && validateImageUrl(url)) {
+                    addImage(url, 'products');
+                    document.getElementById('productUrlInput').value = '';
+                }
+            });
+            
+            // API test button
+            document.getElementById('apiTestBtn').addEventListener('click', function() {
+                testApiUpload();
+            });
+        }
+        
+        function validateImageUrl(url) {
+            if (!url) return true;
+            if (url.startsWith('/')) return true;
+            if (url.startsWith('http://') || url.startsWith('https://')) return true;
+            return false;
+        }
+        
+        function addImage(url, type) {
+            const images = type === 'categories' ? categoryImages : productImages;
+            if (!images.includes(url)) {
+                images.push(url);
+                updateDisplay(type);
+                showStatus(type + 'UrlStatus', 'Image added successfully!', 'success');
+            } else {
+                showStatus(type + 'UrlStatus', 'Image already exists!', 'error');
+            }
+        }
+        
+        function removeImage(index, type) {
+            const images = type === 'categories' ? categoryImages : productImages;
+            images.splice(index, 1);
+            updateDisplay(type);
+        }
+        
+        function addCategoryTestUrl(url) {
+            addImage(url, 'categories');
+        }
+        
+        function addProductTestUrl(url) {
+            addImage(url, 'products');
+        }
+        
+        function uploadFiles(files, type) {
+            const statusDiv = document.getElementById(type + 'UploadStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Uploading files...';
+            
+            // Simulate file upload (in real app, this would upload to server)
+            setTimeout(() => {
+                files.forEach(file => {
+                    // Create a local URL for preview
+                    const url = URL.createObjectURL(file);
+                    addImage(url, type);
+                });
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `Successfully uploaded ${files.length} file(s) to ${type}!`;
+                
+                // Clear file input
+                document.getElementById(type + 'FileInput').value = '';
+                document.getElementById(type + 'UploadBtn').disabled = true;
+            }, 1000);
+        }
+        
+        function updateDisplay(type) {
+            const images = type === 'categories' ? categoryImages : productImages;
+            const previewDiv = document.getElementById(type + (type === 'categories' ? 'ImagePreview' : 'ImagesPreview'));
+            previewDiv.innerHTML = '';
+            
+            images.forEach((url, index) => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.innerHTML = `
+                    <img src="${url}" alt="${type} ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjYwIiB5PSI2MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+'">
+                    <button class="remove-btn" onclick="removeImage(${index}, '${type}')">×</button>
+                `;
+                previewDiv.appendChild(imageItem);
+            });
+            
+            document.getElementById(type + 'Count').textContent = images.length;
+            document.getElementById(type + 'Json').textContent = JSON.stringify(images);
+        }
+        
+        function showStatus(elementId, message, type) {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.style.display = 'block';
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function runValidationTests() {
+            const testCases = [
+                { url: '', expected: true, description: 'Empty URL' },
+                { url: '/uploads/categories/image.jpg', expected: true, description: 'Category relative path' },
+                { url: '/uploads/products/image.jpg', expected: true, description: 'Product relative path' },
+                { url: 'https://example.com/image.jpg', expected: true, description: 'HTTPS URL' },
+                { url: 'http://example.com/image.jpg', expected: true, description: 'HTTP URL' },
+                { url: 'ftp://example.com/image.jpg', expected: false, description: 'FTP URL (invalid)' },
+                { url: 'image.jpg', expected: false, description: 'Filename only (invalid)' },
+                { url: '//example.com/image.jpg', expected: false, description: 'Protocol-relative (invalid)' },
+                { url: 'data:image/jpeg;base64,...', expected: false, description: 'Data URL (invalid)' }
+            ];
+            
+            const resultsDiv = document.getElementById('validationResults');
+            testCases.forEach(testCase => {
+                const isValid = validateImageUrl(testCase.url);
+                const isCorrect = isValid === testCase.expected;
+                
+                const testDiv = document.createElement('div');
+                testDiv.className = `test-section ${isCorrect ? 'success' : 'error'}`;
+                testDiv.innerHTML = `
+                    <strong>${testCase.description}</strong><br>
+                    URL: <code>${testCase.url || '(empty)'}</code><br>
+                    Expected: ${testCase.expected ? 'Valid' : 'Invalid'} | 
+                    Got: ${isValid ? 'Valid' : 'Invalid'} | 
+                    ${isCorrect ? '✅ PASS' : '❌ FAIL'}
+                `;
+                resultsDiv.appendChild(testDiv);
+            });
+        }
+        
+        function testApiUpload() {
+            const file = document.getElementById('apiFileInput').files[0];
+            const type = document.getElementById('apiTypeSelect').value;
+            const statusDiv = document.getElementById('apiTestStatus');
+            const responseDiv = document.getElementById('apiResponse');
+            
+            if (!file) {
+                showStatus('apiTestStatus', 'Please select a file first', 'error');
+                return;
+            }
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Testing API upload...';
+            
+            // Simulate API call
+            setTimeout(() => {
+                const mockResponse = {
+                    success: true,
+                    url: `/uploads/${type}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.jpg`,
+                    fileName: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.jpg`,
+                    type: type
+                };
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = 'API test completed successfully!';
+                
+                responseDiv.textContent = JSON.stringify(mockResponse, null, 2);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

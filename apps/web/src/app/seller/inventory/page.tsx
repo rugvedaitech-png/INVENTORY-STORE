@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
+import Pagination from '@/components/Pagination'
 
 interface Product {
-  id: string
+  id: number
   title: string
   sku: string | null
   stock: number
@@ -12,14 +15,14 @@ interface Product {
   reorderQty: number
   costPrice: number | null
   supplier: {
-    id: string
+    id: number
     name: string
     leadTimeDays: number
   } | null
 }
 
 interface ReorderSuggestion {
-  productId: string
+  productId: number
   title: string
   sku: string | null
   currentStock: number
@@ -27,95 +30,104 @@ interface ReorderSuggestion {
   reorderQty: number
   proposedQty: number
   supplier: {
-    id: string
+    id: number
     name: string
     leadTimeDays: number
   } | null
   daysOfCover: number
 }
 
+interface ProductsResponse {
+  products: Product[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+}
+
 export default function InventoryPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [reorderSuggestions, setReorderSuggestions] = useState<ReorderSuggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'inventory' | 'reorder'>('inventory')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  })
+
+  // Redirect if not authenticated or not store owner
+  useEffect(() => {
+    if (status === 'loading') return
+    if (!session) {
+      router.push('/auth/login')
+      return
+    }
+    if (session.user.role !== 'STORE_OWNER') {
+      router.push('/unauthorized')
+      return
+    }
+  }, [session, status, router])
 
   useEffect(() => {
-    fetchInventoryData()
-  }, [])
+    if (session?.user?.role === 'STORE_OWNER') {
+      fetchInventoryData()
+    }
+  }, [session])
 
-  const fetchInventoryData = async () => {
+  const fetchInventoryData = useCallback(async (page?: number) => {
     try {
-      // In a real app, you'd fetch from your API
-      // For now, we'll use mock data
-      const mockProducts: Product[] = [
-        {
-          id: '1',
-          title: 'Classic Cotton T-Shirt',
-          sku: 'TSH-001',
-          stock: 20,
-          reorderPoint: 5,
-          reorderQty: 25,
-          costPrice: 300,
-          supplier: {
-            id: '1',
-            name: 'Fashion Wholesale Co.',
-            leadTimeDays: 3,
-          },
-        },
-        {
-          id: '2',
-          title: 'Denim Jeans',
-          sku: 'JNS-001',
-          stock: 15,
-          reorderPoint: 3,
-          reorderQty: 20,
-          costPrice: 800,
-          supplier: {
-            id: '1',
-            name: 'Fashion Wholesale Co.',
-            leadTimeDays: 3,
-          },
-        },
-        {
-          id: '3',
-          title: 'Summer Dress',
-          sku: 'DRS-001',
-          stock: 2, // Low stock
-          reorderPoint: 4,
-          reorderQty: 15,
-          costPrice: 500,
-          supplier: null,
-        },
-      ]
+      setLoading(true)
+      const pageToFetch = page || currentPage
+      
+      // Fetch products from API with pagination
+      const productsResponse = await fetch(`/api/products?active=true&page=${pageToFetch}&limit=10`)
+      if (!productsResponse.ok) throw new Error('Failed to fetch products')
+      const productsData: ProductsResponse = await productsResponse.json()
+      
+      // Transform products data to match our interface
+      const transformedProducts: Product[] = productsData.products.map((product: any) => ({
+        id: product.id,
+        title: product.title,
+        sku: product.sku,
+        stock: product.stock,
+        reorderPoint: product.reorderPoint,
+        reorderQty: product.reorderQty,
+        costPrice: product.costPrice,
+        supplier: product.supplier
+      }))
 
-      const mockReorderSuggestions: ReorderSuggestion[] = [
-        {
-          productId: '3',
-          title: 'Summer Dress',
-          sku: 'DRS-001',
-          currentStock: 2,
-          reorderPoint: 4,
-          reorderQty: 15,
-          proposedQty: 17, // reorderPoint - currentStock + reorderQty
-          supplier: null,
-          daysOfCover: 0.5, // stock / reorderQty
-        },
-      ]
+      // Fetch reorder suggestions from API
+      // The API will automatically filter by the logged-in user's store
+      const reorderResponse = await fetch('/api/inventory/reorder-suggestions')
+      if (!reorderResponse.ok) throw new Error('Failed to fetch reorder suggestions')
+      const reorderData = await reorderResponse.json()
 
-      setProducts(mockProducts)
-      setReorderSuggestions(mockReorderSuggestions)
+      setProducts(transformedProducts)
+      setReorderSuggestions(reorderData)
+      setPagination(productsData.pagination)
     } catch (error) {
       console.error('Error fetching inventory data:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage])
 
   const getStockStatus = (stock: number, reorderPoint: number) => {
     if (stock === 0) return { color: 'text-red-600', bg: 'bg-red-100', text: 'Out of Stock' }
     if (stock <= reorderPoint) return { color: 'text-yellow-600', bg: 'bg-yellow-100', text: 'Low Stock' }
     return { color: 'text-green-600', bg: 'bg-green-100', text: 'In Stock' }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    fetchInventoryData(page)
   }
 
   if (loading) {
@@ -231,6 +243,17 @@ export default function InventoryPage() {
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* Pagination for Inventory Tab */}
+        {activeTab === 'inventory' && pagination.pages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination.pages}
+            totalItems={pagination.total}
+            itemsPerPage={pagination.limit}
+            onPageChange={handlePageChange}
+          />
         )}
 
         {activeTab === 'reorder' && (

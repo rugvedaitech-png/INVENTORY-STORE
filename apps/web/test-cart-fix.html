@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .before, .after { padding: 15px; border-radius: 4px; }
+        .before { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .after { background: #d4edda; border: 1px solid #c3e6cb; }
+        .cart-item { display: flex; align-items: center; gap: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0; }
+        .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; background: #f0f0f0; }
+        .cart-item-details { flex: 1; }
+        .cart-item-controls { display: flex; align-items: center; gap: 10px; }
+        .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-red { background: #dc3545; color: white; }
+        .btn-green { background: #28a745; color: white; }
+        .quantity { padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; text-align: center; min-width: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Cart Fix Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Issue Fixed</h3>
+            <p>The cart was showing "₹NaN" for prices because product data wasn't being properly stored in localStorage. This has been fixed by updating the cart structure to include full product information.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Root Cause</h3>
+            <div class="code">
+// BEFORE (Broken)
+const updateCart = (productId: number, qty: number) => {
+  const newCartItems = { ...cartItems }
+  newCartItems[productId] = qty  // Only storing quantity!
+  setCartItems(newCartItems)
+  
+  // Saving only ID and quantity
+  const cartArray = Object.entries(newCartItems).map(([id, qty]) => ({
+    id: parseInt(id),
+    qty  // Missing product data!
+  }))
+  localStorage.setItem(`cart-${storeSlug}`, JSON.stringify(cartArray))
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Solution Applied</h3>
+            <div class="code">
+// AFTER (Fixed)
+const updateCart = (productId: number, qty: number) => {
+  const newCartItems = { ...cartItems }
+  if (qty <= 0) {
+    delete newCartItems[productId]
+  } else {
+    // Find the product data to store with cart item
+    const product = store?.products.find(p => p.id === productId)
+    if (product) {
+      newCartItems[productId] = {
+        qty,
+        product: {
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          stock: product.stock,
+          images: parseImages(product.images)
+        }
+      }
+    }
+  }
+  setCartItems(newCartItems)
+  
+  // Save full product data
+  const cartArray = Object.entries(newCartItems).map(([id, item]) => ({
+    id: parseInt(id),
+    qty: item.qty,
+    product: item.product  // Now includes full product data!
+  }))
+  localStorage.setItem(`cart-${storeSlug}`, JSON.stringify(cartArray))
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Before vs After</h3>
+            
+            <div class="before-after">
+                <div class="before">
+                    <h4>❌ Before (Broken)</h4>
+                    <div class="cart-item">
+                        <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 4px;"></div>
+                        <div class="cart-item-details">
+                            <h5>Unknown Product</h5>
+                            <p>₹NaN each</p>
+                            <p>Stock: 0</p>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="btn btn-red">-</button>
+                            <span class="quantity">2</span>
+                            <button class="btn btn-green">+</button>
+                        </div>
+                        <div>
+                            <p><strong>₹NaN</strong></p>
+                            <button style="color: red; background: none; border: none; cursor: pointer;">Remove</button>
+                        </div>
+                    </div>
+                    <p><strong>Issues:</strong></p>
+                    <ul>
+                        <li>Product title shows "Unknown Product"</li>
+                        <li>Price shows "₹NaN"</li>
+                        <li>Stock shows 0</li>
+                        <li>Total shows "₹NaN"</li>
+                    </ul>
+                </div>
+
+                <div class="after">
+                    <h4>✅ After (Fixed)</h4>
+                    <div class="cart-item">
+                        <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 4px;"></div>
+                        <div class="cart-item-details">
+                            <h5>Basmati Rice (1kg)</h5>
+                            <p>₹120.00 each</p>
+                            <p>Stock: 50</p>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="btn btn-red">-</button>
+                            <span class="quantity">2</span>
+                            <button class="btn btn-green">+</button>
+                        </div>
+                        <div>
+                            <p><strong>₹240.00</strong></p>
+                            <button style="color: red; background: none; border: none; cursor: pointer;">Remove</button>
+                        </div>
+                    </div>
+                    <p><strong>Fixed:</strong></p>
+                    <ul>
+                        <li>Product title shows correctly</li>
+                        <li>Price shows correctly (₹120.00)</li>
+                        <li>Stock shows correctly (50)</li>
+                        <li>Total shows correctly (₹240.00)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Files Updated</h3>
+            
+            <div class="code">
+apps/web/src/app/(public)/[store]/browse/page.tsx
+├── updateCart() function - Now stores full product data
+├── Cart loading logic - Updated to handle new structure
+├── getCartItemCount() - Updated for new cart structure
+└── ProductCardWithCart - Updated to work with new structure
+
+apps/web/src/app/(public)/[store]/cart/page.tsx
+├── Cart loading - Updated to handle new structure
+├── Cart display - Updated to use product data
+├── Price calculations - Updated to use product.price
+└── Order summary - Updated to show correct data
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Cart Structure</h3>
+            
+            <div class="code">
+// New Cart Structure
+{
+  "1": {  // Product ID
+    "qty": 2,
+    "product": {
+      "id": 1,
+      "title": "Basmati Rice (1kg)",
+      "price": 12000,  // Price in paise
+      "stock": 50,
+      "images": ["/uploads/products/rice.jpg"]
+    }
+  },
+  "2": {
+    "qty": 1,
+    "product": {
+      "id": 2,
+      "title": "Whole Wheat Flour (1kg)",
+      "price": 4500,
+      "stock": 30,
+      "images": ["/uploads/products/flour.jpg"]
+    }
+  }
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Scenarios</h3>
+            
+            <div class="test-section">
+                <h4>Scenario 1: Add Product to Cart</h4>
+                <ol>
+                    <li>Customer selects a category (e.g., "Rice & Grains")</li>
+                    <li>Customer clicks "Add to Cart" on "Basmati Rice"</li>
+                    <li>Button changes to -1+ controls</li>
+                    <li>Cart count updates in header</li>
+                    <li>Product data is stored in localStorage</li>
+                </ol>
+            </div>
+
+            <div class="test-section">
+                <h4>Scenario 2: View Cart</h4>
+                <ol>
+                    <li>Customer clicks "View Cart" button</li>
+                    <li>Cart page loads with correct product information</li>
+                    <li>Product title, price, and stock are displayed correctly</li>
+                    <li>Total amount is calculated correctly</li>
+                </ol>
+            </div>
+
+            <div class="test-section">
+                <h4>Scenario 3: Cart Persistence</h4>
+                <ol>
+                    <li>Customer adds items to cart</li>
+                    <li>Customer refreshes the page</li>
+                    <li>Cart items persist and display correctly</li>
+                    <li>All product data is preserved</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Expected Results</h3>
+            <ul>
+                <li>✅ Product titles display correctly in cart</li>
+                <li>✅ Product prices display correctly (₹120.00, not ₹NaN)</li>
+                <li>✅ Stock information displays correctly</li>
+                <li>✅ Total amounts calculate correctly</li>
+                <li>✅ Cart persists across page refreshes</li>
+                <li>✅ -1+ buttons work correctly</li>
+                <li>✅ Order summary shows correct data</li>
+            </ul>
+        </div>
+
+        <div class="test-section warning">
+            <h3>⚠️ Testing Notes</h3>
+            <ul>
+                <li>Test with different products and prices</li>
+                <li>Verify cart works across different categories</li>
+                <li>Test cart persistence after browser refresh</li>
+                <li>Verify total calculations are accurate</li>
+                <li>Test with products that have no images</li>
+                <li>Verify stock validation still works</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 // Temporary fix for UserRole import issue
@@ -19,10 +19,40 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     role: UserRole.CUSTOMER,
+    storeName: '',
+    storeWhatsapp: '',
+    storeUpiId: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [storeInfo, setStoreInfo] = useState<{ name: string; slug: string } | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle URL parameters
+  useEffect(() => {
+    const store = searchParams.get('store')
+    const role = searchParams.get('role')
+
+    if (store && role) {
+      // Fetch store information
+      fetch(`/api/stores/${store}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.store) {
+            setStoreInfo(data.store)
+            setFormData(prev => ({
+              ...prev,
+              role: role as UserRole
+            }))
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching store info:', err)
+          setError('Invalid registration link')
+        })
+    }
+  }, [searchParams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -54,6 +84,10 @@ export default function RegisterPage() {
           phone: formData.phone,
           password: formData.password,
           role: formData.role,
+          storeSlug: storeInfo?.slug,
+          storeName: formData.storeName,
+          storeWhatsapp: formData.storeWhatsapp,
+          storeUpiId: formData.storeUpiId,
         }),
       })
 
@@ -77,29 +111,110 @@ export default function RegisterPage() {
           Create your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Join our platform as a store owner, supplier, or customer
+          {storeInfo 
+            ? `Join ${storeInfo.name} as a ${formData.role.toLowerCase()}`
+            : 'Join our platform as a store owner, supplier, or customer'
+          }
         </p>
+        {storeInfo && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Store:</strong> {storeInfo.name}
+            </p>
+            <p className="text-sm text-blue-600">
+              You&apos;re registering as a {formData.role.toLowerCase()} for this store.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-              >
-                <option value={UserRole.CUSTOMER}>Customer</option>
-                <option value={UserRole.STORE_OWNER}>Store Owner</option>
-                <option value={UserRole.SUPPLIER}>Supplier</option>
-              </select>
-            </div>
+            {!storeInfo && (
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                  Account Type
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                >
+                  <option value={UserRole.CUSTOMER}>Customer</option>
+                  <option value={UserRole.STORE_OWNER}>Store Owner</option>
+                  <option value={UserRole.SUPPLIER}>Supplier</option>
+                </select>
+              </div>
+            )}
+
+            {storeInfo && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Account Type
+                </label>
+                <div className="mt-1 p-3 bg-gray-50 border border-gray-300 rounded-md">
+                  <span className="text-sm font-medium text-gray-900 capitalize">
+                    {formData.role.toLowerCase()}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Store creation fields for store owners */}
+            {!storeInfo && formData.role === UserRole.STORE_OWNER && (
+              <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="text-lg font-medium text-blue-900">Store Information</h3>
+                <div>
+                  <label htmlFor="storeName" className="block text-sm font-medium text-gray-700">
+                    Store Name *
+                  </label>
+                  <input
+                    id="storeName"
+                    name="storeName"
+                    type="text"
+                    required
+                    value={formData.storeName}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="Enter your store name"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="storeWhatsapp" className="block text-sm font-medium text-gray-700">
+                    WhatsApp Number
+                  </label>
+                  <input
+                    id="storeWhatsapp"
+                    name="storeWhatsapp"
+                    type="tel"
+                    value={formData.storeWhatsapp}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="919876543210"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="storeUpiId" className="block text-sm font-medium text-gray-700">
+                    UPI ID
+                  </label>
+                  <input
+                    id="storeUpiId"
+                    name="storeUpiId"
+                    type="text"
+                    value={formData.storeUpiId}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="yourstore@upi"
+                  />
+                </div>
+                <p className="text-sm text-blue-700">
+                  We'll create your store and add some sample products to get you started!
+                </p>
+              </div>
+            )}
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">

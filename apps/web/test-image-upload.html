@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Image Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
+        .preview { margin: 20px 0; }
+        .preview img { max-width: 200px; max-height: 200px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Image Upload</h1>
+        
+        <div class="upload-area">
+            <input type="file" id="fileInput" accept="image/*">
+            <p>Select an image file to upload</p>
+        </div>
+        
+        <div id="status"></div>
+        <div id="preview" class="preview"></div>
+        
+        <script>
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('status');
+            const preview = document.getElementById('preview');
+            
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                status.innerHTML = '<p>Uploading...</p>';
+                preview.innerHTML = '';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const response = await fetch('/api/upload/image', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        status.innerHTML = `<p class="success">Upload successful! URL: ${result.url}</p>`;
+                        preview.innerHTML = `<img src="${result.url}" alt="Uploaded image">`;
+                    } else {
+                        status.innerHTML = `<p class="error">Upload failed: ${result.error}</p>`;
+                    }
+                } catch (error) {
+                    status.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

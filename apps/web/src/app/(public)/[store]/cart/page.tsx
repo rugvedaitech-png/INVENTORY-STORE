@@ -8,11 +8,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 interface CartItem {
-  id: string
+  id: number
   title: string
   price: number
   stock: number
-  images: string
+  images: string[]
   qty: number
 }
 
@@ -41,12 +41,19 @@ export default function CartPage({ params }: CartPageProps) {
     if (!storeSlug) return
     const savedCart = localStorage.getItem(`cart-${storeSlug}`)
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart))
+      try {
+        const cart = JSON.parse(savedCart)
+        // Cart now contains product data directly
+        setCartItems(cart)
+      } catch (error) {
+        console.error('Error loading cart:', error)
+        setCartItems([])
+      }
     }
     setLoading(false)
   }, [storeSlug])
 
-  const updateQuantity = (productId: string, newQty: number) => {
+  const updateQuantity = (productId: number, newQty: number) => {
     if (newQty <= 0) {
       removeItem(productId)
       return
@@ -59,14 +66,14 @@ export default function CartPage({ params }: CartPageProps) {
     localStorage.setItem(`cart-${storeSlug}`, JSON.stringify(updatedItems))
   }
 
-  const removeItem = (productId: string) => {
+  const removeItem = (productId: number) => {
     const updatedItems = cartItems.filter(item => item.id !== productId)
     setCartItems(updatedItems)
     localStorage.setItem(`cart-${storeSlug}`, JSON.stringify(updatedItems))
   }
 
   const getTotalAmount = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.qty), 0)
+    return cartItems.reduce((total, item) => total + ((item.product?.price || 0) * item.qty), 0)
   }
 
   const handleCheckout = () => {
@@ -139,14 +146,15 @@ export default function CartPage({ params }: CartPageProps) {
                         className="flex items-center space-x-4 p-4 border rounded-lg"
                       >
                         <div className="w-20 h-20 relative bg-gray-100 rounded-lg flex-shrink-0">
-                          {(() => {
-                            const images = parseImages(item.images)
-                            return images.length > 0 ? (
-                              <Image
-                                src={images[0]}
-                                alt={item.title}
-                                fill
-                                className="object-cover rounded-lg"
+                          {item.product?.images?.length > 0 ? (
+                            <Image
+                              src={item.product.images[0]}
+                              alt={item.product.title}
+                              fill
+                              className="object-cover rounded-lg"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
                             />
                           ) : (
                             <div className="flex items-center justify-center h-full text-gray-400">
@@ -164,18 +172,17 @@ export default function CartPage({ params }: CartPageProps) {
                                 />
                               </svg>
                             </div>
-                          )
-                          })()}
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">
-                            {item.title}
+                            {item.product?.title || 'Unknown Product'}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {formatCurrency(item.price)} each
+                            {item.product?.price ? formatCurrency(item.product.price) : '₹0.00'} each
                           </p>
                           <p className="text-xs text-gray-500">
-                            Stock: {item.stock}
+                            Stock: {item.product?.stock || 0}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -198,7 +205,7 @@ export default function CartPage({ params }: CartPageProps) {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">
-                            {formatCurrency(item.price * item.qty)}
+                            {formatCurrency((item.product?.price || 0) * item.qty)}
                           </p>
                           <button
                             onClick={() => removeItem(item.id)}
@@ -228,10 +235,10 @@ export default function CartPage({ params }: CartPageProps) {
                         className="flex justify-between text-sm"
                       >
                         <span className="text-gray-600">
-                          {item.title} × {item.qty}
+                          {item.product?.title || 'Unknown Product'} × {item.qty}
                         </span>
                         <span className="font-medium">
-                          {formatCurrency(item.price * item.qty)}
+                          {formatCurrency((item.product?.price || 0) * item.qty)}
                         </span>
                       </div>
                     ))}

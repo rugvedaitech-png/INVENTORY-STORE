@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Store Redirect Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .test-case { margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Customer Store Redirect Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Overview</h3>
+            <p>This test verifies that customers are properly redirected to their assigned store and see the correct data.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Fix Applied</h3>
+            <div class="test-case success">
+                <h4>✅ Store Page Authentication Check</h4>
+                <p><strong>File:</strong> <code>apps/web/src/app/(public)/[store]/page.tsx</code></p>
+                <p><strong>Fix:</strong> Added authentication check to redirect customers to their assigned store</p>
+                <div class="code">
+// Check if user is authenticated
+const session = await getServerSession(authOptions)
+
+// If user is logged in, check if they should be redirected to their assigned store
+if (session?.user) {
+  const user = await db.user.findUnique({
+    where: { id: parseInt(session.user.id) },
+    include: { store: true }
+  })
+  
+  // If user has a storeId and it doesn't match the current store, redirect them
+  if (user?.storeId && user.store && user.store.slug !== storeSlug) {
+    redirect(`/${user.store.slug}`)
+  }
+}
+                </div>
+            </div>
+
+            <div class="test-case success">
+                <h4>✅ Customer Dashboard Redirect</h4>
+                <p><strong>File:</strong> <code>apps/web/src/app/customer/page.tsx</code></p>
+                <p><strong>Fix:</strong> Updated customer dashboard to redirect to assigned store</p>
+                <div class="code">
+// Get user with their assigned store
+const user = await db.user.findUnique({
+  where: { id: parseInt(session.user.id) },
+  include: { store: true }
+})
+
+// If user has an assigned store, redirect them to it
+if (user?.storeId && user.store) {
+  redirect(`/${user.store.slug}`)
+}
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Scenarios</h3>
+            
+            <div class="test-case">
+                <h4>Scenario 1: Customer with storeId = 2</h4>
+                <p><strong>Before Fix:</strong></p>
+                <ul>
+                    <li>Customer logs in with <code>storeId = 2</code></li>
+                    <li>Visits <code>/store1</code> (store with ID 1)</li>
+                    <li>❌ Sees data from store ID 1 (wrong store)</li>
+                </ul>
+                <p><strong>After Fix:</strong></p>
+                <ul>
+                    <li>Customer logs in with <code>storeId = 2</code></li>
+                    <li>Visits <code>/store1</code> (store with ID 1)</li>
+                    <li>✅ Automatically redirected to <code>/store2</code> (their assigned store)</li>
+                    <li>✅ Sees data from store ID 2 (correct store)</li>
+                </ul>
+            </div>
+
+            <div class="test-case">
+                <h4>Scenario 2: Customer Dashboard Access</h4>
+                <p><strong>Before Fix:</strong></p>
+                <ul>
+                    <li>Customer logs in and goes to <code>/customer</code></li>
+                    <li>❌ Shows hardcoded link to <code>/demo-ration-store</code></li>
+                </ul>
+                <p><strong>After Fix:</strong></p>
+                <ul>
+                    <li>Customer logs in and goes to <code>/customer</code></li>
+                    <li>✅ Automatically redirected to their assigned store</li>
+                    <li>✅ If no assigned store, shows appropriate message</li>
+                </ul>
+            </div>
+
+            <div class="test-case">
+                <h4>Scenario 3: Store Owner Access</h4>
+                <p><strong>Behavior:</strong></p>
+                <ul>
+                    <li>Store owners can still access any store via URL</li>
+                    <li>No redirect restrictions for store owners</li>
+                    <li>✅ Maintains existing functionality</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Database Schema</h3>
+            <div class="code">
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(STORE_OWNER)
+  phone     String?
+  storeId   Int?     // Store ID for customers and suppliers
+  store     Store?   @relation("UserStore", fields: [storeId], references: [id])
+  stores    Store[]  @relation("StoreOwner") // Stores owned by this user
+  // ...
+}
+
+model Store {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  owner       User     @relation("StoreOwner", fields: [ownerId], references: [id])
+  name        String
+  slug        String   @unique
+  // ...
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 How to Test</h3>
+            <ol>
+                <li><strong>Create a customer with storeId = 2:</strong>
+                    <div class="code">
+INSERT INTO User (email, name, password, role, storeId) 
+VALUES ('customer@test.com', 'Test Customer', 'password123', 'CUSTOMER', 2);
+                    </div>
+                </li>
+                <li><strong>Login as the customer</strong></li>
+                <li><strong>Try to access a different store:</strong>
+                    <ul>
+                        <li>Visit <code>/store1</code> (if store1 exists)</li>
+                        <li>Should be redirected to <code>/store2</code></li>
+                    </ul>
+                </li>
+                <li><strong>Check customer dashboard:</strong>
+                    <ul>
+                        <li>Visit <code>/customer</code></li>
+                        <li>Should be redirected to <code>/store2</code></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="test-section success">
+            <h3>✅ Expected Results</h3>
+            <ul>
+                <li>✅ Customers are automatically redirected to their assigned store</li>
+                <li>✅ Customers see data only from their assigned store</li>
+                <li>✅ Store owners can still access any store</li>
+                <li>✅ No more "seeing wrong store data" issues</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

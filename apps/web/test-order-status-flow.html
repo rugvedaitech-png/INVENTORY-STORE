@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order Status Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+        .status-flow { display: flex; align-items: center; justify-content: space-between; margin: 20px 0; }
+        .status-step { padding: 10px 20px; border-radius: 5px; text-align: center; min-width: 120px; }
+        .status-pending { background: #fff3cd; color: #856404; border: 2px solid #ffeaa7; }
+        .status-confirmed { background: #d1ecf1; color: #0c5460; border: 2px solid #bee5eb; }
+        .status-shipped { background: #e2e3f5; color: #4c4c8c; border: 2px solid #c7c7f0; }
+        .status-delivered { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .arrow { font-size: 24px; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <h1>Test Order Status Flow</h1>
+    
+    <div class="test-section">
+        <h3>Order Status Flow</h3>
+        <p>The new order status flow is: PENDING → CONFIRMED → SHIPPED → DELIVERED</p>
+        <div class="status-flow">
+            <div class="status-step status-pending">
+                <strong>PENDING</strong><br>
+                <small>Order placed</small>
+            </div>
+            <div class="arrow">→</div>
+            <div class="status-step status-confirmed">
+                <strong>CONFIRMED</strong><br>
+                <small>Store confirms</small>
+            </div>
+            <div class="arrow">→</div>
+            <div class="status-step status-shipped">
+                <strong>SHIPPED</strong><br>
+                <small>Order shipped</small>
+            </div>
+            <div class="arrow">→</div>
+            <div class="status-step status-delivered">
+                <strong>DELIVERED</strong><br>
+                <small>Order delivered</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Order Status Update</h3>
+        <p>Test updating an order status through the flow</p>
+        <input type="number" id="orderId" placeholder="Enter Order ID" style="padding: 8px; margin-right: 10px;">
+        <br><br>
+        <button onclick="testStatusUpdate('CONFIRMED')">Mark as Confirmed</button>
+        <button onclick="testStatusUpdate('SHIPPED')">Mark as Shipped</button>
+        <button onclick="testStatusUpdate('DELIVERED')">Mark as Delivered</button>
+        <div id="statusResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Order Fetch</h3>
+        <p>Fetch order details to see current status</p>
+        <input type="number" id="fetchOrderId" placeholder="Enter Order ID" style="padding: 8px; margin-right: 10px;">
+        <button onclick="testOrderFetch()">Fetch Order</button>
+        <div id="fetchResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Status Color Coding</h3>
+        <p>Here's how different statuses are displayed:</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <span class="status-step status-pending">PENDING</span>
+            <span class="status-step status-confirmed">CONFIRMED</span>
+            <span class="status-step status-shipped">SHIPPED</span>
+            <span class="status-step status-delivered">DELIVERED</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Store Owner Actions</h3>
+        <p>Available actions for each status:</p>
+        <ul>
+            <li><strong>PENDING:</strong> Confirm or Reject order</li>
+            <li><strong>CONFIRMED:</strong> Add/Edit discount, Mark as Shipped</li>
+            <li><strong>SHIPPED:</strong> Mark as Delivered</li>
+            <li><strong>DELIVERED:</strong> No further actions (order complete)</li>
+        </ul>
+    </div>
+
+    <script>
+        async function testStatusUpdate(status) {
+            const orderId = document.getElementById('orderId').value;
+            const resultDiv = document.getElementById('statusResult');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `Updating order ${orderId} to ${status}...`;
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.textContent = `Success! Order ${orderId} status updated to: ${data.status}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `Error: ${data.error || 'Unknown error'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `Network error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testOrderFetch() {
+            const orderId = document.getElementById('fetchOrderId').value;
+            const resultDiv = document.getElementById('fetchResult');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = 'Fetching order details...';
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+
+                const response = await fetch(`/api/orders/${orderId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    const statusClass = `status-${data.status.toLowerCase()}`;
+                    resultDiv.innerHTML = `
+                        <strong>Order Details:</strong><br>
+                        ID: ${data.id}<br>
+                        Status: <span class="status-step ${statusClass}">${data.status}</span><br>
+                        Customer: ${data.buyerName}<br>
+                        Total: ₹${(data.totalAmount / 100).toFixed(2)}<br>
+                        Items: ${data.items.length}<br>
+                        Created: ${new Date(data.createdAt).toLocaleDateString()}
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `Error: ${data.error || 'Unknown error'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `Network error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

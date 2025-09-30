@@ -10,8 +10,8 @@ enum UserRole {
   CUSTOMER = 'CUSTOMER'
 }
 
-// GET - Get all users (admin only)
-export async function GET() {
+// GET - Get all users (admin only) or users by role
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -32,9 +32,20 @@ export async function GET() {
       )
     }
 
-    const users = await AuthService.getAllUsers()
+    const { searchParams } = new URL(request.url)
+    const role = searchParams.get('role')
+    const search = searchParams.get('search')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
 
-    return NextResponse.json({ users })
+    let users
+    if (role) {
+      users = await AuthService.getUsersByRole(role as UserRole, search, page, limit)
+    } else {
+      users = await AuthService.getAllUsers(search, page, limit)
+    }
+
+    return NextResponse.json(users)
   } catch (error) {
     console.error('Get users error:', error)
     return NextResponse.json(

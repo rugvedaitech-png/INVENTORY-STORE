@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Tracking Fix Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .test-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .test-description { color: #666; margin-bottom: 15px; }
+        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; text-decoration: none; display: inline-block; }
+        .button:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        .status { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d1ecf1; color: #0c5460; }
+        .status-shipped { background: #e2e3f1; color: #383d41; }
+        .status-delivered { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Order Tracking Fix - Complete Implementation</h1>
+            <p>Fixed the "No Orders Found" issue by creating proper customer orders API and updating the frontend</p>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card">
+                <div class="test-title">🔍 Issue Identified</div>
+                <div class="test-description">
+                    The order tracking page was showing "No Orders Found" because:
+                </div>
+                <ul>
+                    <li>❌ Using wrong API endpoint (<code>/api/orders</code> - for store owners)</li>
+                    <li>❌ Missing customer-specific orders API</li>
+                    <li>❌ Incorrect database schema relations</li>
+                    <li>❌ Frontend expecting wrong data structure</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">✅ Solutions Implemented</div>
+                <div class="test-description">
+                    Fixed all issues with comprehensive changes:
+                </div>
+                <ul>
+                    <li>✅ Created <code>/api/customer/orders</code> endpoint</li>
+                    <li>✅ Fixed database schema relations (user vs customer)</li>
+                    <li>✅ Updated frontend to use correct API</li>
+                    <li>✅ Fixed data structure mapping</li>
+                    <li>✅ Added proper error handling</li>
+                </ul>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">📊 New API Endpoint</div>
+                <div class="test-description">
+                    Created customer-specific orders API:
+                </div>
+                <div class="code">
+                    <strong>Endpoint:</strong> GET /api/customer/orders<br>
+                    <strong>Authentication:</strong> Required (session-based)<br>
+                    <strong>Returns:</strong> Customer's own orders only<br>
+                    <strong>Includes:</strong> Store, user, and product details
+                </div>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">🔧 Database Schema Fix</div>
+                <div class="test-description">
+                    Fixed the relation mapping:
+                </div>
+                <div class="code">
+                    <strong>Before:</strong> customer: { ... }<br>
+                    <strong>After:</strong> user: { id, name, email }<br>
+                    <strong>Reason:</strong> Order.customerId → User.id (not Customer.id)
+                </div>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">🎯 Order Status Flow</div>
+                <div class="test-description">
+                    Complete order tracking with visual timeline:
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="status status-pending">PENDING - Order placed, waiting for confirmation</div>
+                    <div class="status status-confirmed">CONFIRMED - Store confirmed the order</div>
+                    <div class="status status-shipped">SHIPPED - Order is on its way</div>
+                    <div class="status status-delivered">DELIVERED - Order delivered successfully</div>
+                </div>
+            </div>
+
+            <div class="test-card">
+                <div class="test-title">🧪 Testing Instructions</div>
+                <div class="test-description">
+                    To test the order tracking functionality:
+                </div>
+                <ol>
+                    <li>Start the development server: <code>npm run dev</code></li>
+                    <li>Navigate to <code>http://localhost:3000/customer/order-tracking</code></li>
+                    <li>If no orders show, create test orders using the script</li>
+                    <li>Verify order timeline and tracking features</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>📋 Files Modified</h2>
+            <div class="test-description">
+                <p><strong>New Files Created:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/api/customer/orders/route.ts</code> - Customer orders API</li>
+                    <li><code>apps/web/create-test-orders.js</code> - Test data creation script</li>
+                </ul>
+                
+                <p><strong>Files Updated:</strong></p>
+                <ul>
+                    <li><code>apps/web/src/app/customer/order-tracking/page.tsx</code> - Fixed API endpoint and data structure</li>
+                    <li><code>apps/web/src/app/customer/order-summary/page.tsx</code> - Fixed API endpoint and data structure</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>🚀 How to Test</h2>
+            <div class="test-description">
+                <p><strong>Step 1: Start the server</strong></p>
+                <div class="code">npm run dev</div>
+                
+                <p><strong>Step 2: Create test orders (if needed)</strong></p>
+                <div class="code">node create-test-orders.js</div>
+                
+                <p><strong>Step 3: Test the pages</strong></p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <a href="http://localhost:3000/customer/order-tracking" class="button" target="_blank">Test Order Tracking</a>
+                    <a href="http://localhost:3000/customer/order-summary" class="button" target="_blank">Test Order Summary</a>
+                    <a href="http://localhost:3000/customer/shop" class="button" target="_blank">Test Shop (Start Shopping)</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>✨ Expected Results</h2>
+            <div class="test-description">
+                <p><strong>Order Tracking Page should now show:</strong></p>
+                <ul>
+                    <li>✅ List of customer orders (if any exist)</li>
+                    <li>✅ Order status with proper colors and icons</li>
+                    <li>✅ Tracking codes and estimated delivery dates</li>
+                    <li>✅ Visual timeline for each order</li>
+                    <li>✅ Search functionality for tracking codes</li>
+                    <li>✅ Refresh button for real-time updates</li>
+                </ul>
+                
+                <p><strong>If no orders exist:</strong></p>
+                <ul>
+                    <li>✅ "No Orders Found" message</li>
+                    <li>✅ "Start Shopping" button that redirects to <code>/customer/shop</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testAPI() {
+            fetch('/api/customer/orders')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Response:', data);
+                    alert(`API Test Result:\n\nStatus: Success\nOrders Found: ${data.length}\n\nCheck console for full response.`);
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    alert(`API Test Result:\n\nStatus: Error\nMessage: ${error.message}\n\nCheck console for details.`);
+                });
+        }
+
+        function createTestOrders() {
+            alert('To create test orders, run this command in the terminal:\n\nnode create-test-orders.js\n\nThis will create sample orders with different statuses for testing.');
+        }
+    </script>
+</body>
+</html>

@@ -22,7 +22,7 @@ export default async function SellerDashboard() {
     redirect('/unauthorized')
   }
 
-  // Get store and basic stats
+  // Get store and comprehensive stats
   const store = await db.store.findFirst({
     where: { ownerId: parseInt(session.user.id) },
     include: {
@@ -30,15 +30,124 @@ export default async function SellerDashboard() {
         select: {
           products: true,
           orders: true,
+          customers: true,
+          suppliers: true,
         }
       }
     }
   })
 
+  if (!store) {
+    redirect('/unauthorized')
+  }
+
+  // Get comprehensive analytics
+  const [
+    totalRevenue,
+    monthlyRevenue,
+    orderStats,
+    topProducts,
+    recentCustomers,
+    lowStockProducts,
+    pendingOrders
+  ] = await Promise.all([
+    // Total revenue from confirmed orders
+    db.order.aggregate({
+      where: { 
+        storeId: store.id,
+        status: 'CONFIRMED'
+      },
+      _sum: { totalAmount: true }
+    }),
+    
+    // Monthly revenue (current month)
+    db.order.aggregate({
+      where: { 
+        storeId: store.id,
+        status: 'CONFIRMED',
+        createdAt: {
+          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        }
+      },
+      _sum: { totalAmount: true }
+    }),
+    
+    // Order statistics
+    db.order.groupBy({
+      by: ['status'],
+      where: { storeId: store.id },
+      _count: { status: true }
+    }),
+    
+    // Top selling products
+    db.orderItem.groupBy({
+      by: ['productId'],
+      where: {
+        order: {
+          storeId: store.id,
+          status: 'CONFIRMED'
+        }
+      },
+      _sum: { qty: true },
+      _count: { productId: true },
+      orderBy: { _sum: { qty: 'desc' } },
+      take: 5
+    }),
+    
+    // Recent customers
+    db.order.findMany({
+      where: { storeId: store.id },
+      select: {
+        buyerName: true,
+        phone: true,
+        user: {
+          select: { name: true, email: true }
+        },
+        createdAt: true,
+        totalAmount: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      distinct: ['phone']
+    }),
+    
+    // Low stock products
+    db.product.findMany({
+      where: {
+        storeId: store.id,
+        stock: { lte: 10 },
+        active: true
+      },
+      select: {
+        id: true,
+        title: true,
+        stock: true,
+        reorderPoint: true
+      },
+      orderBy: { stock: 'asc' },
+      take: 5
+    }),
+    
+    // Pending orders awaiting confirmation
+    db.order.count({
+      where: {
+        storeId: store.id,
+        status: 'PENDING'
+      }
+    })
+  ])
+
   const recentOrders = await db.order.findMany({
     where: { storeId: store?.id },
     include: {
-      customer: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
+        }
+      },
       items: {
         include: {
           product: true
@@ -49,16 +158,7 @@ export default async function SellerDashboard() {
     take: 5
   })
 
-  const lowStockProducts = await db.product.findMany({
-    where: {
-      storeId: store?.id,
-      stock: {
-        lte: 10 // Products with stock <= 10
-      }
-    },
-    orderBy: { stock: 'asc' },
-    take: 5
-  })
+  // Remove duplicate - lowStockProducts already fetched above
 
   return (
     <div className="space-y-6">
@@ -80,17 +180,17 @@ export default async function SellerDashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">📦</span>
+                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                  <span className="text-white font-bold">₹</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Products
+                    Total Revenue
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {store?._count?.products || 0}
+                    ₹{((totalRevenue._sum.totalAmount || 0) / 100).toFixed(2)}
                   </dd>
                 </dl>
               </div>
@@ -102,17 +202,17 @@ export default async function SellerDashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">📋</span>
+                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                  <span className="text-white font-bold">📈</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Total Orders
+                    This Month
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {store?._count?.orders || 0}
+                    ₹{((monthlyRevenue._sum.totalAmount || 0) / 100).toFixed(2)}
                   </dd>
                 </dl>
               </div>
@@ -125,16 +225,16 @@ export default async function SellerDashboard() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">⚠️</span>
+                  <span className="text-white font-bold">⏳</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Low Stock Items
+                    Pending Orders
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {lowStockProducts.length}
+                    {pendingOrders}
                   </dd>
                 </dl>
               </div>
@@ -146,21 +246,42 @@ export default async function SellerDashboard() {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold">💰</span>
+                <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                  <span className="text-white font-bold">⚠️</span>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Store Status
+                    Low Stock
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    Active
+                    {lowStockProducts.length}
                   </dd>
                 </dl>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Order Status Overview */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            Order Status Overview
+          </h3>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {orderStats.map((stat) => (
+              <div key={stat.status} className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {stat._count.status}
+                </div>
+                <div className="text-sm text-gray-500 capitalize">
+                  {stat.status.replace('_', ' ').toLowerCase()}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -183,15 +304,15 @@ export default async function SellerDashboard() {
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <div className="w-8 h-8 bg-gray-200 rounded-md flex items-center justify-center">
-                        <span className="text-gray-600 font-bold">#{order.id.slice(-4)}</span>
+                        <span className="text-gray-600 font-bold">#{order.id.toString().slice(-4)}</span>
                       </div>
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">
-                        Order #{order.id.slice(-8)}
+                        Order #{order.id.toString().slice(-8)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {order.customer?.name || 'Guest'} • {order.items.length} items
+                        {order.user?.name || 'Guest'} • {order.items.length} items
                       </div>
                     </div>
                   </div>
@@ -204,7 +325,7 @@ export default async function SellerDashboard() {
                       {order.status}
                     </span>
                     <div className="ml-4 text-sm text-gray-900">
-                      ₹{(order.total / 100).toFixed(2)}
+                      ₹{((order.totalAmount || 0) / 100).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -252,6 +373,46 @@ export default async function SellerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Recent Customers */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+            Recent Customers
+          </h3>
+          <div className="space-y-3">
+            {recentCustomers.map((customer, index) => (
+              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        {customer.user?.name?.charAt(0) || customer.buyerName.charAt(0)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-900">
+                      {customer.user?.name || customer.buyerName}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {customer.user?.email || customer.phone}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">
+                    ₹{((customer.totalAmount || 0) / 100).toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(customer.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Quick Actions */}
       <div className="bg-white shadow rounded-lg">

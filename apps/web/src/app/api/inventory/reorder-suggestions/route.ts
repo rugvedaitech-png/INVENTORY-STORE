@@ -10,16 +10,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const storeId = searchParams.get('storeId')
-
-    if (!storeId) {
-      return NextResponse.json({ error: 'Store ID is required' }, { status: 400 })
-    }
-
-    // Check if user owns the store
+    // Get the user's store
     const store = await db.store.findFirst({
-      where: { id: storeId, ownerId: session.user.id },
+      where: { ownerId: parseInt(session.user.id) },
     })
 
     if (!store) {
@@ -29,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Find products that need reordering
     const products = await db.product.findMany({
       where: {
-        storeId,
+        storeId: store.id,
         active: true,
         stock: {
           lte: db.product.fields.reorderPoint,

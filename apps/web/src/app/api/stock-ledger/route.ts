@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user owns the store
     const store = await db.store.findFirst({
-      where: { id: storeId, ownerId: session.user.id },
+      where: { id: storeId, ownerId: parseInt(session.user.id) },
     })
 
     if (!store) {

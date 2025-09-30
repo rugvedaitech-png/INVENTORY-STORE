@@ -7,12 +7,15 @@ import { parseImages } from '@/lib/utils'
 import Image from 'next/image'
 
 interface CartItem {
-  id: string
-  title: string
-  price: number
-  stock: number
-  images: string
+  id: number
   qty: number
+  product: {
+    id: number
+    title: string
+    price: number
+    stock: number
+    images: string[]
+  }
 }
 
 interface CheckoutPageProps {
@@ -48,13 +51,19 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     if (!storeSlug) return
     const savedCart = localStorage.getItem(`cart-${storeSlug}`)
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart))
+      try {
+        const cart = JSON.parse(savedCart)
+        setCartItems(cart)
+      } catch (error) {
+        console.error('Error loading cart:', error)
+        setCartItems([])
+      }
     }
     setLoading(false)
   }, [storeSlug])
 
   const getTotalAmount = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.qty), 0)
+    return cartItems.reduce((total, item) => total + ((item.product?.price || 0) * item.qty), 0)
   }
 
   const validateForm = () => {
@@ -91,7 +100,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
       const orderData = {
         ...formData,
         items: cartItems.map(item => ({
-          productId: item.id,
+          productId: item.product.id.toString(),
           qty: item.qty,
         })),
       }
@@ -311,14 +320,15 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
                       <div className="w-12 h-12 relative bg-gray-100 rounded-lg flex-shrink-0">
-                        {(() => {
-                          const images = parseImages(item.images)
-                          return images.length > 0 ? (
-                            <Image
-                              src={images[0]}
-                              alt={item.title}
-                              fill
-                              className="object-cover rounded-lg"
+                        {item.product?.images?.length > 0 ? (
+                          <Image
+                            src={item.product.images[0]}
+                            alt={item.product.title}
+                            fill
+                            className="object-cover rounded-lg"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
                           />
                         ) : (
                           <div className="flex items-center justify-center h-full text-gray-400">
@@ -326,19 +336,18 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
-                        )
-                        })()}
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {item.title}
+                          {item.product?.title || 'Unknown Product'}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {formatCurrency(item.price)} × {item.qty}
+                          {item.product?.price ? formatCurrency(item.product.price) : '₹0.00'} × {item.qty}
                         </p>
                       </div>
                       <p className="text-sm font-semibold text-gray-900">
-                        {formatCurrency(item.price * item.qty)}
+                        {formatCurrency((item.product?.price || 0) * item.qty)}
                       </p>
                     </div>
                   ))}

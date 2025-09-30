@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { createOrderSchema } from '@/lib/validators'
-import { isRazorpayEnabled, createRazorpayOrder } from '@/lib/rzp'
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,14 +14,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const storeId = searchParams.get('storeId')
     const status = searchParams.get('status')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
 
     if (!storeId) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 })
     }
 
     // Check if user owns the store
+    const storeIdNum = typeof storeId === 'string' ? parseInt(storeId) : storeId
     const store = await db.store.findFirst({
-      where: { id: storeId, ownerId: session.user.id },
+      where: { id: storeIdNum, ownerId: parseInt(session.user.id) },
     })
 
     if (!store) {
@@ -30,25 +32,46 @@ export async function GET(request: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: { storeId: string; status?: any } = { storeId }
+    const where: { storeId: number; status?: any } = { storeId: storeIdNum }
     if (status) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where.status = status as any
     }
 
-    const orders = await db.order.findMany({
-      where,
-      include: {
-        items: {
-          include: {
-            product: true,
+    const [orders, total] = await Promise.all([
+      db.order.findMany({
+        where,
+        include: {
+          customerAddress: true, // Include address details
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  title: true,
+                  sku: true,
+                  active: true
+                }
+              },
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.order.count({ where }),
+    ])
 
-    return NextResponse.json(orders)
+    return NextResponse.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    })
   } catch (error) {
     console.error('Error fetching orders:', error)
     return NextResponse.json(
@@ -61,7 +84,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Order creation request body:', JSON.stringify(body, null, 2))
     const validatedData = createOrderSchema.parse(body)
+
+    // Get session to identify the customer
+    const session = await getServerSession(authOptions)
+    let customerId: number | null = null
+    
+    if (session?.user?.id) {
+      customerId = parseInt(session.user.id)
+    }
 
     // Get store by slug (for public orders)
     const { searchParams } = new URL(request.url)
@@ -81,11 +113,11 @@ export async function POST(request: NextRequest) {
 
     // Calculate total amount and check stock
     let totalAmount = 0
-    const orderItems: Array<{ productId: string; qty: number; priceSnap: number }> = []
+    const orderItems: Array<{ productId: number; qty: number; priceSnap: number }> = []
 
     for (const item of validatedData.items) {
       const product = await db.product.findUnique({
-        where: { id: item.productId },
+        where: { id: parseInt(item.productId) },
       })
 
       if (!product) {
@@ -113,7 +145,7 @@ export async function POST(request: NextRequest) {
       totalAmount += itemTotal
 
       orderItems.push({
-        productId: item.productId,
+        productId: parseInt(item.productId),
         qty: item.qty,
         priceSnap: product.price,
       })
@@ -122,18 +154,21 @@ export async function POST(request: NextRequest) {
     // Create order in transaction
     const result = await db.$transaction(async (tx) => {
       // Create order
-      const order = await tx.order.create({
-        data: {
-          storeId: store.id,
-          buyerName: validatedData.buyerName,
-          phone: validatedData.phone,
-          address: validatedData.address,
-          paymentMethod: validatedData.paymentMethod,
-          totalAmount,
-          items: {
-            create: orderItems,
+        const order = await tx.order.create({
+          data: {
+            storeId: store.id,
+            customerId: customerId,
+            addressId: validatedData.addressId || null, // New address reference
+            buyerName: validatedData.buyerName,
+            phone: validatedData.phone,
+            address: validatedData.address, // Keep for backward compatibility
+            paymentMethod: validatedData.paymentMethod,
+            subtotal: totalAmount,
+            totalAmount,
+            items: {
+              create: orderItems,
+            },
           },
-        },
         include: {
           items: {
             include: {
@@ -169,29 +204,22 @@ export async function POST(request: NextRequest) {
     })
 
     // Handle payment based on method
-    if (validatedData.paymentMethod === 'CARD' && isRazorpayEnabled()) {
-      try {
-        const razorpayOrder = await createRazorpayOrder(totalAmount, result.id)
-        return NextResponse.json({
-          ...result,
-          razorpayOrderId: razorpayOrder.id,
-        })
-      } catch (error) {
-        console.error('Razorpay order creation failed:', error)
-        // Continue with order creation even if Razorpay fails
-      }
+    if (validatedData.paymentMethod === 'COD') {
+      // COD orders are handled directly
+      return NextResponse.json(result, { status: 201 })
     }
 
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
+    console.error('Error creating order:', error)
     if (error instanceof Error && error.name === 'ZodError') {
+      console.error('Validation error details:', error.message)
       return NextResponse.json(
         { error: 'Validation error', details: error.message },
         { status: 400 }
       )
     }
 
-    console.error('Error creating order:', error)
     return NextResponse.json(
       { error: 'Failed to create order' },
       { status: 500 }

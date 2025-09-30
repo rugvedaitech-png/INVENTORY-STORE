@@ -32,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Purchase order not found' }, { status: 404 })
     }
 
-    if (purchaseOrder.store.ownerId !== session.user.id) {
+    if (purchaseOrder.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -70,7 +70,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Purchase order not found' }, { status: 404 })
     }
 
-    if (purchaseOrder.store.ownerId !== session.user.id) {
+    if (purchaseOrder.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

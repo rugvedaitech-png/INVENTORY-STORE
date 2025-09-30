@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order Status Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+        .error { background: #f8d7da; color: #721c24; }
+        .success { background: #d4edda; color: #155724; }
+        .validation-test { background: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .status-option { margin: 5px; padding: 5px 10px; background: #f0f0f0; border-radius: 3px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <h1>Order Status Validation Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Valid Order Statuses</h3>
+        <p>These are the valid order statuses according to the validation schema:</p>
+        <div class="validation-test">
+            <div class="status-option">PENDING</div>
+            <div class="status-option">CONFIRMED</div>
+            <div class="status-option">SHIPPED</div>
+            <div class="status-option">DELIVERED</div>
+            <div class="status-option">CANCELLED</div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test Valid Status Updates</h3>
+        <p>Test updating an order to each valid status:</p>
+        <input type="number" id="orderId" placeholder="Enter Order ID" style="padding: 8px; margin-right: 10px;">
+        <br><br>
+        <button onclick="testValidStatus('PENDING')">Test PENDING</button>
+        <button onclick="testValidStatus('CONFIRMED')">Test CONFIRMED</button>
+        <button onclick="testValidStatus('SHIPPED')">Test SHIPPED</button>
+        <button onclick="testValidStatus('DELIVERED')">Test DELIVERED</button>
+        <button onclick="testValidStatus('CANCELLED')">Test CANCELLED</button>
+        <div id="validResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test Invalid Status Updates</h3>
+        <p>Test updating an order with invalid statuses (should fail validation):</p>
+        <input type="number" id="invalidOrderId" placeholder="Enter Order ID" style="padding: 8px; margin-right: 10px;">
+        <br><br>
+        <button onclick="testInvalidStatus('INVALID_STATUS')">Test Invalid Status</button>
+        <button onclick="testInvalidStatus('SHIPPING')">Test SHIPPING (invalid)</button>
+        <button onclick="testInvalidStatus('COMPLETED')">Test COMPLETED (invalid)</button>
+        <button onclick="testInvalidStatus('')">Test Empty Status</button>
+        <div id="invalidResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Test Status Flow Validation</h3>
+        <p>Test the complete order status flow to ensure proper transitions:</p>
+        <input type="number" id="flowOrderId" placeholder="Enter Order ID" style="padding: 8px; margin-right: 10px;">
+        <br><br>
+        <button onclick="testStatusFlow()">Test Complete Flow</button>
+        <div id="flowResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Validation Schema Details</h3>
+        <p>Current validation schema from validators.ts:</p>
+        <div class="validation-test">
+            <pre>export const updateOrderStatusSchema = z.object({
+  status: z.enum(['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
+})</pre>
+        </div>
+        <p><strong>Database Schema (OrderStatus enum):</strong></p>
+        <div class="validation-test">
+            <pre>enum OrderStatus {
+  PENDING
+  AWAITING_CONFIRMATION
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REJECTED
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        async function testValidStatus(status) {
+            const orderId = document.getElementById('orderId').value;
+            const resultDiv = document.getElementById('validResult');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `Testing valid status: ${status}...`;
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.textContent = `✅ SUCCESS: Order ${orderId} status updated to: ${data.status}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ FAILED: ${data.error || 'Unknown error'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testInvalidStatus(status) {
+            const orderId = document.getElementById('invalidOrderId').value;
+            const resultDiv = document.getElementById('invalidResult');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `Testing invalid status: "${status}"...`;
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.textContent = `❌ UNEXPECTED SUCCESS: Order ${orderId} status updated to: ${data.status} (This should have failed!)`;
+                    resultDiv.className = 'result error';
+                } else {
+                    resultDiv.textContent = `✅ EXPECTED FAILURE: ${data.error || 'Unknown error'} (Validation working correctly)`;
+                    resultDiv.className = 'result success';
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testStatusFlow() {
+            const orderId = document.getElementById('flowOrderId').value;
+            const resultDiv = document.getElementById('flowResult');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const statusFlow = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'];
+            let results = [];
+
+            try {
+                resultDiv.textContent = 'Testing complete status flow...';
+                resultDiv.className = 'result';
+                resultDiv.style.display = 'block';
+
+                for (const status of statusFlow) {
+                    try {
+                        const response = await fetch(`/api/orders/${orderId}/status`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                status: status
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            results.push(`✅ ${status}: SUCCESS`);
+                        } else {
+                            results.push(`❌ ${status}: FAILED - ${data.error}`);
+                        }
+                    } catch (error) {
+                        results.push(`❌ ${status}: ERROR - ${error.message}`);
+                    }
+                }
+
+                resultDiv.innerHTML = `
+                    <strong>Status Flow Test Results:</strong><br>
+                    ${results.join('<br>')}
+                `;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ FLOW TEST ERROR: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

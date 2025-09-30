@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Images Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .code { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
+        .product-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }
+        .image-preview { width: 100px; height: 100px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Product Images Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Overview</h3>
+            <p>This test verifies that product images are properly parsed and displayed, handling various edge cases that could cause the "Invalid URL" error.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Cases</h3>
+            <div id="testResults">
+                <!-- Test results will be shown here -->
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Product Card Simulation</h3>
+            <div id="productCards">
+                <!-- Simulated product cards will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate the parseImages utility function
+        function parseImages(imagesString) {
+            try {
+                const parsed = JSON.parse(imagesString)
+                return Array.isArray(parsed) ? parsed : []
+            } catch {
+                return []
+            }
+        }
+
+        // Simulate the getFirstValidImage function from ProductCard
+        function getFirstValidImage(images) {
+            for (const imageUrl of images) {
+                if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
+                    try {
+                        if (imageUrl.startsWith('/')) {
+                            return imageUrl
+                        }
+                        new URL(imageUrl)
+                        return imageUrl
+                    } catch (error) {
+                        continue
+                    }
+                }
+            }
+            return null
+        }
+
+        // Test cases
+        const testCases = [
+            {
+                name: 'Valid JSON array with URLs',
+                images: '["https://picsum.photos/400/400?random=1", "/uploads/products/image.jpg"]',
+                expected: 'Should work'
+            },
+            {
+                name: 'Empty JSON array',
+                images: '[]',
+                expected: 'Should show placeholder'
+            },
+            {
+                name: 'Invalid JSON string',
+                images: 'invalid json',
+                expected: 'Should return empty array'
+            },
+            {
+                name: 'Null/undefined images',
+                images: null,
+                expected: 'Should return empty array'
+            },
+            {
+                name: 'Mixed valid/invalid URLs',
+                images: '["https://picsum.photos/400/400?random=1", "invalid-url", "/uploads/products/image.jpg"]',
+                expected: 'Should use first valid URL'
+            },
+            {
+                name: 'Only invalid URLs',
+                images: '["invalid-url", "ftp://invalid.com/image.jpg"]',
+                expected: 'Should show placeholder'
+            },
+            {
+                name: 'Empty strings in array',
+                images: '["", "https://picsum.photos/400/400?random=1", ""]',
+                expected: 'Should use valid URL'
+            }
+        ]
+
+        function runTests() {
+            const resultsDiv = document.getElementById('testResults')
+            
+            testCases.forEach((testCase, index) => {
+                const parsedImages = parseImages(testCase.images)
+                const firstValidImage = getFirstValidImage(parsedImages)
+                
+                const testDiv = document.createElement('div')
+                testDiv.className = 'test-section'
+                testDiv.innerHTML = `
+                    <h4>Test ${index + 1}: ${testCase.name}</h4>
+                    <p><strong>Input:</strong> <code>${testCase.images || 'null'}</code></p>
+                    <p><strong>Parsed:</strong> <code>${JSON.stringify(parsedImages)}</code></p>
+                    <p><strong>First Valid Image:</strong> <code>${firstValidImage || 'null'}</code></p>
+                    <p><strong>Expected:</strong> ${testCase.expected}</p>
+                    <div class="image-preview">
+                        ${firstValidImage ? 
+                            `<img src="${firstValidImage}" alt="Test image" style="max-width: 100%; max-height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                             <div style="display: none; color: #999;">❌ Failed to load</div>` :
+                            '<div style="color: #999;">📷 No image</div>'
+                        }
+                    </div>
+                `
+                resultsDiv.appendChild(testDiv)
+            })
+        }
+
+        function createProductCards() {
+            const cardsDiv = document.getElementById('productCards')
+            
+            const sampleProducts = [
+                {
+                    id: 1,
+                    title: 'Product with Valid Images',
+                    images: '["https://picsum.photos/400/400?random=1", "https://picsum.photos/400/400?random=2"]'
+                },
+                {
+                    id: 2,
+                    title: 'Product with Mixed Images',
+                    images: '["invalid-url", "https://picsum.photos/400/400?random=3", "ftp://invalid.com/image.jpg"]'
+                },
+                {
+                    id: 3,
+                    title: 'Product with No Images',
+                    images: '[]'
+                },
+                {
+                    id: 4,
+                    title: 'Product with Invalid JSON',
+                    images: 'invalid json string'
+                }
+            ]
+
+            sampleProducts.forEach(product => {
+                const parsedImages = parseImages(product.images)
+                const firstValidImage = getFirstValidImage(parsedImages)
+                
+                const cardDiv = document.createElement('div')
+                cardDiv.className = 'product-card'
+                cardDiv.innerHTML = `
+                    <h4>${product.title}</h4>
+                    <p><strong>Raw images:</strong> <code>${product.images}</code></p>
+                    <p><strong>Parsed images:</strong> <code>${JSON.stringify(parsedImages)}</code></p>
+                    <p><strong>First valid image:</strong> <code>${firstValidImage || 'null'}</code></p>
+                    <div class="image-preview">
+                        ${firstValidImage ? 
+                            `<img src="${firstValidImage}" alt="${product.title}" style="max-width: 100%; max-height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                             <div style="display: none; color: #999; flex-direction: column; align-items: center;">
+                                <div>❌</div>
+                                <div>Failed to load</div>
+                             </div>` :
+                            '<div style="color: #999; display: flex; flex-direction: column; align-items: center;"><div>📷</div><div>No image</div></div>'
+                        }
+                    </div>
+                `
+                cardsDiv.appendChild(cardDiv)
+            })
+        }
+
+        // Initialize tests
+        document.addEventListener('DOMContentLoaded', function() {
+            runTests()
+            createProductCards()
+        })
+    </script>
+</body>
+</html>

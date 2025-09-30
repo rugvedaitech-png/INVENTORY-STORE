@@ -19,10 +19,11 @@ export const updateProductSchema = createProductSchema.partial()
 
 // Order validators
 export const createOrderSchema = z.object({
+  addressId: z.number().int().positive().optional(), // New address reference
   buyerName: z.string().min(1, 'Buyer name is required'),
   phone: z.string().min(10, 'Valid phone number is required'),
-  address: z.string().min(1, 'Address is required'),
-  paymentMethod: z.enum(['COD', 'UPI', 'CARD']),
+  address: z.string().min(1, 'Address is required'), // Keep for backward compatibility
+  paymentMethod: z.literal('COD'), // Only COD allowed since prices are hidden
   items: z.array(z.object({
     productId: z.string(),
     qty: z.number().int().min(1, 'Quantity must be at least 1'),
@@ -40,18 +41,18 @@ export const createSupplierSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   leadTimeDays: z.number().int().min(0, 'Lead time must be non-negative').default(3),
+  userId: z.number().int().positive().optional(),
 })
 
 export const updateSupplierSchema = createSupplierSchema.partial()
 
 // Purchase Order validators
 export const createPurchaseOrderSchema = z.object({
-  supplierId: z.string(),
+  supplierId: z.string().transform((val) => parseInt(val, 10)),
   notes: z.string().optional(),
   items: z.array(z.object({
-    productId: z.string(),
+    productId: z.string().transform((val) => parseInt(val, 10)),
     qty: z.number().int().min(1, 'Quantity must be at least 1'),
-    costPaise: z.number().int().min(0, 'Cost must be non-negative'),
   })).min(1, 'At least one item is required'),
 })
 
@@ -80,3 +81,17 @@ export const signInSchema = z.object({
   email: z.string().email('Valid email is required'),
 })
 
+// CSV Product validators
+export const csvProductSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  sku: z.string().optional(),
+  price: z.number().int().min(0, 'Price must be non-negative'),
+  costPrice: z.number().int().min(0).optional(),
+  stock: z.number().int().min(0, 'Stock must be non-negative'),
+  reorderPoint: z.number().int().min(0, 'Reorder point must be non-negative'),
+  reorderQty: z.number().int().min(0, 'Reorder quantity must be non-negative'),
+  category: z.string().optional(),
+  images: z.string().default("[]"),
+  active: z.boolean().default(true),
+})

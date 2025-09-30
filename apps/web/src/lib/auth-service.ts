@@ -8,6 +8,7 @@ export interface User {
   name: string | null
   role: UserRole
   phone: string | null
+  storeId: number | null
   createdAt: Date
 }
 
@@ -20,9 +21,10 @@ export interface LoginCredentials {
 export interface RegisterData {
   name: string
   email: string
-  phone: string
+  phone: string | null
   password: string
   role: UserRole
+  storeId?: number | null
 }
 
 export class AuthService {
@@ -31,6 +33,11 @@ export class AuthService {
    */
   static async authenticate(credentials: LoginCredentials): Promise<User | null> {
     try {
+      console.log('AuthService.authenticate called with:', { 
+        email: credentials.email, 
+        role: credentials.role 
+      })
+
       const user = await db.user.findUnique({
         where: {
           email: credentials.email,
@@ -42,24 +49,37 @@ export class AuthService {
           password: true,
           role: true,
           phone: true,
+          storeId: true,
           createdAt: true,
         },
       })
 
+      console.log('User found in DB:', user ? 'YES' : 'NO')
+      if (user) {
+        console.log('User details:', { id: user.id, email: user.email, role: user.role })
+      }
+
       if (!user) {
+        console.log('No user found with email:', credentials.email)
         return null
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(credentials.password, user.password)
+      console.log('Password valid:', isValidPassword)
+      
       if (!isValidPassword) {
+        console.log('Invalid password for user:', credentials.email)
         return null
       }
 
       // Check role if specified
       if (credentials.role && user.role !== credentials.role) {
+        console.log('Role mismatch:', { expected: credentials.role, actual: user.role })
         return null
       }
+
+      console.log('Authentication successful for user:', user.email)
 
       // Return user without password
       const { password, ...userWithoutPassword } = user
@@ -95,6 +115,7 @@ export class AuthService {
           phone: data.phone,
           password: hashedPassword,
           role: data.role,
+          storeId: data.storeId,
         },
         select: {
           id: true,
@@ -102,12 +123,13 @@ export class AuthService {
           name: true,
           role: true,
           phone: true,
+          storeId: true,
           createdAt: true,
         },
       })
 
       // If it's a customer, also create a customer record
-      if (data.role === UserRole.CUSTOMER) {
+      if (data.role === UserRole.CUSTOMER && data.storeId) {
         await db.customer.create({
           data: {
             name: data.name,
@@ -115,6 +137,7 @@ export class AuthService {
             phone: data.phone,
             address: '', // Will be updated later
             userId: user.id,
+            storeId: data.storeId,
           },
         })
       }
@@ -132,13 +155,14 @@ export class AuthService {
   static async getUserById(id: string): Promise<User | null> {
     try {
       const user = await db.user.findUnique({
-        where: { id },
+        where: { id: parseInt(id) },
         select: {
           id: true,
           email: true,
           name: true,
           role: true,
           phone: true,
+          storeId: true,
           createdAt: true,
         },
       })
@@ -163,6 +187,7 @@ export class AuthService {
           name: true,
           role: true,
           phone: true,
+          storeId: true,
           createdAt: true,
         },
       })
@@ -182,7 +207,7 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(newPassword, 12)
       
       await db.user.update({
-        where: { id: userId },
+        where: { id: parseInt(userId) },
         data: { password: hashedPassword },
       })
 
@@ -199,7 +224,7 @@ export class AuthService {
   static async updateProfile(userId: string, data: Partial<Pick<User, 'name' | 'phone'>>): Promise<User | null> {
     try {
       const user = await db.user.update({
-        where: { id: userId },
+        where: { id: parseInt(userId) },
         data: {
           name: data.name,
           phone: data.phone,
@@ -210,6 +235,7 @@ export class AuthService {
           name: true,
           role: true,
           phone: true,
+          storeId: true,
           createdAt: true,
         },
       })
@@ -227,7 +253,7 @@ export class AuthService {
   static async verifyRole(userId: string, requiredRole: UserRole): Promise<boolean> {
     try {
       const user = await db.user.findUnique({
-        where: { id: userId },
+        where: { id: parseInt(userId) },
         select: { role: true },
       })
 
@@ -241,26 +267,106 @@ export class AuthService {
   /**
    * Get all users (admin only)
    */
-  static async getAllUsers(): Promise<User[]> {
+  static async getAllUsers(search?: string | null, page = 1, limit = 50): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
     try {
-      const users = await db.user.findMany({
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          phone: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      })
+      const where: any = {}
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+        ]
+      }
 
-      return users
+      const [users, total] = await Promise.all([
+        db.user.findMany({
+          where,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            phone: true,
+            storeId: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        db.user.count({ where })
+      ])
+
+      return {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
     } catch (error) {
       console.error('Get all users error:', error)
-      return []
+      return { users: [], pagination: { page: 1, limit: 50, total: 0, pages: 0 } }
+    }
+  }
+
+  /**
+   * Get users by role
+   */
+  static async getUsersByRole(role: UserRole, search?: string | null, page = 1, limit = 50): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
+    try {
+      const where: any = { role }
+      if (search) {
+        where.AND = [
+          { role },
+          {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phone: { contains: search, mode: 'insensitive' } },
+            ]
+          }
+        ]
+        delete where.role
+      }
+
+      const [users, total] = await Promise.all([
+        db.user.findMany({
+          where,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            phone: true,
+            storeId: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        db.user.count({ where })
+      ])
+
+      return {
+        users,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    } catch (error) {
+      console.error('Get users by role error:', error)
+      return { users: [], pagination: { page: 1, limit: 50, total: 0, pages: 0 } }
     }
   }
 
@@ -270,7 +376,7 @@ export class AuthService {
   static async deleteUser(userId: string): Promise<boolean> {
     try {
       await db.user.delete({
-        where: { id: userId },
+        where: { id: parseInt(userId) },
       })
 
       return true

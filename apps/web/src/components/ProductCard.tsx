@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
 import { formatCurrency } from '@/lib/money'
+import { useWishlist } from '@/hooks/useWishlist'
 
 interface Product {
   id: number
@@ -21,6 +22,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, storeSlug }: ProductCardProps) {
   const [qty, setQty] = useState(1)
+  const { toggleWishlist, isInWishlist } = useWishlist()
+  const [wishlistLoading, setWishlistLoading] = useState(false)
 
   const addToCart = () => {
     if (qty <= 0 || product.stock === 0) return
@@ -34,13 +37,12 @@ export default function ProductCard({ product, storeSlug }: ProductCardProps) {
     if (existingItem) {
       existingItem.qty += qty
     } else {
-      const images = product.images
       cartItems.push({
         id: product.id,
         title: product.title,
         price: product.price,
         stock: product.stock,
-        images: product.images,
+        images: images,
         qty: qty,
       })
     }
@@ -49,17 +51,61 @@ export default function ProductCard({ product, storeSlug }: ProductCardProps) {
     alert('Added to cart!')
   }
 
-  const images = product.images
+  const handleWishlistToggle = async () => {
+    setWishlistLoading(true)
+    try {
+      const result = await toggleWishlist(product.id)
+      if (result.success) {
+        // Success feedback could be added here
+      } else {
+        alert(result.error || 'Failed to update wishlist')
+      }
+    } catch (error) {
+      alert('Failed to update wishlist')
+    } finally {
+      setWishlistLoading(false)
+    }
+  }
+
+  const images = product.images || []
+  
+  // Validate and get the first valid image URL
+  const getFirstValidImage = () => {
+    for (const imageUrl of images) {
+      if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim()) {
+        // Check if it's a valid URL or relative path
+        try {
+          // If it's a relative path (starts with /), it's valid
+          if (imageUrl.startsWith('/')) {
+            return imageUrl
+          }
+          // If it's a full URL, validate it
+          new URL(imageUrl)
+          return imageUrl
+        } catch (error) {
+          // Invalid URL, try next image
+          continue
+        }
+      }
+    }
+    return null
+  }
+
+  const firstValidImage = getFirstValidImage()
 
   return (
     <div className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
       <div className="aspect-square relative bg-gray-100 rounded-t-lg">
-        {images.length > 0 ? (
+        {firstValidImage ? (
           <Image
-            src={images[0]}
+            src={firstValidImage}
             alt={product.title}
             fill
             className="object-cover rounded-t-lg"
+            onError={(e) => {
+              // Hide the image if it fails to load
+              e.currentTarget.style.display = 'none'
+            }}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -78,6 +124,40 @@ export default function ProductCard({ product, storeSlug }: ProductCardProps) {
             </svg>
           </div>
         )}
+        
+        {/* Wishlist Button */}
+        <button
+          onClick={handleWishlistToggle}
+          disabled={wishlistLoading}
+          className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
+            isInWishlist(product.id)
+              ? 'bg-red-500 text-white hover:bg-red-600'
+              : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-500'
+          } ${wishlistLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+          title={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          {wishlistLoading ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg
+              className="w-4 h-4"
+              fill={isInWishlist(product.id) ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          )}
+        </button>
+        
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <span className="text-white font-semibold">Out of Stock</span>

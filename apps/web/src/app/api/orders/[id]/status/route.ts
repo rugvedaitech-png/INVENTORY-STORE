@@ -17,10 +17,16 @@ export async function PATCH(
     const body = await request.json()
     const validatedData = updateOrderStatusSchema.parse(body)
     const { id } = await params
+    const orderId = parseInt(id)
+
+    // Validate order ID
+    if (isNaN(orderId)) {
+      return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 })
+    }
 
     // Check if user owns the order
     const order = await db.order.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: { store: true },
     })
 
@@ -28,12 +34,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    if (order.store.ownerId !== session.user.id) {
+    if (order.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const updatedOrder = await db.order.update({
-      where: { id },
+      where: { id: orderId },
       data: { status: validatedData.status },
       include: {
         items: {

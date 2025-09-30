@@ -1,6 +1,5 @@
 import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
-import { UserRole } from '@prisma/client'
 
 export default withAuth(
   function middleware(req) {
@@ -19,19 +18,19 @@ export default withAuth(
 
     // Check role-based access
     if (pathname.startsWith('/seller')) {
-      if (!token || token.role !== UserRole.STORE_OWNER) {
+      if (!token || token.role !== 'STORE_OWNER') {
         return NextResponse.redirect(new URL('/unauthorized', req.url))
       }
     }
 
     if (pathname.startsWith('/supplier')) {
-      if (!token || token.role !== UserRole.SUPPLIER) {
+      if (!token || token.role !== 'SUPPLIER') {
         return NextResponse.redirect(new URL('/unauthorized', req.url))
       }
     }
 
     if (pathname.startsWith('/customer')) {
-      if (!token || token.role !== UserRole.CUSTOMER) {
+      if (!token || token.role !== 'CUSTOMER') {
         return NextResponse.redirect(new URL('/unauthorized', req.url))
       }
     }

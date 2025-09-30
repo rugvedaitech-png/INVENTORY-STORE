@@ -41,26 +41,43 @@ export const authOptions: NextAuthOptions = {
         role: { label: 'Role', type: 'text' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const user = await AuthService.authenticate({
-          email: credentials.email,
-          password: credentials.password,
-          role: credentials.role as UserRole,
+        console.log('NextAuth authorize called with:', { 
+          email: credentials?.email, 
+          password: credentials?.password ? '***' : 'missing',
+          role: credentials?.role 
         })
 
-        if (!user) {
+        if (!credentials?.email || !credentials?.password) {
+          console.log('Missing email or password')
           return null
         }
 
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          phone: user.phone,
+        try {
+          const user = await AuthService.authenticate({
+            email: credentials.email,
+            password: credentials.password,
+            role: credentials.role as UserRole,
+          })
+
+          console.log('AuthService.authenticate result:', user ? 'SUCCESS' : 'FAILED')
+          
+          if (!user) {
+            console.log('Authentication failed - user not found or invalid credentials')
+            return null
+          }
+
+          console.log('Returning user:', { id: user.id, email: user.email, role: user.role })
+
+          return {
+            id: user.id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            phone: user.phone,
+          }
+        } catch (error) {
+          console.error('Authorization error:', error)
+          return null
         }
       },
     }),

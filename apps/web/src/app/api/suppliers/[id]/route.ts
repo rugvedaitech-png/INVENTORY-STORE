@@ -30,7 +30,7 @@ export async function GET(
       return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    if (supplier.store.ownerId !== session.user.id) {
+    if (supplier.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -68,7 +68,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    if (supplier.store.ownerId !== session.user.id) {
+    if (supplier.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -116,7 +116,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
     }
 
-    if (supplier.store.ownerId !== session.user.id) {
+    if (supplier.store.ownerId !== parseInt(session.user.id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

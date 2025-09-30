@@ -46,18 +46,8 @@ async function main() {
     },
   })
 
-  // Create customer record
-  await prisma.customer.upsert({
-    where: { email: 'customer@demo.com' },
-    update: {},
-    create: {
-      email: 'customer@demo.com',
-      name: 'Demo Customer',
-      phone: '919876543212',
-      address: '123 Demo Street, Demo City',
-      userId: customer.id,
-    },
-  })
+  // Create customer record (after store is created)
+  // We'll create this after the store is created
 
   console.log('✅ Created users:', { storeOwner: storeOwner.email, supplier: supplier.email, customer: customer.email })
 
@@ -77,6 +67,124 @@ async function main() {
 
   console.log('✅ Created store:', store.name)
 
+  // Add ration store categories
+  const categories = [
+    {
+      name: 'Rice & Grains',
+      description: 'Basmati rice, regular rice, wheat, and other grains',
+      sortOrder: 1,
+    },
+    {
+      name: 'Pulses & Lentils',
+      description: 'Dal, chana, rajma, and other protein-rich pulses',
+      sortOrder: 2,
+    },
+    {
+      name: 'Cooking Oil',
+      description: 'Sunflower oil, mustard oil, coconut oil, and ghee',
+      sortOrder: 3,
+    },
+    {
+      name: 'Sugar & Sweeteners',
+      description: 'White sugar, brown sugar, jaggery, and honey',
+      sortOrder: 4,
+    },
+    {
+      name: 'Salt & Spices',
+      description: 'Table salt, rock salt, turmeric, red chili, and masala',
+      sortOrder: 5,
+    },
+    {
+      name: 'Flour & Atta',
+      description: 'Wheat flour, rice flour, besan, and other flours',
+      sortOrder: 6,
+    },
+    {
+      name: 'Tea & Coffee',
+      description: 'Tea leaves, coffee powder, and related beverages',
+      sortOrder: 7,
+    },
+    {
+      name: 'Dry Fruits & Nuts',
+      description: 'Almonds, cashews, raisins, and other dry fruits',
+      sortOrder: 8,
+    },
+    {
+      name: 'Cereals & Breakfast',
+      description: 'Cornflakes, oats, poha, and breakfast items',
+      sortOrder: 9,
+    },
+    {
+      name: 'Canned & Packaged',
+      description: 'Canned vegetables, pickles, and packaged foods',
+      sortOrder: 10,
+    },
+  ]
+
+  for (const categoryData of categories) {
+    const slug = categoryData.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+    
+    await prisma.category.create({
+      data: {
+        ...categoryData,
+        storeId: store.id,
+        slug: slug,
+      },
+    })
+  }
+
+  console.log('✅ Created categories:', categories.length)
+
+  // Create customer record
+  const customerRecord = await prisma.customer.upsert({
+    where: { email: 'customer@demo.com' },
+    update: {},
+    create: {
+      email: 'customer@demo.com',
+      name: 'Demo Customer',
+      phone: '919876543212',
+      address: '123 Demo Street, Demo City', // Will be migrated to addresses table
+      userId: customer.id,
+      storeId: store.id,
+    },
+  })
+
+  console.log('✅ Created customer record')
+
+  // Create demo addresses for the customer
+  await prisma.customerAddress.create({
+    data: {
+      customerId: customerRecord.id,
+      title: 'Home',
+      fullName: 'Demo Customer',
+      phone: '919876543212',
+      address: '123 Demo Street, Apartment 4B',
+      city: 'Demo City',
+      state: 'Demo State',
+      pincode: '123456',
+      isActive: true, // First address is active
+    },
+  })
+
+  await prisma.customerAddress.create({
+    data: {
+      customerId: customerRecord.id,
+      title: 'Office',
+      fullName: 'Demo Customer',
+      phone: '919876543212',
+      address: '456 Business Park, Floor 3',
+      city: 'Demo City',
+      state: 'Demo State',
+      pincode: '123457',
+      isActive: false, // Inactive address
+    },
+  })
+
+  console.log('✅ Created demo customer addresses')
+
   // Create ration supplier
   const rationSupplier = await prisma.supplier.create({
     data: {
@@ -91,6 +199,12 @@ async function main() {
 
   console.log('✅ Created supplier:', rationSupplier.name)
 
+  // Get categories for product assignment
+  const createdCategories = await prisma.category.findMany({
+    where: { storeId: store.id },
+    orderBy: { sortOrder: 'asc' }
+  })
+
   // Create ration store products
   const products = [
     {
@@ -104,6 +218,7 @@ async function main() {
       reorderQty: 100,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=1']),
+      categoryId: createdCategories.find(c => c.name === 'Rice & Grains')?.id,
     },
     {
       title: 'Whole Wheat Flour (1kg)',
@@ -116,6 +231,7 @@ async function main() {
       reorderQty: 50,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=2']),
+      categoryId: createdCategories.find(c => c.name === 'Flour & Atta')?.id,
     },
     {
       title: 'Toor Dal (500g)',
@@ -128,6 +244,7 @@ async function main() {
       reorderQty: 40,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=3']),
+      categoryId: createdCategories.find(c => c.name === 'Pulses & Lentils')?.id,
     },
     {
       title: 'Cooking Oil (1L)',
@@ -140,6 +257,7 @@ async function main() {
       reorderQty: 30,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=4']),
+      categoryId: createdCategories.find(c => c.name === 'Cooking Oil')?.id,
     },
     {
       title: 'Sugar (1kg)',
@@ -152,6 +270,7 @@ async function main() {
       reorderQty: 50,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=5']),
+      categoryId: createdCategories.find(c => c.name === 'Sugar & Sweeteners')?.id,
     },
     {
       title: 'Salt (500g)',
@@ -164,6 +283,7 @@ async function main() {
       reorderQty: 100,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=6']),
+      categoryId: createdCategories.find(c => c.name === 'Salt & Spices')?.id,
     },
     {
       title: 'Red Lentils (500g)',
@@ -176,6 +296,7 @@ async function main() {
       reorderQty: 50,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=7']),
+      categoryId: createdCategories.find(c => c.name === 'Pulses & Lentils')?.id,
     },
     {
       title: 'Chickpeas (500g)',
@@ -188,6 +309,7 @@ async function main() {
       reorderQty: 40,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=8']),
+      categoryId: createdCategories.find(c => c.name === 'Pulses & Lentils')?.id,
     },
     {
       title: 'Black Gram (500g)',
@@ -200,6 +322,7 @@ async function main() {
       reorderQty: 35,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=9']),
+      categoryId: createdCategories.find(c => c.name === 'Pulses & Lentils')?.id,
     },
     {
       title: 'Green Gram (500g)',
@@ -212,6 +335,7 @@ async function main() {
       reorderQty: 45,
       supplierId: rationSupplier.id,
       images: JSON.stringify(['https://picsum.photos/400/400?random=10']),
+      categoryId: createdCategories.find(c => c.name === 'Pulses & Lentils')?.id,
     },
   ]
 

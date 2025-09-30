@@ -31,6 +31,8 @@ function generateOrderMessage(store: Store, order: OrderWithItems): string {
     '',
     `👤 *Customer:* ${order.buyerName}`,
     `📱 *Phone:* ${order.phone}`,
+    `💳 *Payment:* ${order.paymentMethod}`,
+    `📊 *Status:* ${order.status}`,
     '',
     '📦 *Order Items:*',
   ]
@@ -46,8 +48,38 @@ function generateOrderMessage(store: Store, order: OrderWithItems): string {
   lines.push(`📍 *Delivery Address:*`)
   lines.push(order.address)
   lines.push('')
-  lines.push('Please confirm this order. Thank you! 🙏')
+  
+  // Check if this is a COD order that needs confirmation
+  const isAwaitingConfirmation = order.status === 'AWAITING_CONFIRMATION' || 
+    (order.status === 'PENDING' && order.paymentMethod === 'COD')
+    
+  if (isAwaitingConfirmation) {
+    lines.push('⚠️ *ACTION REQUIRED:*')
+    lines.push('This COD order needs your confirmation.')
+    lines.push('Please check stock availability and confirm.')
+    lines.push('')
+    lines.push('✅ Reply "CONFIRM" to approve')
+    lines.push('❌ Reply "REJECT" to decline')
+  } else {
+    lines.push('Please confirm this order. Thank you! 🙏')
+  }
   
   return lines.join('\n')
+}
+
+export function generateOrderConfirmationRequest(
+  store: Store,
+  order: OrderWithItems
+): string {
+  const baseUrl = 'https://wa.me/'
+  const phoneNumber = store.whatsapp || ''
+  
+  const message = generateOrderMessage(store, order)
+  
+  if (phoneNumber) {
+    return `${baseUrl}${phoneNumber}?text=${encodeURIComponent(message)}`
+  }
+  
+  return `${baseUrl}?text=${encodeURIComponent(message)}`
 }
 

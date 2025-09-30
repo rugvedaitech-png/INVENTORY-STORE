@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Product Image Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .image-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 10px 0; }
+        .image-item { position: relative; }
+        .image-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group button { padding: 8px; margin: 2px; }
+        .url-input { width: 300px; }
+        .add-btn { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .add-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .upload-btn { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .upload-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .loading { background: #fff3cd; border: 1px solid #ffeaa7; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Product Image Upload Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li>Upload images using the file input below</li>
+                <li>Add images using URLs in the text input</li>
+                <li>Test different URL formats (relative paths, full URLs)</li>
+                <li>Remove images by clicking the × button</li>
+                <li>Check that images are properly displayed and managed</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🖼️ Image Management</h3>
+            
+            <!-- Image Preview -->
+            <div id="imagePreview" class="image-preview">
+                <!-- Images will be added here dynamically -->
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="form-group">
+                <label>📁 Upload Image File:</label>
+                <input type="file" id="fileInput" accept="image/*" multiple>
+                <button id="uploadBtn" class="upload-btn" disabled>Upload Selected Files</button>
+                <div id="uploadStatus" class="status" style="display: none;"></div>
+            </div>
+            
+            <!-- URL Input Section -->
+            <div class="form-group">
+                <label>🔗 Add Image URL:</label>
+                <input type="text" id="urlInput" class="url-input" placeholder="https://example.com/image.jpg or /uploads/products/image.jpg">
+                <button id="addUrlBtn" class="add-btn" disabled>Add URL</button>
+                <div id="urlStatus" class="status" style="display: none;"></div>
+            </div>
+            
+            <!-- Test URLs -->
+            <div class="form-group">
+                <label>🧪 Test with Sample URLs:</label>
+                <button onclick="addTestUrl('https://picsum.photos/400/400?random=1')" class="add-btn">Add Random Image 1</button>
+                <button onclick="addTestUrl('https://picsum.photos/400/400?random=2')" class="add-btn">Add Random Image 2</button>
+                <button onclick="addTestUrl('/uploads/products/sample.jpg')" class="add-btn">Add Relative Path</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Current State</h3>
+            <div id="currentState">
+                <p><strong>Total Images:</strong> <span id="imageCount">0</span></p>
+                <p><strong>Images JSON:</strong> <code id="imagesJson">[]</code></p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Validation Tests</h3>
+            <div id="validationTests">
+                <!-- Validation results will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let images = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDisplay();
+            setupEventListeners();
+            runValidationTests();
+        });
+        
+        function setupEventListeners() {
+            // File input
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    document.getElementById('uploadBtn').disabled = false;
+                } else {
+                    document.getElementById('uploadBtn').disabled = true;
+                }
+            });
+            
+            // Upload button
+            document.getElementById('uploadBtn').addEventListener('click', function() {
+                const files = Array.from(document.getElementById('fileInput').files);
+                uploadFiles(files);
+            });
+            
+            // URL input
+            document.getElementById('urlInput').addEventListener('input', function(e) {
+                const url = e.target.value.trim();
+                document.getElementById('addUrlBtn').disabled = !url || !validateImageUrl(url);
+            });
+            
+            // Add URL button
+            document.getElementById('addUrlBtn').addEventListener('click', function() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (url && validateImageUrl(url)) {
+                    addImage(url);
+                    document.getElementById('urlInput').value = '';
+                }
+            });
+        }
+        
+        function validateImageUrl(url) {
+            if (!url) return true;
+            if (url.startsWith('/')) return true;
+            if (url.startsWith('http://') || url.startsWith('https://')) return true;
+            return false;
+        }
+        
+        function addImage(url) {
+            if (!images.includes(url)) {
+                images.push(url);
+                updateDisplay();
+                showStatus('urlStatus', 'Image added successfully!', 'success');
+            } else {
+                showStatus('urlStatus', 'Image already exists!', 'error');
+            }
+        }
+        
+        function removeImage(index) {
+            images.splice(index, 1);
+            updateDisplay();
+        }
+        
+        function addTestUrl(url) {
+            addImage(url);
+        }
+        
+        function uploadFiles(files) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Uploading files...';
+            
+            // Simulate file upload (in real app, this would upload to server)
+            setTimeout(() => {
+                files.forEach(file => {
+                    // Create a local URL for preview
+                    const url = URL.createObjectURL(file);
+                    addImage(url);
+                });
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `Successfully uploaded ${files.length} file(s)!`;
+                
+                // Clear file input
+                document.getElementById('fileInput').value = '';
+                document.getElementById('uploadBtn').disabled = true;
+            }, 1000);
+        }
+        
+        function updateDisplay() {
+            const previewDiv = document.getElementById('imagePreview');
+            previewDiv.innerHTML = '';
+            
+            images.forEach((url, index) => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.innerHTML = `
+                    <img src="${url}" alt="Image ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2RkZCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2U8L3RleHQ+PC9zdmc+'">
+                    <button class="remove-btn" onclick="removeImage(${index})">×</button>
+                `;
+                previewDiv.appendChild(imageItem);
+            });
+            
+            document.getElementById('imageCount').textContent = images.length;
+            document.getElementById('imagesJson').textContent = JSON.stringify(images);
+        }
+        
+        function showStatus(elementId, message, type) {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.style.display = 'block';
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function runValidationTests() {
+            const testCases = [
+                { url: '', expected: true, description: 'Empty URL' },
+                { url: '/uploads/products/image.jpg', expected: true, description: 'Relative path' },
+                { url: 'https://example.com/image.jpg', expected: true, description: 'HTTPS URL' },
+                { url: 'http://example.com/image.jpg', expected: true, description: 'HTTP URL' },
+                { url: 'ftp://example.com/image.jpg', expected: false, description: 'FTP URL (invalid)' },
+                { url: 'image.jpg', expected: false, description: 'Filename only (invalid)' },
+                { url: '//example.com/image.jpg', expected: false, description: 'Protocol-relative (invalid)' }
+            ];
+            
+            const testsDiv = document.getElementById('validationTests');
+            testCases.forEach(testCase => {
+                const isValid = validateImageUrl(testCase.url);
+                const isCorrect = isValid === testCase.expected;
+                
+                const testDiv = document.createElement('div');
+                testDiv.className = `test-section ${isCorrect ? 'success' : 'error'}`;
+                testDiv.innerHTML = `
+                    <strong>${testCase.description}</strong><br>
+                    URL: <code>${testCase.url || '(empty)'}</code><br>
+                    Expected: ${testCase.expected ? 'Valid' : 'Invalid'} | 
+                    Got: ${isValid ? 'Valid' : 'Invalid'} | 
+                    ${isCorrect ? '✅ PASS' : '❌ FAIL'}
+                `;
+                testsDiv.appendChild(testDiv);
+            });
+        }
+    </script>
+</body>
+</html>
