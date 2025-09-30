@@ -211,7 +211,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <p className="text-sm text-blue-700">
-                  We'll create your store and add some sample products to get you started!
+                  We will create your store and add some sample products to get you started!
                 </p>
               </div>
             )}
