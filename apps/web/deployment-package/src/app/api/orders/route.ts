@@ -1,0 +1,228 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { db } from '@/lib/db'
+import { createOrderSchema } from '@/lib/validators'
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const storeId = searchParams.get('storeId')
+    const status = searchParams.get('status')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+
+    if (!storeId) {
+      return NextResponse.json({ error: 'Store ID is required' }, { status: 400 })
+    }
+
+    // Check if user owns the store
+    const storeIdNum = typeof storeId === 'string' ? parseInt(storeId) : storeId
+    const store = await db.store.findFirst({
+      where: { id: storeIdNum, ownerId: parseInt(session.user.id) },
+    })
+
+    if (!store) {
+      return NextResponse.json({ error: 'Store not found' }, { status: 404 })
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: { storeId: number; status?: any } = { storeId: storeIdNum }
+    if (status) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where.status = status as any
+    }
+
+    const [orders, total] = await Promise.all([
+      db.order.findMany({
+        where,
+        include: {
+          customerAddress: true, // Include address details
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  title: true,
+                  sku: true,
+                  active: true
+                }
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.order.count({ where }),
+    ])
+
+    return NextResponse.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    console.log('Order creation request body:', JSON.stringify(body, null, 2))
+    const validatedData = createOrderSchema.parse(body)
+
+    // Get session to identify the customer
+    const session = await getServerSession(authOptions)
+    let customerId: number | null = null
+    
+    if (session?.user?.id) {
+      customerId = parseInt(session.user.id)
+    }
+
+    // Get store by slug (for public orders)
+    const { searchParams } = new URL(request.url)
+    const storeSlug = searchParams.get('store')
+
+    if (!storeSlug) {
+      return NextResponse.json({ error: 'Store slug is required' }, { status: 400 })
+    }
+
+    const store = await db.store.findUnique({
+      where: { slug: storeSlug },
+    })
+
+    if (!store) {
+      return NextResponse.json({ error: 'Store not found' }, { status: 404 })
+    }
+
+    // Calculate total amount and check stock
+    let totalAmount = 0
+    const orderItems: Array<{ productId: number; qty: number; priceSnap: number }> = []
+
+    for (const item of validatedData.items) {
+      const product = await db.product.findUnique({
+        where: { id: parseInt(item.productId) },
+      })
+
+      if (!product) {
+        return NextResponse.json(
+          { error: `Product not found: ${item.productId}` },
+          { status: 404 }
+        )
+      }
+
+      if (!product.active) {
+        return NextResponse.json(
+          { error: `Product is not available: ${product.title}` },
+          { status: 400 }
+        )
+      }
+
+      if (product.stock < item.qty) {
+        return NextResponse.json(
+          { error: `Insufficient stock for ${product.title}. Available: ${product.stock}` },
+          { status: 409 }
+        )
+      }
+
+      const itemTotal = product.price * item.qty
+      totalAmount += itemTotal
+
+      orderItems.push({
+        productId: parseInt(item.productId),
+        qty: item.qty,
+        priceSnap: product.price,
+      })
+    }
+
+    // Create order in transaction
+    const result = await db.$transaction(async (tx) => {
+      // Create order
+        const order = await tx.order.create({
+          data: {
+            storeId: store.id,
+            customerId: customerId,
+            addressId: validatedData.addressId || null, // New address reference
+            buyerName: validatedData.buyerName,
+            phone: validatedData.phone,
+            address: validatedData.address, // Keep for backward compatibility
+            paymentMethod: validatedData.paymentMethod,
+            subtotal: totalAmount,
+            totalAmount,
+            items: {
+              create: orderItems,
+            },
+          },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      })
+
+      // Update stock and create ledger entries for each item
+      for (const item of orderItems) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.qty,
+            },
+          },
+        })
+
+        await tx.stockLedger.create({
+          data: {
+            storeId: store.id,
+            productId: item.productId,
+            refType: 'SALE',
+            refId: order.id,
+            delta: -item.qty,
+          },
+        })
+      }
+
+      return order
+    })
+
+    // Handle payment based on method
+    if (validatedData.paymentMethod === 'COD') {
+      // COD orders are handled directly
+      return NextResponse.json(result, { status: 201 })
+    }
+
+    return NextResponse.json(result, { status: 201 })
+  } catch (error) {
+    console.error('Error creating order:', error)
+    if (error instanceof Error && error.name === 'ZodError') {
+      console.error('Validation error details:', error.message)
+      return NextResponse.json(
+        { error: 'Validation error', details: error.message },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to create order' },
+      { status: 500 }
+    )
+  }
+}

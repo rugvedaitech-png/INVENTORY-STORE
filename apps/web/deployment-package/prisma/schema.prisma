@@ -1,0 +1,297 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          Int                     @id @default(autoincrement())
+  email       String                  @unique
+  name        String?
+  password    String
+  role        UserRole                @default(STORE_OWNER)
+  phone       String?
+  storeId     Int? // Store ID for customers and suppliers
+  store       Store?                  @relation("UserStore", fields: [storeId], references: [id])
+  stores      Store[]                 @relation("StoreOwner") // Stores owned by this user (for store owners)
+  customers   Customer[]
+  orders      Order[] // Orders placed by this user
+  supplier    Supplier? // Supplier account linked to this user
+  poAuditLogs PurchaseOrderAuditLog[]
+  wishlist    Wishlist[] @relation("UserWishlist")
+  createdAt   DateTime                @default(now())
+}
+
+model Customer {
+  id        Int               @id @default(autoincrement())
+  email     String            @unique
+  name      String
+  phone     String
+  address   String? // Deprecated - will be removed after migration
+  userId    Int?
+  user      User?             @relation(fields: [userId], references: [id])
+  storeId   Int // Required - customer must belong to a store
+  store     Store             @relation(fields: [storeId], references: [id])
+  addresses CustomerAddress[] // One-to-many relationship with addresses
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model CustomerAddress {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  title      String // e.g., "Home", "Office", "Delivery Address"
+  fullName   String // Full name for delivery
+  phone      String // Phone for delivery
+  address    String // Complete address
+  city       String
+  state      String
+  pincode    String
+  isActive   Boolean  @default(false) // Only one address can be active
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orders     Order[] // Orders using this address
+
+  @@index([customerId, isActive])
+}
+
+model Store {
+  id             Int             @id @default(autoincrement())
+  ownerId        Int
+  owner          User            @relation("StoreOwner", fields: [ownerId], references: [id])
+  name           String
+  slug           String          @unique
+  whatsapp       String? // digits only, e.g., 9198xxxxxx
+  upiId          String?
+  currency       String          @default("INR")
+  products       Product[]
+  orders         Order[]
+  customers      Customer[]
+  suppliers      Supplier[]
+  purchaseOrders PurchaseOrder[]
+  stockLedger    StockLedger[]
+  categories     Category[]
+  users          User[]          @relation("UserStore") // Users associated with this store (customers/suppliers)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Product {
+  id                 Int                 @id @default(autoincrement())
+  storeId            Int
+  store              Store               @relation(fields: [storeId], references: [id])
+  categoryId         Int?
+  category           Category?           @relation(fields: [categoryId], references: [id])
+  title              String
+  description        String?
+  sku                String?
+  price              Int // selling price (paise)
+  costPrice          Int? // moving-average cost (paise)
+  stock              Int                 @default(0)
+  reorderPoint       Int                 @default(0)
+  reorderQty         Int                 @default(0)
+  supplierId         Int?
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id])
+  images             String              @default("[]") // JSON string array
+  active             Boolean             @default(true)
+  orderItems         OrderItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  stockLedger        StockLedger[]
+  wishlist           Wishlist[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  name        String
+  description String?
+  slug        String // URL-friendly version of name
+  image       String? // Category image URL
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0) // For custom ordering
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([storeId, slug]) // Unique slug per store
+  @@index([storeId, active])
+}
+
+model Order {
+  id             Int              @id @default(autoincrement())
+  storeId        Int
+  store          Store            @relation(fields: [storeId], references: [id])
+  customerId     Int?
+  user           User?            @relation(fields: [customerId], references: [id])
+  addressId      Int?
+  customerAddress CustomerAddress? @relation(fields: [addressId], references: [id])
+  buyerName      String // Deprecated - will use customer.name
+  phone          String // Deprecated - will use customer.phone  
+  address        String? // Deprecated - will use customerAddress.address
+  status         OrderStatus      @default(PENDING)
+  paymentMethod  PaymentMethod
+  paymentRef     String?
+  subtotal       Int // paise - amount before discount
+  discountAmount Int              @default(0) // paise - discount amount
+  discountType   DiscountType     @default(AMOUNT) // AMOUNT or PERCENTAGE
+  totalAmount    Int // paise - final amount after discount
+  items          OrderItem[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  qty       Int
+  priceSnap Int // price at purchase (paise)
+}
+
+model Supplier {
+  id             Int             @id @default(autoincrement())
+  storeId        Int
+  store          Store           @relation(fields: [storeId], references: [id])
+  userId         Int?            @unique // Link to User account (one-to-one)
+  user           User?           @relation(fields: [userId], references: [id])
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  leadTimeDays   Int             @default(3)
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model PurchaseOrder {
+  id                   Int                     @id @default(autoincrement())
+  storeId              Int
+  store                Store                   @relation(fields: [storeId], references: [id])
+  supplierId           Int
+  supplier             Supplier                @relation(fields: [supplierId], references: [id])
+  code                 String                  @unique // e.g., PO-2025-0001
+  status               POStatus                @default(DRAFT)
+  notes                String?
+  subtotal             Int                     @default(0)
+  taxTotal             Int                     @default(0)
+  total                Int                     @default(0)
+  placedAt             DateTime?
+  quotationRequestedAt DateTime?
+  quotationSubmittedAt DateTime?
+  quotationApprovedAt  DateTime?
+  quotationRejectedAt  DateTime?
+  quotationNotes       String?
+  items                PurchaseOrderItem[]
+  auditLogs            PurchaseOrderAuditLog[]
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              Int           @id @default(autoincrement())
+  poId            Int
+  po              PurchaseOrder @relation(fields: [poId], references: [id])
+  productId       Int
+  product         Product       @relation(fields: [productId], references: [id])
+  qty             Int
+  costPaise       Int // Store owner's estimated cost
+  quotedCostPaise Int? // Supplier's quoted cost
+  receivedQty     Int           @default(0)
+}
+
+model StockLedger {
+  id        Int      @id @default(autoincrement())
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  refType   StockRef
+  refId     Int // orderId or poId
+  delta     Int // +in, -out
+  unitCost  Int?
+  createdAt DateTime @default(now())
+}
+
+model PurchaseOrderAuditLog {
+  id              Int           @id @default(autoincrement())
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
+  action          String // "quotation_requested", "quotation_submitted", "quotation_approved", "quotation_rejected", "shipped", "received", "rejected"
+  previousStatus  POStatus
+  newStatus       POStatus
+  notes           String?
+  createdAt       DateTime      @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_CONFIRMATION
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REJECTED
+}
+
+enum PaymentMethod {
+  COD
+  UPI
+  CARD
+}
+
+enum POStatus {
+  DRAFT
+  QUOTATION_REQUESTED
+  QUOTATION_SUBMITTED
+  QUOTATION_APPROVED
+  QUOTATION_REJECTED
+  SENT
+  SHIPPED
+  PARTIAL
+  RECEIVED
+  REJECTED
+  CLOSED
+  CANCELLED
+}
+
+enum DiscountType {
+  AMOUNT
+  PERCENTAGE
+}
+
+enum StockRef {
+  SALE
+  PO_RECEIPT
+  ADJUSTMENT
+}
+
+enum UserRole {
+  STORE_OWNER
+  SUPPLIER
+  CUSTOMER
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation("UserWishlist", fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
+  @@index([userId])
+}
