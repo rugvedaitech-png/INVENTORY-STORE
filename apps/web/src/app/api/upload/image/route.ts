@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-    if (!allowedTypes.includes(file.type)) {
+    const allowedFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    if (!allowedFileTypes.includes(file.type)) {
       return NextResponse.json(
         { error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed.' },
         { status: 400 }
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
     const type = searchParams.get('type') || 'categories'
     
     // Validate upload type
-    const allowedTypes = ['categories', 'products']
-    if (!allowedTypes.includes(type)) {
+    const allowedUploadTypes = ['categories', 'products']
+    if (!allowedUploadTypes.includes(type)) {
       return NextResponse.json(
         { error: 'Invalid upload type. Must be "categories" or "products".' },
         { status: 400 }
