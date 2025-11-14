@@ -68,7 +68,7 @@ services:
       - app
     networks:
       - inventory_network
-      
+
 
 volumes:
   mysql_data:
