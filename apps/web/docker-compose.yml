@@ -62,8 +62,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt/live/ordernestpro.rugvedaitech.com:/etc/nginx/ssl:ro
-      - /etc/letsencrypt/archive/ordernestpro.rugvedaitech.com:/etc/nginx/ssl-archive:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
     networks:
