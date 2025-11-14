@@ -9,7 +9,8 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 
 interface SupportTicket {

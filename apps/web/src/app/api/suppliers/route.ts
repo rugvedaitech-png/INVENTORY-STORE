@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If userId is provided, fetch user details and use them
-    let supplierData = { ...validatedData }
+    const supplierData = { ...validatedData }
     
     if (validatedData.userId) {
       const user = await db.user.findUnique({

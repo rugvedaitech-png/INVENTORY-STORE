@@ -44,23 +44,23 @@ async function getStore(slug: string) {
 
 export default async function StorePage({ params }: StorePageProps) {
   const { store: storeSlug } = await params
-  
+
   // Check if user is authenticated
   const session = await getServerSession(authOptions)
-  
+
   // If user is logged in, check if they should be redirected to their assigned store
   if (session?.user) {
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       include: { store: true }
     })
-    
+
     // If user has a storeId and it doesn't match the current store, redirect them
     if (user?.storeId && user.store && user.store.slug !== storeSlug) {
       redirect(`/${user.store.slug}`)
     }
   }
-  
+
   const store = await getStore(storeSlug)
 
   if (!store) {
