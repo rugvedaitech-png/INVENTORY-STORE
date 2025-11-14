@@ -107,39 +107,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-12 text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Demo Store</h2>
-          <p className="mt-2 text-gray-600">Check out our demo ration store</p>
-          <div className="mt-4">
-            <Link
-              href="/demo-ration-store"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Visit Demo Store
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-8 bg-gray-100 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Demo Credentials</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <strong>Store Owner:</strong><br />
-              Email: demo@boutique.test<br />
-              Password: password123
-            </div>
-            <div>
-              <strong>Supplier:</strong><br />
-              Email: supplier@demo.com<br />
-              Password: password123
-            </div>
-            <div>
-              <strong>Customer:</strong><br />
-              Email: customer@demo.com<br />
-              Password: password123
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
