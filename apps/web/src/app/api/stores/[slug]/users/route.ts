@@ -125,6 +125,13 @@ export async function POST(
       storeId: store.id
     })
 
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Failed to register user' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       { 
         message: 'User added to store successfully', 

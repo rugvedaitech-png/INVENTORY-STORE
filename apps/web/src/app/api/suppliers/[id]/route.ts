@@ -15,8 +15,12 @@ export async function GET(
     }
 
     const { id } = await params
+    const supplierId = parseInt(id)
+    if (Number.isNaN(supplierId)) {
+      return NextResponse.json({ error: 'Invalid supplier id' }, { status: 400 })
+    }
     const supplier = await db.supplier.findUnique({
-      where: { id },
+      where: { id: supplierId },
       include: {
         store: true,
         products: true,
@@ -57,10 +61,14 @@ export async function PATCH(
     const body = await request.json()
     const validatedData = updateSupplierSchema.parse(body)
     const { id } = await params
+    const supplierId = parseInt(id)
+    if (Number.isNaN(supplierId)) {
+      return NextResponse.json({ error: 'Invalid supplier id' }, { status: 400 })
+    }
 
     // Check if user owns the supplier
     const supplier = await db.supplier.findUnique({
-      where: { id },
+      where: { id: supplierId },
       include: { store: true },
     })
 
@@ -73,7 +81,7 @@ export async function PATCH(
     }
 
     const updatedSupplier = await db.supplier.update({
-      where: { id },
+      where: { id: supplierId },
       data: validatedData,
     })
 
@@ -105,10 +113,14 @@ export async function DELETE(
     }
 
     const { id } = await params
+    const supplierId = parseInt(id)
+    if (Number.isNaN(supplierId)) {
+      return NextResponse.json({ error: 'Invalid supplier id' }, { status: 400 })
+    }
 
     // Check if user owns the supplier
     const supplier = await db.supplier.findUnique({
-      where: { id },
+      where: { id: supplierId },
       include: { store: true },
     })
 
@@ -121,7 +133,7 @@ export async function DELETE(
     }
 
     await db.supplier.delete({
-      where: { id },
+      where: { id: supplierId },
     })
 
     return NextResponse.json({ message: 'Supplier deleted successfully' })

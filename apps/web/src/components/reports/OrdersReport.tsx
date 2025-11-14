@@ -10,22 +10,23 @@ import {
   XCircleIcon,
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieLabelRenderProps,
 } from 'recharts'
 import * as XLSX from 'xlsx'
 import { exportElementToPDF, exportElementToPDFAlternative, exportStructuredPDF, exportTablePDF } from '@/lib/pdf-export'
@@ -229,6 +230,12 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
     { name: 'Delivered', value: data.summary.statusBreakdown.delivered, color: '#10B981' },
     { name: 'Cancelled', value: data.summary.statusBreakdown.cancelled, color: '#EF4444' }
   ] : []
+
+  const formatStatusLabel = ({ name, percent }: PieLabelRenderProps) => {
+    const label = typeof name === 'string' ? name : ''
+    const pct = typeof percent === 'number' ? (percent * 100).toFixed(0) : '0'
+    return `${label} ${pct}%`
+  }
 
   const topProductsChartData = data?.summary.topProducts.slice(0, 5).map(product => ({
     name: product.title.length > 20 ? product.title.substring(0, 20) + '...' : product.title,
@@ -446,7 +453,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={(props) => formatStatusLabel(props as PieLabelRenderProps)}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"

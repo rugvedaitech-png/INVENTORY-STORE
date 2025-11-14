@@ -10,22 +10,23 @@ import {
   BuildingOfficeIcon,
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline'
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieLabelRenderProps,
 } from 'recharts'
 import * as XLSX from 'xlsx'
 import { exportElementToPDF, exportElementToPDFAlternative, exportStructuredPDF, exportTablePDF } from '@/lib/pdf-export'
@@ -244,6 +245,12 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
     { name: 'Cancelled', value: data.summary.statusBreakdown.cancelled, color: '#EF4444' }
   ] : []
 
+  const formatStatusLabel = ({ name, percent }: PieLabelRenderProps) => {
+    const label = typeof name === 'string' ? name : ''
+    const pct = typeof percent === 'number' ? (percent * 100).toFixed(0) : '0'
+    return `${label} ${pct}%`
+  }
+
   const topSuppliersChartData = data?.summary.topSuppliers.slice(0, 5).map(supplier => ({
     name: supplier.name.length > 20 ? supplier.name.substring(0, 20) + '...' : supplier.name,
     cost: supplier.totalCost / 100,
@@ -460,7 +467,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={(props) => formatStatusLabel(props as PieLabelRenderProps)}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"

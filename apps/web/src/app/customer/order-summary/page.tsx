@@ -27,6 +27,7 @@ interface Order {
   updatedAt: string
   trackingCode?: string
   estimatedDelivery?: string
+  address?: string | null
   items: Array<{
     id: number
     quantity: number
@@ -48,6 +49,11 @@ interface Order {
     id: number
     name: string
     email: string
+    phone?: string | null
+  }
+  customerAddress?: {
+    address?: string | null
+    phone?: string | null
   }
 }
 
@@ -575,11 +581,15 @@ export default function OrderSummaryPage() {
                             </div>
                             <div className="flex items-center space-x-2">
                               <PhoneIcon className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm">{selectedOrder.phone}</span>
+                              <span className="text-sm">
+                                {selectedOrder.user?.phone || selectedOrder.customerAddress?.phone || 'No phone provided'}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <MapPinIcon className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm">{selectedOrder.address || 'No address provided'}</span>
+                              <span className="text-sm">
+                                {selectedOrder.customerAddress?.address || selectedOrder.address || 'No address provided'}
+                              </span>
                             </div>
                           </div>
                         </div>

@@ -3,9 +3,18 @@
 import { useAuth } from '@/hooks/useAuth'
 import { useEffect, useState } from 'react'
 
+interface Profile {
+  id: number
+  email: string
+  name: string | null
+  role: string
+  phone: string | null
+  createdAt: string
+}
+
 export default function TestAuthPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
-  const [profile, setProfile] = useState(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {

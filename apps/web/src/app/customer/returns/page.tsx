@@ -117,10 +117,20 @@ export default function ReturnsPage() {
     try {
       if (editingReturn) {
         // Update existing return request
-        setReturnRequests(returnRequests.map(request => 
-          request.id === editingReturn.id 
-            ? { ...newReturn, id: editingReturn.id, createdAt: editingReturn.createdAt, updatedAt: new Date().toISOString(), status: editingReturn.status, refundAmount: editingReturn.refundAmount, pickupDate: editingReturn.pickupDate, trackingNumber: editingReturn.trackingNumber }
-            : request
+        const updatedRequest: ReturnRequest = {
+          ...editingReturn,
+          ...newReturn,
+          productImage: editingReturn.productImage,
+          createdAt: editingReturn.createdAt,
+          updatedAt: new Date().toISOString(),
+          status: editingReturn.status,
+          refundAmount: editingReturn.refundAmount,
+          pickupDate: editingReturn.pickupDate,
+          trackingNumber: editingReturn.trackingNumber,
+        }
+
+        setReturnRequests(returnRequests.map(request =>
+          request.id === editingReturn.id ? updatedRequest : request
         ))
       } else {
         // Add new return request

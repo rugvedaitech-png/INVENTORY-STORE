@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -11,7 +11,7 @@ enum UserRole {
   CUSTOMER = 'CUSTOMER'
 }
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -328,5 +328,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <RegisterPageContent />
+    </Suspense>
   )
 }

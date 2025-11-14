@@ -95,10 +95,17 @@ export default function ReviewsPage() {
     try {
       if (editingReview) {
         // Update existing review
-        setReviews(reviews.map(review => 
-          review.id === editingReview.id 
-            ? { ...newReview, id: editingReview.id, createdAt: editingReview.createdAt, isVerified: editingReview.isVerified, helpful: editingReview.helpful }
-            : review
+        const updatedReview: Review = {
+          ...editingReview,
+          ...newReview,
+          createdAt: editingReview.createdAt,
+          productImage: editingReview.productImage,
+          isVerified: editingReview.isVerified,
+          helpful: editingReview.helpful
+        }
+
+        setReviews(reviews.map(review =>
+          review.id === editingReview.id ? updatedReview : review
         ))
       } else {
         // Add new review

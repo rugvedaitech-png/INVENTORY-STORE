@@ -4,9 +4,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 interface StorePageProps {
-  params: {
+  params: Promise<{
     store: string
-  }
+  }>
 }
 
 async function getStore(slug: string) {

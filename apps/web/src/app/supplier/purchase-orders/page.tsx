@@ -23,10 +23,17 @@ interface PurchaseOrder {
   notes: string | null
   placedAt: string | null
   createdAt: string
+  supplier?: {
+    id: number
+    name: string
+    email: string | null
+    phone: string | null
+  }
   items: {
     id: number
     qty: number
     costPaise: number
+    quotedCostPaise?: number | null
     product: {
       id: number
       title: string

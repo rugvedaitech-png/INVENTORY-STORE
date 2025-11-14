@@ -17,10 +17,11 @@ export async function POST(
     const body = await request.json()
     const validatedData = receivePurchaseOrderSchema.parse(body)
     const { id } = await params
+    const poId = parseInt(id)
 
     // Check if user owns the purchase order
     const purchaseOrder = await db.purchaseOrder.findUnique({
-      where: { id },
+      where: { id: poId },
       include: {
         store: true,
         items: {
@@ -48,7 +49,8 @@ export async function POST(
 
     // Validate receiving quantities
     for (const receiveItem of validatedData.items) {
-      const poItem = purchaseOrder.items.find(item => item.id === receiveItem.itemId)
+      const itemId = Number(receiveItem.itemId)
+      const poItem = purchaseOrder.items.find(item => item.id === itemId)
       if (!poItem) {
         return NextResponse.json(
           { error: `Purchase order item not found: ${receiveItem.itemId}` },
@@ -72,11 +74,12 @@ export async function POST(
       let someReceived = false
 
       for (const receiveItem of validatedData.items) {
-        const poItem = purchaseOrder.items.find(item => item.id === receiveItem.itemId)!
+        const itemId = Number(receiveItem.itemId)
+        const poItem = purchaseOrder.items.find(item => item.id === itemId)!
         const newReceivedQty = poItem.receivedQty + receiveItem.receivedQty
 
         await tx.purchaseOrderItem.update({
-          where: { id: receiveItem.itemId },
+          where: { id: itemId },
           data: { receivedQty: newReceivedQty },
         })
 
@@ -132,7 +135,7 @@ export async function POST(
 
       // Update purchase order status
       const updatedPO = await tx.purchaseOrder.update({
-        where: { id },
+        where: { id: poId },
         data: { status: newStatus },
         include: {
           supplier: true,

@@ -70,6 +70,8 @@ export default function QuotationsPage() {
     total: 0,
     pages: 0
   })
+  const userEmail = session?.user?.email ?? ''
+  const userName = session?.user?.name ?? session?.user?.email ?? 'Supplier'
 
   useEffect(() => {
     if (status === 'loading') return
@@ -206,7 +208,7 @@ export default function QuotationsPage() {
 
   if (loading) {
     return (
-      <SupplierLayoutClient>
+      <SupplierLayoutClient userEmail={userEmail} userName={userName}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -215,7 +217,7 @@ export default function QuotationsPage() {
   }
 
   return (
-    <SupplierLayoutClient>
+    <SupplierLayoutClient userEmail={userEmail} userName={userName}>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">

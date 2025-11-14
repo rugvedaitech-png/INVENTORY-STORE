@@ -110,7 +110,14 @@ export default function PaymentMethodsPage() {
 
   const handleEdit = (method: PaymentMethod) => {
     setEditingMethod(method)
-    setFormData(method)
+    setFormData({
+      type: method.type,
+      name: method.name,
+      details: method.details,
+      expiryDate: method.expiryDate ?? '',
+      lastFour: method.lastFour ?? '',
+      isDefault: method.isDefault
+    })
     setShowForm(true)
   }
 

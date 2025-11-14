@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
       take: 1,
       select: {
         id: true,
-        userId: true,
+        customerId: true,
         buyerName: true,
         status: true
       }
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       message: 'Schema test successful',
       orders: orders,
       schemaInfo: {
-        hasUserId: true,
+        hasCustomerId: true,
         orderCount: orders.length
       }
     })
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error',
       details: error instanceof Error ? error.stack : 'No stack trace',
       schemaInfo: {
-        hasUserId: false,
+        hasCustomerId: false,
         errorType: 'schema_mismatch'
       }
     }, { status: 500 })

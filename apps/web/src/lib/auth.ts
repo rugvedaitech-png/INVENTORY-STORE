@@ -88,7 +88,7 @@ export const authOptions: NextAuthOptions = {
         if (user) {
           session.user.id = user.id
           const dbUser = await db.user.findUnique({
-            where: { id: user.id },
+            where: { id: parseInt(user.id) },
             select: { role: true, phone: true }
           })
           session.user.role = dbUser?.role || UserRole.CUSTOMER
@@ -104,8 +104,12 @@ export const authOptions: NextAuthOptions = {
     jwt: async ({ user, token }) => {
       if (user) {
         token.id = user.id
-        token.role = user.role
-        token.phone = user.phone
+        if ('role' in user) {
+          token.role = (user as any).role
+        }
+        if ('phone' in user) {
+          token.phone = (user as any).phone
+        }
       }
       return token
     },

@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required columns
     const requiredColumns = ['title', 'price', 'stock']
-    const csvColumns = Object.keys(records[0])
+    const csvColumns = Object.keys(records[0] as Record<string, unknown>)
     const missingColumns = requiredColumns.filter(col => !csvColumns.includes(col))
     
     if (missingColumns.length > 0) {

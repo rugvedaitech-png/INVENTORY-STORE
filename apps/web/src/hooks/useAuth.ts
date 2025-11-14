@@ -18,10 +18,10 @@ export function useAuth() {
 
   const user: User | null = session?.user ? {
     id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
+    email: session.user.email ?? '',
+    name: session.user.name ?? null,
     role: session.user.role,
-    phone: session.user.phone,
+    phone: session.user.phone ?? null,
   } : null
 
   const isLoading = status === 'loading'

@@ -480,7 +480,7 @@ export default function OrdersPage() {
                         <div className="max-w-xs">
                           {order.items.map((item, index) => (
                             <div key={item.id} className="truncate">
-                              {item.product?.title || 'Unknown Product'} × {item.qty}
+                              {item.product?.title || 'Unknown Product'} × {item.quantity ?? 0}
                               {index < order.items.length - 1 && ', '}
                             </div>
                           ))}

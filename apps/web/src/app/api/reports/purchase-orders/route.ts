@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
     // Status breakdown
     const statusBreakdown = {
       draft: purchaseOrders.filter(po => po.status === 'DRAFT').length,
-      placed: purchaseOrders.filter(po => po.status === 'PLACED').length,
+      placed: purchaseOrders.filter(po => po.status === 'SENT').length,
       received: purchaseOrders.filter(po => po.status === 'RECEIVED').length,
       cancelled: purchaseOrders.filter(po => po.status === 'CANCELLED').length
     }

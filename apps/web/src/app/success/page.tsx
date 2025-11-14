@@ -11,7 +11,7 @@ interface Order {
   updatedAt: Date
   phone: string
   address: string
-  storeId: string
+  storeId: number
   status: string
   buyerName: string
   paymentMethod: string
@@ -29,10 +29,10 @@ interface Order {
     }
   }>
   store: {
-    id: string
+    id: number
     name: string
     slug: string
-    ownerId: string
+    ownerId: number
     whatsapp: string | null
     upiId: string | null
     currency: string

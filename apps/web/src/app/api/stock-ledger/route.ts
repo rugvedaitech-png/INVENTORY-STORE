@@ -11,15 +11,16 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const storeId = searchParams.get('storeId')
-    const productId = searchParams.get('productId')
+    const storeIdParam = searchParams.get('storeId')
+    const productIdParam = searchParams.get('productId')
     const refType = searchParams.get('refType')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    if (!storeId) {
+    if (!storeIdParam) {
       return NextResponse.json({ error: 'Store ID is required' }, { status: 400 })
     }
+    const storeId = parseInt(storeIdParam)
 
     // Check if user owns the store
     const store = await db.store.findFirst({
@@ -31,9 +32,9 @@ export async function GET(request: NextRequest) {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: { storeId: string; productId?: string; refType?: any } = { storeId }
-    if (productId) {
-      where.productId = productId
+    const where: { storeId: number; productId?: number; refType?: any } = { storeId }
+    if (productIdParam) {
+      where.productId = parseInt(productIdParam)
     }
     if (refType) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

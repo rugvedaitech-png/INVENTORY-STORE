@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
@@ -41,19 +41,20 @@ interface Store {
   categories: Category[]
 }
 
-interface ProductsResponse {
-  products: Product[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+interface BrowsePageProps {
+  params: Promise<{
+    store: string
+  }>
 }
 
-interface BrowsePageProps {
-  params: {
-    store: string
+interface CartEntry {
+  qty: number
+  product: {
+    id: number
+    title: string
+    price: number
+    stock: number
+    images: string[]
   }
 }
 
@@ -62,7 +63,7 @@ export default function BrowsePage({ params }: BrowsePageProps) {
   const [storeSlug, setStoreSlug] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [cartItems, setCartItems] = useState<Record<number, number>>({})
+  const [cartItems, setCartItems] = useState<Record<number, CartEntry>>({})
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState({
@@ -73,11 +74,20 @@ export default function BrowsePage({ params }: BrowsePageProps) {
   })
 
   useEffect(() => {
-    const getStoreSlug = async () => {
-      const { store } = await params
-      setStoreSlug(store)
+    let isMounted = true
+    params
+      .then(({ store }) => {
+        if (isMounted) {
+          setStoreSlug(store)
+        }
+      })
+      .catch(error => {
+        console.error('Error getting store slug:', error)
+      })
+
+    return () => {
+      isMounted = false
     }
-    getStoreSlug()
   }, [params])
 
   // Load store data
@@ -109,11 +119,13 @@ export default function BrowsePage({ params }: BrowsePageProps) {
     if (savedCart) {
       try {
         const cart = JSON.parse(savedCart)
-        const cartMap: Record<number, any> = {}
-        cart.forEach((item: { id: number; qty: number; product?: any }) => {
-          cartMap[item.id] = {
-            qty: item.qty,
-            product: item.product
+        const cartMap: Record<number, CartEntry> = {}
+        cart.forEach((item: { id: number; qty: number; product?: CartEntry['product'] }) => {
+          if (item.product) {
+            cartMap[item.id] = {
+              qty: item.qty,
+              product: item.product
+            }
           }
         })
         setCartItems(cartMap)

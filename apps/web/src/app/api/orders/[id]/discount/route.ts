@@ -6,9 +6,7 @@ import { z } from 'zod'
 
 const updateDiscountSchema = z.object({
   discountAmount: z.number().int().min(0, 'Discount amount must be non-negative'),
-  discountType: z.enum(['AMOUNT', 'PERCENTAGE'], {
-    errorMap: () => ({ message: 'Discount type must be AMOUNT or PERCENTAGE' })
-  })
+  discountType: z.enum(['AMOUNT', 'PERCENTAGE']),
 })
 
 export async function PUT(
@@ -101,7 +99,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

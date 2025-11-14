@@ -22,7 +22,14 @@ interface SupplierSidebarProps {
   onThemeChange?: (theme: 'light' | 'dark' | 'purple') => void
 }
 
-const navigationItems = [
+type NavigationItem = {
+  name: string
+  href: string
+  icon: typeof HomeIcon
+  badge?: string
+}
+
+const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/supplier', icon: HomeIcon },
   { name: 'Quotations', href: '/supplier/quotations', icon: DocumentTextIcon },
   { name: 'Purchase Orders', href: '/supplier/purchase-orders', icon: DocumentTextIcon },
@@ -123,7 +130,7 @@ export default function SupplierSidebar({
             {/* Theme Switcher */}
             {onThemeChange && (
               <div className="mb-3">
-                <ThemeSwitcher theme={theme} onThemeChange={onThemeChange} />
+                <ThemeSwitcher currentTheme={theme} onThemeChange={onThemeChange} />
               </div>
             )}
             

@@ -18,7 +18,19 @@ import Pagination from '@/components/Pagination'
 interface PurchaseOrder {
   id: number
   code: string
-  status: 'DRAFT' | 'SENT' | 'SHIPPED' | 'PARTIAL' | 'RECEIVED' | 'REJECTED' | 'CLOSED' | 'CANCELLED'
+  status:
+    | 'DRAFT'
+    | 'SENT'
+    | 'SHIPPED'
+    | 'PARTIAL'
+    | 'RECEIVED'
+    | 'REJECTED'
+    | 'CLOSED'
+    | 'CANCELLED'
+    | 'QUOTATION_REQUESTED'
+    | 'QUOTATION_SUBMITTED'
+    | 'QUOTATION_APPROVED'
+    | 'QUOTATION_REJECTED'
   notes: string | null
   subtotal: number
   taxTotal: number

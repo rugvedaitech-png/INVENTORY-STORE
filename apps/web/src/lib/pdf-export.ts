@@ -297,7 +297,7 @@ export async function exportTablePDF({
             5: { cellWidth: 20 }, // Status
             6: { cellWidth: 20 }  // Amount
           },
-          didDrawPage: (data) => {
+          didDrawPage: (data: any) => {
             // Add page number
             const pageSize = pdf.internal.pageSize
             const pageHeight = pageSize.height || pageSize.getHeight()
@@ -450,15 +450,18 @@ export async function exportElementToPDF({
         allStyles.forEach(style => style.remove())
         
         // Override the CSS parsing to prevent lab() color errors
-        const originalParse = clonedDoc.defaultView?.CSS?.supports
-        if (clonedDoc.defaultView?.CSS) {
-          clonedDoc.defaultView.CSS.supports = function(property: string, value: string) {
-            // Return false for lab() colors to force fallback
-            if (value && value.includes('lab(')) {
+        const originalSupports = clonedDoc.defaultView?.CSS?.supports.bind(clonedDoc.defaultView.CSS)
+        if (clonedDoc.defaultView?.CSS && originalSupports) {
+          const customSupports: typeof clonedDoc.defaultView.CSS.supports = (property: any, value?: any) => {
+            if (typeof value === 'string' && value.includes('lab(')) {
               return false
             }
-            return originalParse ? originalParse.call(this, property, value) : false
+            if (value === undefined && typeof property === 'string' && property.includes('lab(')) {
+              return false
+            }
+            return originalSupports(property, value)
           }
+          clonedDoc.defaultView.CSS.supports = customSupports
         }
         
         // Override getComputedStyle to replace lab() colors

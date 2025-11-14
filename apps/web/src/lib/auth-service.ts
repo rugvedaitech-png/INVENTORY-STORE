@@ -112,7 +112,7 @@ export class AuthService {
         data: {
           name: data.name,
           email: data.email,
-          phone: data.phone,
+          phone: data.phone ?? '',
           password: hashedPassword,
           role: data.role,
           storeId: data.storeId,
@@ -134,7 +134,7 @@ export class AuthService {
           data: {
             name: data.name,
             email: data.email,
-            phone: data.phone,
+            phone: data.phone ?? '',
             address: '', // Will be updated later
             userId: user.id,
             storeId: data.storeId,

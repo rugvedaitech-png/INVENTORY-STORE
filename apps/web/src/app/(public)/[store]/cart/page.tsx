@@ -3,23 +3,29 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
-import { parseImages } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 
 interface CartItem {
   id: number
-  title: string
-  price: number
-  stock: number
-  images: string[]
+  title?: string
+  price?: number
+  stock?: number
+  images?: string[]
   qty: number
+  product?: {
+    id: number
+    title: string
+    price: number
+    stock: number
+    images: string[]
+  }
 }
 
 interface CartPageProps {
-  params: {
+  params: Promise<{
     store: string
-  }
+  }>
 }
 
 export default function CartPage({ params }: CartPageProps) {
@@ -140,49 +146,52 @@ export default function CartPage({ params }: CartPageProps) {
                     Cart Items
                   </h2>
                   <div className="space-y-4">
-                    {cartItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center space-x-4 p-4 border rounded-lg"
-                      >
-                        <div className="w-20 h-20 relative bg-gray-100 rounded-lg flex-shrink-0">
-                          {item.product?.images?.length > 0 ? (
-                            <Image
-                              src={item.product.images[0]}
-                              alt={item.product.title}
-                              fill
-                              className="object-cover rounded-lg"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none'
-                              }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400">
-                              <svg
-                                className="w-8 h-8"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
+                    {cartItems.map((item) => {
+                      const hasImages = (item.product?.images?.length ?? 0) > 0
+                      const availableStock = item.product?.stock ?? item.stock ?? Infinity
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center space-x-4 p-4 border rounded-lg"
+                        >
+                          <div className="w-20 h-20 relative bg-gray-100 rounded-lg flex-shrink-0">
+                            {hasImages ? (
+                              <Image
+                                src={item.product!.images![0]!}
+                                alt={item.product!.title}
+                                fill
+                                className="object-cover rounded-lg"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                }}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-gray-400">
+                                <svg
+                                  className="w-8 h-8"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-900 truncate">
-                            {item.product?.title || 'Unknown Product'}
+                            {item.product?.title || item.title || 'Unknown Product'}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {item.product?.price ? formatCurrency(item.product.price) : '₹0.00'} each
+                            {item.product?.price ? formatCurrency(item.product.price) : item.price ? formatCurrency(item.price) : '₹0.00'} each
                           </p>
                           <p className="text-xs text-gray-500">
-                            Stock: {item.product?.stock || 0}
+                            Stock: {availableStock === Infinity ? '—' : availableStock}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -197,7 +206,7 @@ export default function CartPage({ params }: CartPageProps) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.qty + 1)}
-                            disabled={item.qty >= item.stock}
+                            disabled={availableStock !== Infinity && item.qty >= availableStock}
                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             +
@@ -205,7 +214,7 @@ export default function CartPage({ params }: CartPageProps) {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">
-                            {formatCurrency((item.product?.price || 0) * item.qty)}
+                            {formatCurrency(((item.product?.price ?? item.price) || 0) * item.qty)}
                           </p>
                           <button
                             onClick={() => removeItem(item.id)}
@@ -215,7 +224,8 @@ export default function CartPage({ params }: CartPageProps) {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -235,10 +245,10 @@ export default function CartPage({ params }: CartPageProps) {
                         className="flex justify-between text-sm"
                       >
                         <span className="text-gray-600">
-                          {item.product?.title || 'Unknown Product'} × {item.qty}
+                          {item.product?.title || item.title || 'Unknown Product'} × {item.qty}
                         </span>
                         <span className="font-medium">
-                          {formatCurrency((item.product?.price || 0) * item.qty)}
+                          {formatCurrency(((item.product?.price ?? item.price) || 0) * item.qty)}
                         </span>
                       </div>
                     ))}

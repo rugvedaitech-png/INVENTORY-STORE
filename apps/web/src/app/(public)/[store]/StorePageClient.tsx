@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import ProductCard from '@/components/ProductCard'
 import { parseImages } from '@/lib/utils'
 
 interface Category {

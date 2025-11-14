@@ -221,7 +221,17 @@ export async function POST(request: NextRequest) {
       storeId = store.id
     }
 
-    // For store owners, create a new store if no storeSlug provided
+    let pendingStoreData:
+      | {
+          name: string
+          slug: string
+          whatsapp: string | null
+          upiId: string | null
+          currency: string
+        }
+      | null = null
+
+    // For store owners, prepare a new store if no storeSlug provided
     if (role === UserRole.STORE_OWNER && !storeId) {
       if (!storeName) {
         return NextResponse.json(
@@ -230,19 +240,13 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Create a new store
-      const store = await db.store.create({
-        data: {
-          name: storeName,
-          slug: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-          whatsapp: storeWhatsapp || null,
-          upiId: storeUpiId || null,
-          currency: 'INR',
-          // We'll set ownerId after creating the user
-        }
-      })
-
-      storeId = store.id
+      pendingStoreData = {
+        name: storeName,
+        slug: storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        whatsapp: storeWhatsapp || null,
+        upiId: storeUpiId || null,
+        currency: 'INR',
+      }
     }
 
     // For customers and suppliers, storeId is required
@@ -263,18 +267,45 @@ export async function POST(request: NextRequest) {
       storeId
     })
 
-    // If this is a store owner, update the store with the ownerId
-    if (role === UserRole.STORE_OWNER && storeId) {
-      await db.store.update({
-        where: { id: storeId },
-        data: { ownerId: user.id }
-      })
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Failed to register user' },
+        { status: 500 }
+      )
+    }
 
-      // Add ration store categories first
-      await addRationStoreCategories(storeId)
-      
-      // Then add sample products to the new store
-      await addSampleProductsToStore(storeId)
+    // If this is a store owner, update the store with the ownerId
+    if (role === UserRole.STORE_OWNER) {
+      let ownerStoreId = storeId
+
+      if (!ownerStoreId && pendingStoreData) {
+        const store = await db.store.create({
+          data: {
+            ...pendingStoreData,
+            ownerId: user.id,
+          },
+        })
+
+        ownerStoreId = store.id
+
+        await db.user.update({
+          where: { id: user.id },
+          data: { storeId: ownerStoreId },
+        })
+      } else if (ownerStoreId) {
+        await db.store.update({
+          where: { id: ownerStoreId },
+          data: { ownerId: user.id },
+        })
+      }
+
+      if (ownerStoreId) {
+        // Add ration store categories first
+        await addRationStoreCategories(ownerStoreId)
+
+        // Then add sample products to the new store
+        await addSampleProductsToStore(ownerStoreId)
+      }
     }
 
     return NextResponse.json(

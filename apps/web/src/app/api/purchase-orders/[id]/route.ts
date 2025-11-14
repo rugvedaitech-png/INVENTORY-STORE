@@ -15,8 +15,9 @@ export async function GET(
     }
 
     const { id } = await params
+    const purchaseOrderId = parseInt(id)
     const purchaseOrder = await db.purchaseOrder.findUnique({
-      where: { id },
+      where: { id: purchaseOrderId },
       include: {
         store: true,
         supplier: true,
@@ -59,10 +60,11 @@ export async function PATCH(
     const body = await request.json()
     const validatedData = updatePurchaseOrderStatusSchema.parse(body)
     const { id } = await params
+    const purchaseOrderId = parseInt(id)
 
     // Check if user owns the purchase order
     const purchaseOrder = await db.purchaseOrder.findUnique({
-      where: { id },
+      where: { id: purchaseOrderId },
       include: { store: true },
     })
 
@@ -83,7 +85,7 @@ export async function PATCH(
     }
 
     const updatedPurchaseOrder = await db.purchaseOrder.update({
-      where: { id },
+      where: { id: purchaseOrderId },
       data: updateData,
       include: {
         supplier: true,

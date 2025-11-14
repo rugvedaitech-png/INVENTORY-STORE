@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
-import { parseImages } from '@/lib/utils'
 import Image from 'next/image'
 
 interface CartItem {
@@ -19,9 +18,9 @@ interface CartItem {
 }
 
 interface CheckoutPageProps {
-  params: {
+  params: Promise<{
     store: string
-  }
+  }>
 }
 
 export default function CheckoutPage({ params }: CheckoutPageProps) {

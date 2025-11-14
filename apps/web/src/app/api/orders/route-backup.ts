@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { createOrderSchema } from '@/lib/validators'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -145,10 +146,12 @@ export async function POST(request: NextRequest) {
           address: validatedData.address,
           paymentMethod: validatedData.paymentMethod,
           totalAmount,
+          subtotal: totalAmount,
+          status: 'PENDING',
           items: {
             create: orderItems,
           },
-        },
+        } as Prisma.OrderUncheckedCreateInput,
         include: {
           items: {
             include: {

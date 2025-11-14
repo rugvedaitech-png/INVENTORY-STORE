@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique PO code
-    let poCode: string
+    let poCode = ''
     let isUnique = false
     let attempts = 0
     const maxAttempts = 10

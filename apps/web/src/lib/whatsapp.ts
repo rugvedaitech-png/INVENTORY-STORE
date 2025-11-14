@@ -46,7 +46,7 @@ function generateOrderMessage(store: Store, order: OrderWithItems): string {
   lines.push(`💰 *Total:* ${formatCurrency(order.totalAmount)}`)
   lines.push('')
   lines.push(`📍 *Delivery Address:*`)
-  lines.push(order.address)
+  lines.push(order.address ?? 'No address provided')
   lines.push('')
   
   // Check if this is a COD order that needs confirmation
