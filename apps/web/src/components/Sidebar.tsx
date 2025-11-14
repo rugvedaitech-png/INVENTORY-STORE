@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { 
   HomeIcon, 
   UsersIcon, 
@@ -50,6 +50,12 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.push('/auth/login')
+  }
 
   const themeClasses = {
     light: {
@@ -193,7 +199,7 @@ export default function Sidebar({
             
             {/* Logout Button */}
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/login' })}
+              onClick={handleSignOut}
               className={`
                 w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
                 ${currentTheme.navItem} hover:bg-red-50 hover:text-red-700

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useCart } from '@/hooks/useCart'
 import CartSidebar from './CartSidebar'
 import {
@@ -41,9 +41,15 @@ interface CustomerSidebarProps {
 
 export default function CustomerSidebar({ userEmail, userName, onClose }: CustomerSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { getTotalItems } = useCart()
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.push('/auth/login')
+  }
 
   const navigationItems = [
     { name: 'Dashboard', href: '/customer', icon: HomeIcon, description: 'Overview & Summary' },
@@ -222,7 +228,7 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
             {/* Sign Out */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                onClick={handleSignOut}
                 className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors group"
               >
                 <XMarkIcon className="mr-3 h-5 w-5 text-red-400 group-hover:text-red-500" />

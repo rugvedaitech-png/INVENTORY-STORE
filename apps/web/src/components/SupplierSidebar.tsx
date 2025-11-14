@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { 
   HomeIcon, 
   DocumentTextIcon, 
@@ -44,6 +44,12 @@ export default function SupplierSidebar({
 }: SupplierSidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.push('/auth/login')
+  }
 
   const themeClasses = {
     light: 'bg-white text-gray-900 border-gray-200',
@@ -136,7 +142,7 @@ export default function SupplierSidebar({
             
             {/* Logout Button */}
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/login' })}
+              onClick={handleSignOut}
               className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors group"
             >
               <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3 text-red-400 group-hover:text-red-500" />
