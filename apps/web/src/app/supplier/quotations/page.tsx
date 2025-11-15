@@ -3,14 +3,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
+import {
   DocumentTextIcon, 
   BuildingOfficeIcon, 
   CurrencyRupeeIcon,
   CheckIcon,
   XMarkIcon,
   ClockIcon,
-  TruckIcon
+  TruckIcon,
+  ArrowPathIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 import SupplierLayoutClient from '../SupplierLayoutClient'
 import Pagination from '@/components/Pagination'
@@ -20,6 +22,7 @@ interface QuotationRequest {
   code: string
   status: string
   notes: string | null
+  quotationNotes: string | null
   subtotal: number
   taxTotal: number
   total: number
@@ -124,6 +127,10 @@ export default function QuotationsPage() {
     fetchQuotationRequests(page)
   }
 
+  const isEditableStatus = (status: string) => (
+    status === 'QUOTATION_REQUESTED' || status === 'QUOTATION_REVISION_REQUESTED'
+  )
+
   const handleQuotationChange = (poId: number, itemId: number, value: string) => {
     const numericValue = parseFloat(value) || 0
     setQuotationData(prev => ({
@@ -190,6 +197,7 @@ export default function QuotationsPage() {
     switch (status) {
       case 'QUOTATION_REQUESTED': return 'bg-yellow-100 text-yellow-800'
       case 'QUOTATION_SUBMITTED': return 'bg-blue-100 text-blue-800'
+      case 'QUOTATION_REVISION_REQUESTED': return 'bg-amber-100 text-amber-800'
       case 'QUOTATION_APPROVED': return 'bg-green-100 text-green-800'
       case 'QUOTATION_REJECTED': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -200,6 +208,7 @@ export default function QuotationsPage() {
     switch (status) {
       case 'QUOTATION_REQUESTED': return <ClockIcon className="h-4 w-4" />
       case 'QUOTATION_SUBMITTED': return <DocumentTextIcon className="h-4 w-4" />
+      case 'QUOTATION_REVISION_REQUESTED': return <ArrowPathIcon className="h-4 w-4" />
       case 'QUOTATION_APPROVED': return <CheckIcon className="h-4 w-4" />
       case 'QUOTATION_REJECTED': return <XMarkIcon className="h-4 w-4" />
       default: return <DocumentTextIcon className="h-4 w-4" />
@@ -260,7 +269,10 @@ export default function QuotationsPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
-                  {quotationRequests.map((request) => (
+                  {quotationRequests.map((request) => {
+                    const editable = isEditableStatus(request.status)
+
+                    return (
                     <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
                       {/* Header */}
                       <div className="flex items-start justify-between">
@@ -293,12 +305,23 @@ export default function QuotationsPage() {
                                 <span className="font-medium">Notes:</span> {request.notes}
                               </div>
                             )}
+                            {request.status === 'QUOTATION_REVISION_REQUESTED' && (
+                              <div className="mt-3 flex items-start space-x-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+                                <InformationCircleIcon className="h-5 w-5 text-amber-500" />
+                                <div>
+                                  <p className="font-semibold">Revision requested by store owner</p>
+                                  <p className="mt-1">
+                                    {request.quotationNotes || 'Update the quotation and submit again to proceed.'}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                         
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-3">
-                          {request.status === 'QUOTATION_REQUESTED' && (
+                          {isEditableStatus(request.status) && (
                             <button
                               onClick={() => handleSubmitQuotation(request.id)}
                               disabled={submitting === request.id}
@@ -312,7 +335,7 @@ export default function QuotationsPage() {
                               ) : (
                                 <>
                                   <DocumentTextIcon className="h-4 w-4 mr-2" />
-                                  Submit Quotation
+                                  {request.status === 'QUOTATION_REVISION_REQUESTED' ? 'Resubmit Quotation' : 'Submit Quotation'}
                                 </>
                               )}
                             </button>
@@ -371,7 +394,7 @@ export default function QuotationsPage() {
                                     <div className="text-sm text-gray-600">
                                       Store Estimate: ₹{(item.costPaise / 100).toFixed(2)}
                                     </div>
-                                    {item.quotedCostPaise && (
+                                    {item.quotedCostPaise != null && (
                                       <div className="text-sm text-green-600 font-semibold">
                                         Quoted: ₹{(item.quotedCostPaise / 100).toFixed(2)}
                                       </div>
@@ -392,11 +415,11 @@ export default function QuotationsPage() {
                                         value={quotationData[request.id]?.[item.id] || (item.quotedCostPaise ? (item.quotedCostPaise / 100).toFixed(2) : '')}
                                         onChange={(e) => handleQuotationChange(request.id, item.id, e.target.value)}
                                         className={`w-32 pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                                          request.status !== 'QUOTATION_REQUESTED' 
+                                          !editable
                                             ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
                                             : 'bg-white border-gray-300'
                                         }`}
-                                        disabled={request.status !== 'QUOTATION_REQUESTED'}
+                                        disabled={!editable}
                                       />
                                     </div>
                                   </div>
@@ -407,7 +430,7 @@ export default function QuotationsPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
             </div>

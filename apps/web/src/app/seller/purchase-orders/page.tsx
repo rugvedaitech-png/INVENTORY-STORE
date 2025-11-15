@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
+import {
   DocumentTextIcon, 
   BuildingOfficeIcon, 
   PlusIcon, 
@@ -11,7 +11,10 @@ import {
   XMarkIcon,
   CheckIcon,
   CurrencyRupeeIcon,
-  CubeIcon
+  CubeIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 import Pagination from '@/components/Pagination'
 
@@ -31,7 +34,9 @@ interface PurchaseOrder {
     | 'QUOTATION_SUBMITTED'
     | 'QUOTATION_APPROVED'
     | 'QUOTATION_REJECTED'
+    | 'QUOTATION_REVISION_REQUESTED'
   notes: string | null
+  quotationNotes: string | null
   subtotal: number
   taxTotal: number
   total: number
@@ -49,6 +54,7 @@ interface PurchaseOrder {
     productId: number
     qty: number
     costPaise: number
+    quotedCostPaise: number | null
     product: {
       id: number
       title: string
@@ -103,6 +109,10 @@ export default function PurchaseOrdersPage() {
     total: 0,
     pages: 0
   })
+  const [expandedPoId, setExpandedPoId] = useState<number | null>(null)
+  const [revisionModalPo, setRevisionModalPo] = useState<PurchaseOrder | null>(null)
+  const [revisionNotes, setRevisionNotes] = useState('')
+  const [revisionSubmitting, setRevisionSubmitting] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -190,6 +200,28 @@ export default function PurchaseOrdersPage() {
     } catch (err) {
       console.error('Failed to fetch products:', err)
     }
+  }
+
+  const togglePurchaseOrderDetails = (poId: number) => {
+    setExpandedPoId(prev => (prev === poId ? null : poId))
+  }
+
+  const formatCurrency = (value?: number | null) => {
+    if (value === null || value === undefined) {
+      return '₹0.00'
+    }
+    return `₹${(value / 100).toFixed(2)}`
+  }
+
+  const openRevisionModal = (po: PurchaseOrder) => {
+    setRevisionModalPo(po)
+    setRevisionNotes(po.quotationNotes || '')
+  }
+
+  const closeRevisionModal = () => {
+    setRevisionModalPo(null)
+    setRevisionNotes('')
+    setRevisionSubmitting(false)
   }
 
   // Form validation
@@ -306,6 +338,7 @@ export default function PurchaseOrdersPage() {
       case 'DRAFT': return 'bg-gray-100 text-gray-800'
       case 'QUOTATION_REQUESTED': return 'bg-yellow-100 text-yellow-800'
       case 'QUOTATION_SUBMITTED': return 'bg-blue-100 text-blue-800'
+      case 'QUOTATION_REVISION_REQUESTED': return 'bg-amber-100 text-amber-800'
       case 'QUOTATION_APPROVED': return 'bg-green-100 text-green-800'
       case 'QUOTATION_REJECTED': return 'bg-red-100 text-red-800'
       case 'SENT': return 'bg-indigo-100 text-indigo-800'
@@ -418,6 +451,33 @@ export default function PurchaseOrdersPage() {
       setError(err instanceof Error ? err.message : `Failed to ${action} order`)
     } finally {
       setConfirming(null)
+    }
+  }
+
+  const handleSubmitRevisionRequest = async () => {
+    if (!revisionModalPo) return
+
+    try {
+      setRevisionSubmitting(true)
+      setError(null)
+
+      const response = await fetch(`/api/purchase-orders/${revisionModalPo.id}/request-revision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: revisionNotes })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to request revision')
+      }
+
+      closeRevisionModal()
+      await fetchPurchaseOrders()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to request revision')
+    } finally {
+      setRevisionSubmitting(false)
     }
   }
 
@@ -698,135 +758,239 @@ export default function PurchaseOrdersPage() {
       {/* Purchase Orders List */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {purchaseOrders.map((po) => (
-            <li key={po.id}>
-              <div className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-medium text-sm">
-                          PO
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {po.code}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {po.supplier.name} • {po.items.length} items • ₹{(po.total / 100).toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        Created: {new Date(po.createdAt).toLocaleDateString()}
-                        {po.placedAt && ` • Placed: ${new Date(po.placedAt).toLocaleDateString()}`}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(po.status)}`}>
-                      {po.status}
-                    </span>
-                    
-                    {po.status === 'DRAFT' && (
+          {purchaseOrders.map((po) => {
+            const isExpanded = expandedPoId === po.id
+
+            return (
+              <li key={po.id}>
+                <div className="px-4 py-4 sm:px-6">
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-start justify-between">
                       <button
-                        onClick={() => handleRequestQuotation(po.id)}
-                        disabled={sending === po.id}
-                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                        type="button"
+                        onClick={() => togglePurchaseOrderDetails(po.id)}
+                        className="flex items-center text-left focus:outline-none"
                       >
-                        {sending === po.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                            Requesting...
-                          </>
-                        ) : (
-                          'Request Quotation'
-                        )}
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-medium text-sm">PO</span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="flex items-center space-x-2">
+                            <div className="text-sm font-medium text-gray-900">
+                              {po.code}
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+                            ) : (
+                              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {po.supplier.name} • {po.items.length} items • {formatCurrency(po.total)}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            Created: {new Date(po.createdAt).toLocaleDateString()}
+                            {po.placedAt && ` • Placed: ${new Date(po.placedAt).toLocaleDateString()}`}
+                          </div>
+                        </div>
                       </button>
-                    )}
-                    
-                    {po.status === 'QUOTATION_SUBMITTED' && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleApproveQuotation(po.id)}
-                          disabled={confirming === po.id}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-                        >
-                          {confirming === po.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Approving...
-                            </>
-                          ) : (
-                            'Approve Quotation'
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleRejectQuotation(po.id)}
-                          disabled={confirming === po.id}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-                        >
-                          {confirming === po.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Rejecting...
-                            </>
-                          ) : (
-                            'Reject Quotation'
-                          )}
-                        </button>
+
+                      <div className="flex flex-col items-end space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(po.status)}`}>
+                          {po.status.replace(/_/g, ' ')}
+                        </span>
+
+                        {po.status === 'DRAFT' && (
+                          <button
+                            onClick={() => handleRequestQuotation(po.id)}
+                            disabled={sending === po.id}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {sending === po.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                Requesting...
+                              </>
+                            ) : (
+                              'Request Quotation'
+                            )}
+                          </button>
+                        )}
+
+                        {po.status === 'QUOTATION_SUBMITTED' && (
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <button
+                              onClick={() => handleApproveQuotation(po.id)}
+                              disabled={confirming === po.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {confirming === po.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                  Approving...
+                                </>
+                              ) : (
+                                'Approve'
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleRejectQuotation(po.id)}
+                              disabled={confirming === po.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {confirming === po.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                  Rejecting...
+                                </>
+                              ) : (
+                                'Reject'
+                              )}
+                            </button>
+                            <button
+                              onClick={() => openRevisionModal(po)}
+                              disabled={revisionSubmitting && revisionModalPo?.id === po.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                            >
+                              {revisionSubmitting && revisionModalPo?.id === po.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-700 mr-1"></div>
+                                  Sending...
+                                </>
+                              ) : (
+                                'Request Revision'
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {po.status === 'QUOTATION_REVISION_REQUESTED' && (
+                          <span className="text-xs text-amber-600 font-medium text-right">
+                            Waiting for supplier revisions
+                          </span>
+                        )}
+
+                        {po.status === 'QUOTATION_APPROVED' && (
+                          <span className="text-xs text-green-600 font-medium">
+                            Quotation approved - waiting for supplier to ship
+                          </span>
+                        )}
+
+                        {po.status === 'SHIPPED' && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setConfirmAction('received')
+                                setConfirming(po.id)
+                              }}
+                              disabled={confirming === po.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {confirming === po.id && confirmAction === 'received' ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                  Confirming...
+                                </>
+                              ) : (
+                                'Mark as Received'
+                              )}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setConfirmAction('rejected')
+                                setConfirming(po.id)
+                              }}
+                              disabled={confirming === po.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {confirming === po.id && confirmAction === 'rejected' ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                  Rejecting...
+                                </>
+                              ) : (
+                                'Reject'
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    {po.status === 'QUOTATION_APPROVED' && (
-                      <span className="text-xs text-green-600 font-medium">
-                        Quotation approved - waiting for supplier to ship
-                      </span>
-                    )}
-                    
-                    {po.status === 'SHIPPED' && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            setConfirmAction('received')
-                            setConfirming(po.id)
-                          }}
-                          disabled={confirming === po.id}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-                        >
-                          {confirming === po.id && confirmAction === 'received' ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Confirming...
-                            </>
-                          ) : (
-                            'Mark as Received'
-                          )}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setConfirmAction('rejected')
-                            setConfirming(po.id)
-                          }}
-                          disabled={confirming === po.id}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-                        >
-                          {confirming === po.id && confirmAction === 'rejected' ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              Rejecting...
-                            </>
-                          ) : (
-                            'Reject'
-                          )}
-                        </button>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="pt-4 border-t border-gray-100">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left font-semibold text-gray-600">Product</th>
+                                <th className="px-4 py-2 text-center font-semibold text-gray-600">Qty</th>
+                                <th className="px-4 py-2 text-right font-semibold text-gray-600">Store Estimate</th>
+                                <th className="px-4 py-2 text-right font-semibold text-gray-600">Supplier Quote</th>
+                                <th className="px-4 py-2 text-right font-semibold text-gray-600">Line Total</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {po.items.map((item) => {
+                                const quoted = item.quotedCostPaise ?? null
+                                const lineTotal = (quoted ?? item.costPaise) * item.qty
+
+                                return (
+                                  <tr key={item.id} className="bg-white">
+                                    <td className="px-4 py-2">
+                                      <div className="text-gray-900 font-medium">{item.product.title}</div>
+                                      {item.product.sku && (
+                                        <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-2 text-center font-semibold text-gray-700">{item.qty}</td>
+                                    <td className="px-4 py-2 text-right text-gray-700">{formatCurrency(item.costPaise)}</td>
+                                    <td className="px-4 py-2 text-right text-gray-900 font-semibold">
+                                      {quoted !== null ? formatCurrency(quoted) : 'Awaiting quote'}
+                                    </td>
+                                    <td className="px-4 py-2 text-right text-gray-900 font-semibold">
+                                      {formatCurrency(lineTotal)}
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                          <div className="rounded-lg border border-gray-200 bg-white p-4">
+                            <div className="text-sm text-gray-500">Subtotal</div>
+                            <div className="text-lg font-semibold text-gray-900">{formatCurrency(po.subtotal)}</div>
+                          </div>
+                          <div className="rounded-lg border border-gray-200 bg-white p-4">
+                            <div className="text-sm text-gray-500">Tax (GST)</div>
+                            <div className="text-lg font-semibold text-gray-900">{formatCurrency(po.taxTotal)}</div>
+                          </div>
+                          <div className="rounded-lg border border-gray-200 bg-white p-4">
+                            <div className="text-sm text-gray-500">Grand Total</div>
+                            <div className="text-xl font-bold text-gray-900">{formatCurrency(po.total)}</div>
+                          </div>
+                        </div>
+
+                        {po.quotationNotes && (
+                          <div className="mt-4 flex items-start space-x-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            <InformationCircleIcon className="h-5 w-5 text-amber-500" />
+                            <div>
+                              <div className="font-semibold">Latest revision note</div>
+                              <p className="mt-1">{po.quotationNotes}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ul>
         {purchaseOrders.length === 0 && (
           <div className="text-center py-12">
@@ -910,6 +1074,68 @@ export default function PurchaseOrdersPage() {
                   }`}
                 >
                   {confirmAction === 'received' ? 'Confirm Received' : 'Reject Order'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {revisionModalPo && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto w-full max-w-lg px-4">
+            <div className="rounded-lg bg-white p-6 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Request Quotation Revision</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Let {revisionModalPo.supplier.name} know what needs to be updated before approval.
+                  </p>
+                </div>
+                <button
+                  onClick={closeRevisionModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Revision notes
+                </label>
+                <textarea
+                  value={revisionNotes}
+                  onChange={(e) => setRevisionNotes(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Explain what needs to be updated in this quotation..."
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  These notes will be visible to the supplier along with the purchase order.
+                </p>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end space-x-3">
+                <button
+                  onClick={closeRevisionModal}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitRevisionRequest}
+                  disabled={revisionSubmitting}
+                  className="inline-flex items-center rounded-lg border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                  {revisionSubmitting ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Revision Request'
+                  )}
                 </button>
               </div>
             </div>

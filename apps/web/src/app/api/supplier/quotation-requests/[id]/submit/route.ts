@@ -53,8 +53,9 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Check if order is in QUOTATION_REQUESTED status
-    if (purchaseOrder.status !== 'QUOTATION_REQUESTED') {
+    const allowedStatuses = ['QUOTATION_REQUESTED', 'QUOTATION_REVISION_REQUESTED']
+
+    if (!allowedStatuses.includes(purchaseOrder.status)) {
       return NextResponse.json({ 
         error: 'Only requested quotations can be submitted' 
       }, { status: 400 })
@@ -92,6 +93,7 @@ export async function POST(
       data: {
         status: 'QUOTATION_SUBMITTED',
         quotationSubmittedAt: new Date(),
+        quotationNotes: null,
         subtotal: subtotal,
         taxTotal: taxTotal,
         total: total

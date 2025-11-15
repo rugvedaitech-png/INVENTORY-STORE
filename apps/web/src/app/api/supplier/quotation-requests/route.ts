@@ -35,7 +35,13 @@ export async function GET(request: NextRequest) {
           storeId: supplier.storeId,
           supplierId: supplier.id,
           status: {
-            in: ['QUOTATION_REQUESTED', 'QUOTATION_SUBMITTED', 'QUOTATION_APPROVED', 'QUOTATION_REJECTED']
+            in: [
+              'QUOTATION_REQUESTED',
+              'QUOTATION_SUBMITTED',
+              'QUOTATION_REVISION_REQUESTED',
+              'QUOTATION_APPROVED',
+              'QUOTATION_REJECTED'
+            ]
           }
         },
         include: {
@@ -68,7 +74,13 @@ export async function GET(request: NextRequest) {
           storeId: supplier.storeId,
           supplierId: supplier.id,
           status: {
-            in: ['QUOTATION_REQUESTED', 'QUOTATION_SUBMITTED', 'QUOTATION_APPROVED', 'QUOTATION_REJECTED']
+            in: [
+              'QUOTATION_REQUESTED',
+              'QUOTATION_SUBMITTED',
+              'QUOTATION_REVISION_REQUESTED',
+              'QUOTATION_APPROVED',
+              'QUOTATION_REJECTED'
+            ]
           }
         }
       })
