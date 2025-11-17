@@ -246,25 +246,6 @@ export default async function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              {user?.store ? (
-                <Link
-                  href={`/${user.store.slug}`}
-                  className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <BuildingStorefrontIcon className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-sm font-medium text-gray-900">Browse My Store ({user.store.name})</span>
-                  <ArrowRightIcon className="h-4 w-4 text-gray-400 ml-auto" />
-                </Link>
-              ) : (
-                <Link
-                  href="/"
-                  className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <BuildingStorefrontIcon className="h-5 w-5 text-blue-600 mr-3" />
-                  <span className="text-sm font-medium text-gray-900">Browse All Stores</span>
-                  <ArrowRightIcon className="h-4 w-4 text-gray-400 ml-auto" />
-                </Link>
-              )}
               <Link
                 href="/customer/shop"
                 className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
@@ -299,26 +280,12 @@ export default async function CustomerDashboard() {
                 <p className="text-sm text-gray-600">
                   You&apos;re assigned to <strong>{user.store.name}</strong>
                 </p>
-                <Link
-                  href={`/${user.store.slug}`}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <BuildingStorefrontIcon className="h-4 w-4 mr-2" />
-                  Visit My Store
-                </Link>
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-gray-600 mb-4">
                   You don&apos;t have an assigned store yet. Contact your store owner to get access.
                 </p>
-                <Link
-                  href="/"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <BuildingStorefrontIcon className="h-4 w-4 mr-2" />
-                  Find Stores
-                </Link>
               </div>
             )}
           </div>
