@@ -10,6 +10,7 @@ import {
   PhoneIcon,
   EnvelopeIcon
 } from '@heroicons/react/24/outline'
+import Pagination from '@/components/Pagination'
 
 interface Order {
   id: number
@@ -44,27 +45,63 @@ export default function OrderTrackingPage() {
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [trackingCode, setTrackingCode] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  })
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    fetchOrders(currentPage)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage])
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page: number = 1) => {
     try {
-      const response = await fetch('/api/customer/orders')
+      setLoading(true)
+      const response = await fetch(`/api/customer/orders?page=${page}&limit=10`)
       if (response.ok) {
         const data = await response.json()
-        setOrders(data.orders || [])
+        const fetchedOrders = data.orders || []
+        setOrders(fetchedOrders)
+        setPagination(data.pagination || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          pages: 0
+        })
+        
+        // If selected order is not in current page, select first order or clear selection
+        if (fetchedOrders.length > 0) {
+          setSelectedOrder((prevSelected) => {
+            // Check if previously selected order is in the new page
+            if (prevSelected && fetchedOrders.find((o: Order) => o.id === prevSelected.id)) {
+              return prevSelected
+            }
+            // Otherwise, select the first order
+            return fetchedOrders[0]
+          })
+        } else {
+          setSelectedOrder(null)
+        }
       } else {
         console.error('Failed to fetch orders:', response.status, response.statusText)
         setOrders([])
+        setSelectedOrder(null)
       }
     } catch (error) {
       console.error('Error fetching orders:', error)
       setOrders([])
+      setSelectedOrder(null)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   const getStatusColor = (status: string) => {
@@ -183,7 +220,7 @@ export default function OrderTrackingPage() {
               {/* Orders List */}
               <div className="lg:col-span-1">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Your Orders</h2>
-                <div className="space-y-4">
+                <div className="space-y-4 mb-6">
                   {orders.map((order) => {
                     const StatusIcon = getStatusIcon(order.status)
                     return (
@@ -220,6 +257,19 @@ export default function OrderTrackingPage() {
                     )
                   })}
                 </div>
+                
+                {/* Pagination */}
+                {pagination.pages > 1 && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={pagination.pages}
+                      totalItems={pagination.total}
+                      itemsPerPage={pagination.limit}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Order Details */}
