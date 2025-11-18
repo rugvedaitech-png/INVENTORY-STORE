@@ -12,7 +12,8 @@ import {
   CogIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  UserIcon
 } from '@heroicons/react/24/outline'
 import ThemeSwitcher from './ThemeSwitcher'
 import { signOut } from 'next-auth/react'
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 const navigationItems = [
   { name: 'Dashboard', href: '/seller', icon: HomeIcon },
+  { name: 'Profile', href: '/seller/profile', icon: UserIcon },
   { name: 'Products', href: '/seller/products', icon: DocumentTextIcon },
   { name: 'Orders', href: '/seller/orders', icon: CalendarIcon, badge: '4' },
   { name: 'Inventory', href: '/seller/inventory', icon: ChartBarIcon, badge: '5' },
