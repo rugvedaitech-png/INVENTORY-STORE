@@ -11,6 +11,7 @@ import {
   PencilIcon
 } from '@heroicons/react/24/outline'
 import QuickActions from './QuickActions'
+import SupplierLayoutClient from '../SupplierLayoutClient'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -57,9 +58,16 @@ export default async function SupplierProfilePage() {
   }) : 0
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <SupplierLayoutClient
+      userEmail={session.user?.email || 'supplier@example.com'}
+      userName={session.user?.name || 'Supplier User'}
+    >
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
@@ -182,7 +190,11 @@ export default async function SupplierProfilePage() {
           <QuickActions />
         </div>
       </div>
-    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SupplierLayoutClient>
   )
 }
 
