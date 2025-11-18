@@ -1,7 +1,8 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { CogIcon, BellIcon, ShieldCheckIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { CogIcon, BellIcon, EyeIcon } from '@heroicons/react/24/outline'
+import ChangePassword from '@/components/ChangePassword'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -44,18 +45,7 @@ export default async function CustomerSettingsPage() {
           <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Account Settings</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <ShieldCheckIcon className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Change Password</p>
-                    <p className="text-xs text-gray-600">Update your account security</p>
-                  </div>
-                </div>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  Change
-                </button>
-              </div>
+              <ChangePassword />
               
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">

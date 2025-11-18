@@ -9,7 +9,8 @@ import {
   TruckIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CogIcon
 } from '@heroicons/react/24/outline'
 import ThemeSwitcher from './ThemeSwitcher'
 import { signOut } from 'next-auth/react'
@@ -33,6 +34,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/supplier', icon: HomeIcon },
   { name: 'Quotations', href: '/supplier/quotations', icon: DocumentTextIcon },
   { name: 'Purchase Orders', href: '/supplier/purchase-orders', icon: DocumentTextIcon },
+  { name: 'Settings', href: '/supplier/settings', icon: CogIcon },
 ]
 
 export default function SupplierSidebar({ 
