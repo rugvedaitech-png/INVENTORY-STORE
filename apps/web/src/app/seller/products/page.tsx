@@ -6,6 +6,25 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
 
+// Helper function to check if image URL is from an allowed domain
+const isAllowedImageDomain = (url: string): boolean => {
+  if (!url || typeof url !== 'string') return false
+  // Local paths (starting with /) are always allowed
+  if (url.startsWith('/')) return true
+  try {
+    const urlObj = new URL(url)
+    const allowedDomains = [
+      'picsum.photos',
+      'example.com',
+      'localhost',
+      'ordernestpro.rugvedaitech.com',
+    ]
+    return allowedDomains.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith(`.${domain}`))
+  } catch {
+    return false
+  }
+}
+
 interface Product {
   id: number
   title: string
@@ -383,13 +402,25 @@ export default function ProductsPage() {
                               <div className="flex items-start">
                                 <div className="flex-shrink-0 h-12 w-12">
                                   {images.length > 0 ? (
-                                    <Image
-                                      className="h-12 w-12 rounded-lg object-cover"
-                                      src={images[0]}
-                                      alt={product.title}
-                                      width={48}
-                                      height={48}
-                                    />
+                                    isAllowedImageDomain(images[0]) ? (
+                                      <Image
+                                        className="h-12 w-12 rounded-lg object-cover"
+                                        src={images[0]}
+                                        alt={product.title}
+                                        width={48}
+                                        height={48}
+                                      />
+                                    ) : (
+                                      // Use regular img tag for unconfigured domains
+                                      <img
+                                        className="h-12 w-12 rounded-lg object-cover"
+                                        src={images[0]}
+                                        alt={product.title}
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none'
+                                        }}
+                                      />
+                                    )
                                   ) : (
                                     <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
                                       <span className="text-gray-400 text-xs">No image</span>
