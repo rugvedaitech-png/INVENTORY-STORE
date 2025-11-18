@@ -267,15 +267,29 @@ export class AuthService {
   /**
    * Get all users (admin only)
    */
-  static async getAllUsers(search?: string | null, page = 1, limit = 50): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
+  static async getAllUsers(search?: string | null, page = 1, limit = 50, storeId?: number): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
     try {
       const where: any = {}
+      
+      // Filter by storeId if provided
+      if (storeId) {
+        where.storeId = storeId
+      }
+      
       if (search) {
-        where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+        where.AND = [
+          ...(storeId ? [{ storeId }] : []),
+          {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phone: { contains: search, mode: 'insensitive' } },
+            ]
+          }
         ]
+        if (storeId) {
+          delete where.storeId
+        }
       }
 
       const [users, total] = await Promise.all([
@@ -317,12 +331,19 @@ export class AuthService {
   /**
    * Get users by role
    */
-  static async getUsersByRole(role: UserRole, search?: string | null, page = 1, limit = 50): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
+  static async getUsersByRole(role: UserRole, search?: string | null, page = 1, limit = 50, storeId?: number): Promise<{ users: User[], pagination: { page: number, limit: number, total: number, pages: number } }> {
     try {
       const where: any = { role }
+      
+      // Filter by storeId if provided
+      if (storeId) {
+        where.storeId = storeId
+      }
+      
       if (search) {
         where.AND = [
           { role },
+          ...(storeId ? [{ storeId }] : []),
           {
             OR: [
               { name: { contains: search, mode: 'insensitive' } },
@@ -332,6 +353,9 @@ export class AuthService {
           }
         ]
         delete where.role
+        if (storeId) {
+          delete where.storeId
+        }
       }
 
       const [users, total] = await Promise.all([

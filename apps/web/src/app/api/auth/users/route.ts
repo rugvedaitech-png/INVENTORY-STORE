@@ -35,14 +35,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const search = searchParams.get('search')
+    const storeId = searchParams.get('storeId')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
     let users
     if (role) {
-      users = await AuthService.getUsersByRole(role as UserRole, search, page, limit)
+      users = await AuthService.getUsersByRole(role as UserRole, search, page, limit, storeId ? parseInt(storeId) : undefined)
     } else {
-      users = await AuthService.getAllUsers(search, page, limit)
+      users = await AuthService.getAllUsers(search, page, limit, storeId ? parseInt(storeId) : undefined)
     }
 
     return NextResponse.json(users)

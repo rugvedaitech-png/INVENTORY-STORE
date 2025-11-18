@@ -128,8 +128,9 @@ export default function SuppliersPage() {
 
 
   const fetchSupplierUsers = async () => {
+    if (!storeId) return
     try {
-      const response = await fetch('/api/auth/users?role=SUPPLIER')
+      const response = await fetch(`/api/auth/users?role=SUPPLIER&storeId=${storeId}`)
       if (!response.ok) {
         throw new Error('Failed to fetch supplier users')
       }
@@ -219,12 +220,13 @@ export default function SuppliersPage() {
   }
 
   const handleLinkUser = async (supplier: Supplier) => {
+    if (!storeId) return
     setLinkingSupplier(supplier)
     setShowLinkUserForm(true)
     
-    // Fetch available users with SUPPLIER role
+    // Fetch available users with SUPPLIER role for this store
     try {
-      const response = await fetch('/api/users?role=SUPPLIER')
+      const response = await fetch(`/api/auth/users?role=SUPPLIER&storeId=${storeId}`)
       if (response.ok) {
         const data = await response.json()
         setAvailableUsers(data.users || [])
