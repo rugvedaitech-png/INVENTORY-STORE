@@ -40,8 +40,16 @@ export default function UsersPage() {
     password: '',
     role: UserRole.CUSTOMER,
   })
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [deletingUserId, setDeletingUserId] = useState<number | null>(null)
 
   // Redirect if not authenticated or not store owner
   useEffect(() => {
@@ -77,8 +85,8 @@ export default function UsersPage() {
         
         setUsers(usersData.users)
       }
-    } catch (error) {
-      console.error('Error fetching data:', error)
+    } catch (err) {
+      console.error('Error fetching data:', err)
       setError('Failed to load data')
     } finally {
       setLoading(false)
@@ -124,7 +132,7 @@ export default function UsersPage() {
         const data = await response.json()
         setError(data.error || 'Failed to add user')
       }
-    } catch (error) {
+    } catch {
       setError('An error occurred. Please try again.')
     } finally {
       setSubmitting(false)
@@ -136,6 +144,98 @@ export default function UsersPage() {
       ...formData,
       [e.target.name]: e.target.value,
     })
+  }
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditFormData({
+      ...editFormData,
+      [e.target.name]: e.target.value,
+    })
+  }
+
+  const handleEdit = (user: User) => {
+    // Only allow editing CUSTOMER and SUPPLIER roles
+    if (user.role === UserRole.STORE_OWNER) {
+      setError('Cannot edit store owner')
+      return
+    }
+    setEditingUser(user)
+    setEditFormData({
+      name: user.name || '',
+      email: user.email,
+      phone: user.phone || '',
+    })
+    setShowEditForm(true)
+    setError('')
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingUser || !store) return
+
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/stores/${store.slug}/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      })
+
+      if (response.ok) {
+        setShowEditForm(false)
+        setEditingUser(null)
+        setEditFormData({ name: '', email: '', phone: '' })
+        fetchData() // Refresh the list
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to update user')
+      }
+    } catch {
+      setError('An error occurred. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (user: User) => {
+    // Only allow deleting CUSTOMER and SUPPLIER roles
+    if (user.role === UserRole.STORE_OWNER) {
+      setError('Cannot delete store owner')
+      return
+    }
+
+    if (!confirm(`Are you sure you want to temporarily delete ${user.name || user.email}? This will remove them from your store but keep their account.`)) {
+      return
+    }
+
+    if (!store) {
+      setError('Store not found')
+      return
+    }
+
+    setDeletingUserId(user.id)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/stores/${store.slug}/users/${user.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        fetchData() // Refresh the list
+      } else {
+        const data = await response.json()
+        setError(data.error || 'Failed to delete user')
+      }
+    } catch {
+      setError('An error occurred. Please try again.')
+    } finally {
+      setDeletingUserId(null)
+    }
   }
 
   const getRoleColor = (role: UserRole) => {
@@ -173,12 +273,22 @@ export default function UsersPage() {
               <p className="text-gray-600">Manage users for {store?.name || 'your store'}</p>
             </div>
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {
+                setShowAddForm(true)
+                setError('')
+              }}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Add User
             </button>
           </div>
+
+          {/* Error Message */}
+          {error && !showAddForm && !showEditForm && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
 
           {/* Users Table */}
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -209,6 +319,9 @@ export default function UsersPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Joined
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -234,6 +347,27 @@ export default function UsersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(user.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {user.role !== UserRole.STORE_OWNER && (
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleEdit(user)}
+                                className="text-indigo-600 hover:text-indigo-900"
+                                disabled={deletingUserId === user.id}
+                              >
+                                Edit
+                              </button>
+                              <span className="text-gray-300">|</span>
+                              <button
+                                onClick={() => handleDelete(user)}
+                                className="text-red-600 hover:text-red-900"
+                                disabled={deletingUserId === user.id}
+                              >
+                                {deletingUserId === user.id ? 'Deleting...' : 'Delete'}
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -324,7 +458,10 @@ export default function UsersPage() {
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setError('')
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
@@ -335,6 +472,84 @@ export default function UsersPage() {
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
                   >
                     {submitting ? 'Adding...' : 'Add User'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditForm && editingUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit User
+              </h3>
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleUpdate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name *</label>
+                  <input
+                    type="text"
+                    required
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    name="email"
+                    value={editFormData.email}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editFormData.phone}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditForm(false)
+                      setEditingUser(null)
+                      setEditFormData({ name: '', email: '', phone: '' })
+                      setError('')
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {submitting ? 'Updating...' : 'Update User'}
                   </button>
                 </div>
               </form>
