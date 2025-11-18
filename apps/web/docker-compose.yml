@@ -32,7 +32,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mysql://${MYSQL_USER:-inventory_user}:${MYSQL_PASSWORD:-inventory_password}@mysql:3306/${MYSQL_DATABASE:-inventory_store}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-https://ordernestpro.rugvedaitech.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}

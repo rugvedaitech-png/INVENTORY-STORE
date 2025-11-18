@@ -28,6 +28,9 @@ WORKDIR /app
 
 ENV NODE_ENV production
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -49,5 +52,6 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Run database migrations and start the application
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+# Start the application
+# Note: Database migrations should be run separately or via init container
+CMD ["npm", "start"]
