@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   TruckIcon,
   ClockIcon,
@@ -40,7 +41,8 @@ interface Order {
   }
 }
 
-export default function OrderTrackingPage() {
+function OrderTrackingPageContent() {
+  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -52,6 +54,31 @@ export default function OrderTrackingPage() {
     total: 0,
     pages: 0
   })
+
+  // Fetch a specific order by ID if not found in current page
+  const fetchSpecificOrder = async (orderId: number) => {
+    try {
+      // Fetch all orders with a high limit to find the specific order
+      const response = await fetch(`/api/customer/orders?limit=100`)
+      if (response.ok) {
+        const data = await response.json()
+        const allOrders = data.orders || []
+        const targetOrder = allOrders.find((o: Order) => o.id === orderId)
+        if (targetOrder) {
+          setSelectedOrder(targetOrder)
+          // Also add it to the orders list if not already there
+          setOrders((prevOrders) => {
+            if (!prevOrders.find((o) => o.id === orderId)) {
+              return [targetOrder, ...prevOrders]
+            }
+            return prevOrders
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching specific order:', error)
+    }
+  }
 
   useEffect(() => {
     fetchOrders(currentPage)
@@ -73,16 +100,34 @@ export default function OrderTrackingPage() {
           pages: 0
         })
         
+        // Check if there's an orderId in the URL query params
+        const orderIdParam = searchParams?.get('orderId')
+        const targetOrderId = orderIdParam ? parseInt(orderIdParam) : null
+        
         // If selected order is not in current page, select first order or clear selection
         if (fetchedOrders.length > 0) {
-          setSelectedOrder((prevSelected) => {
-            // Check if previously selected order is in the new page
-            if (prevSelected && fetchedOrders.find((o: Order) => o.id === prevSelected.id)) {
-              return prevSelected
+          // If there's an orderId in URL, try to find and select it
+          if (targetOrderId) {
+            const targetOrder = fetchedOrders.find((o: Order) => o.id === targetOrderId)
+            if (targetOrder) {
+              setSelectedOrder(targetOrder)
+            } else {
+              // If order not in current page, fetch it directly
+              fetchSpecificOrder(targetOrderId)
+              // Select first order as fallback
+              setSelectedOrder(fetchedOrders[0])
             }
-            // Otherwise, select the first order
-            return fetchedOrders[0]
-          })
+          } else {
+            // No orderId in URL, use normal selection logic
+            setSelectedOrder((prevSelected) => {
+              // Check if previously selected order is in the new page
+              if (prevSelected && fetchedOrders.find((o: Order) => o.id === prevSelected.id)) {
+                return prevSelected
+              }
+              // Otherwise, select the first order
+              return fetchedOrders[0]
+            })
+          }
         } else {
           setSelectedOrder(null)
         }
@@ -387,5 +432,20 @@ export default function OrderTrackingPage() {
           )}
         </div>
       </div>
+  )
+}
+
+export default function OrderTrackingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OrderTrackingPageContent />
+    </Suspense>
   )
 }

@@ -228,7 +228,7 @@ export default async function CustomerDashboard() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <Link
-                        href={`/customer/orders/${order.id}`}
+                        href={`/customer/order-tracking?orderId=${order.id}`}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >
                         View Details
