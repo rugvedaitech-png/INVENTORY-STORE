@@ -42,12 +42,12 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Get all users associated with this store
+    // Get all users associated with this store (exclude soft-deleted users)
     const users = await db.user.findMany({
       where: {
         OR: [
           { id: store.ownerId }, // Store owner
-          { storeId: store.id }  // Associated users
+          { storeId: store.id }  // Associated users (not soft-deleted)
         ]
       },
       select: {

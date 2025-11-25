@@ -68,21 +68,21 @@ export default function UsersPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      
+
       // Get store info first
       const storeResponse = await fetch('/api/stores')
       if (!storeResponse.ok) throw new Error('Failed to fetch store')
       const storeData = await storeResponse.json()
-      
+
       if (storeData.stores && storeData.stores.length > 0) {
         const userStore = storeData.stores[0]
         setStore(userStore)
-        
+
         // Fetch users for this store
         const usersResponse = await fetch(`/api/stores/${userStore.slug}/users`)
         if (!usersResponse.ok) throw new Error('Failed to fetch users')
         const usersData = await usersResponse.json()
-        
+
         setUsers(usersData.users)
       }
     } catch (err) {
@@ -387,7 +387,7 @@ export default function UsersPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Add New User
               </h3>
-              
+
               {error && (
                 <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                   {error}
@@ -488,7 +488,7 @@ export default function UsersPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Edit User
               </h3>
-              
+
               {error && (
                 <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                   {error}

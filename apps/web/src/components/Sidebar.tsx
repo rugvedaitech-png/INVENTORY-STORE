@@ -13,7 +13,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
-  UserIcon
+  UserIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline'
 import ThemeSwitcher from './ThemeSwitcher'
 import { signOut } from 'next-auth/react'
@@ -29,6 +30,7 @@ interface SidebarProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/seller', icon: HomeIcon },
   { name: 'Profile', href: '/seller/profile', icon: UserIcon },
+  { name: 'Billing', href: '/seller/billing', icon: ShoppingCartIcon },
   { name: 'Products', href: '/seller/products', icon: DocumentTextIcon },
   { name: 'Orders', href: '/seller/orders', icon: CalendarIcon, badge: '4' },
   { name: 'Inventory', href: '/seller/inventory', icon: ChartBarIcon, badge: '5' },

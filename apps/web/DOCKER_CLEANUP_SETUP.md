@@ -187,3 +187,5 @@ For most production environments, **weekly cleanup** (Option 1) is recommended a
 - The script will not remove images or cache that are currently in use
 - Always test the script manually before setting up the cron job
 
+
+
