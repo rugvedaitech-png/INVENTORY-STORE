@@ -21,7 +21,7 @@ export default function SellerLayoutClient({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex print:block">
       {/* Sidebar */}
       <Sidebar 
         userEmail={userEmail}
@@ -31,8 +31,8 @@ export default function SellerLayoutClient({
       />
       
       {/* Main content */}
-      <div className="flex-1 lg:ml-0">
-        <main className="p-6">
+      <div className="flex-1 lg:ml-0 print:w-full">
+        <main className="p-6 print:p-0">
           {children}
         </main>
       </div>

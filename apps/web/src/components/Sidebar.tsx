@@ -10,7 +10,6 @@ import {
   DocumentTextIcon, 
   ChartBarIcon,
   CogIcon,
-  Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   UserIcon,
@@ -102,24 +101,10 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`p-2 rounded-md ${currentTheme.sidebar} shadow-lg`}
-        >
-          {isMobileMenuOpen ? (
-            <XMarkIcon className="h-6 w-6" />
-          ) : (
-            <Bars3Icon className="h-6 w-6" />
-          )}
-        </button>
-      </div>
-
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div 
-          className={`lg:hidden fixed inset-0 z-40 ${currentTheme.mobileOverlay}`}
+          className={`lg:hidden fixed inset-0 z-40 print:hidden ${currentTheme.mobileOverlay}`}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -131,6 +116,7 @@ export default function Sidebar({
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         ${currentTheme.sidebar}
         shadow-xl lg:shadow-none
+        print:hidden
       `}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}

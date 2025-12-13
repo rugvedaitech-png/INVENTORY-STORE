@@ -187,11 +187,11 @@ export default function BillingPage() {
       setCartItems([])
       setBarcodeInput('')
 
-      // Show success and redirect
+      // Show success and redirect with print parameter
       setSuccess(`Bill created successfully! Order #${data.orderId}`)
       setTimeout(() => {
-        router.push(`/seller/billing/receipt/${data.orderId}`)
-      }, 1500)
+        router.push(`/seller/billing/receipt/${data.orderId}?print=true`)
+      }, 500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bill')
     } finally {

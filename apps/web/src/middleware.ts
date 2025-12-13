@@ -6,11 +6,12 @@ export default withAuth(
     const token = req.nextauth.token
     const { pathname } = req.nextUrl
 
-    // Allow access to public routes
+    // Allow access to public routes and API routes
     if (pathname.startsWith('/demo-ration-store') || 
         pathname.startsWith('/success') ||
         pathname.startsWith('/api/orders') ||
         pathname.startsWith('/api/products') ||
+        pathname.startsWith('/api/auth') ||
         pathname.startsWith('/auth') ||
         pathname === '/') {
       return NextResponse.next()
@@ -42,11 +43,12 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl
         
-        // Allow access to public routes
+        // Allow access to public routes and API routes
         if (pathname.startsWith('/demo-ration-store') || 
             pathname.startsWith('/success') ||
             pathname.startsWith('/api/orders') ||
             pathname.startsWith('/api/products') ||
+            pathname.startsWith('/api/auth') ||
             pathname.startsWith('/auth') ||
             pathname === '/') {
           return true

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
 import { numberToWords } from '@/lib/numberToWords'
 import { PrinterIcon, ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
@@ -39,15 +39,18 @@ interface Order {
   items: OrderItem[]
 }
 
-export default function ReceiptPage() {
+function ReceiptPageContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const orderId = params?.id as string
+  const shouldPrint = searchParams?.get('print') === 'true'
 
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasPrinted, setHasPrinted] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -79,6 +82,20 @@ export default function ReceiptPage() {
       setLoading(false)
     }
   }
+
+  // Auto-print when order is loaded and print parameter is present
+  useEffect(() => {
+    if (order && shouldPrint && !hasPrinted && !loading) {
+      // Small delay to ensure page is fully rendered
+      const timer = setTimeout(() => {
+        window.print()
+        setHasPrinted(true)
+        // Remove print parameter from URL after printing
+        router.replace(`/seller/billing/receipt/${orderId}`)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [order, shouldPrint, hasPrinted, loading, orderId, router])
 
   const handlePrint = () => {
     window.print()
@@ -177,8 +194,8 @@ export default function ReceiptPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 print:bg-white">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:py-4">
+    <div className="min-h-screen bg-gray-50 print:bg-white print:min-h-0">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:py-0 print:px-0 print:max-w-none">
         {/* Action Buttons */}
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
@@ -198,7 +215,7 @@ export default function ReceiptPage() {
         </div>
 
         {/* Receipt - Matching Template */}
-        <div className="bg-white rounded-lg shadow-lg p-6 print:shadow-none print:p-4 max-w-lg mx-auto">
+        <div className="receipt-container bg-white rounded-lg shadow-lg p-6 print:shadow-none print:p-4 max-w-lg mx-auto">
           {/* Logo */}
           <div className="text-center mb-4">
             <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black rounded mb-2">
@@ -387,15 +404,32 @@ export default function ReceiptPage() {
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Print Styles optimized for Posiflex 8800 Series Thermal Receipt Printer (80mm) */}
       <style jsx global>{`
         @media print {
           @page {
-            size: A4;
-            margin: 0.5cm;
+            size: 80mm auto;
+            margin: 0;
+            padding: 0;
           }
-          body {
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          html, body {
             background: white !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 9pt !important;
+            line-height: 1.2 !important;
+            overflow: hidden !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .print\\:hidden {
             display: none !important;
@@ -405,16 +439,149 @@ export default function ReceiptPage() {
           }
           .print\\:bg-white {
             background: white !important;
-  }
+          }
           .print\\:py-4 {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
           }
           .print\\:p-4 {
-            padding: 1rem !important;
+            padding: 0.5rem !important;
+          }
+          /* Receipt container optimized for Posiflex 8800 (80mm paper, ~79.5mm print width) */
+          .receipt-container {
+            width: 79.5mm !important;
+            max-width: 79.5mm !important;
+            margin: 0 auto !important;
+            padding: 1mm 0.25mm !important;
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 9pt !important;
+            box-sizing: border-box !important;
+            color: black !important;
+          }
+          /* Store name and headers - optimized for thermal printing */
+          .receipt-container h1, 
+          .receipt-container h2, 
+          .receipt-container h3 {
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 10pt !important;
+            font-weight: bold !important;
+            margin: 1mm 0 !important;
+            line-height: 1.2 !important;
+            text-align: center !important;
+            letter-spacing: 0.5px !important;
+          }
+          /* Body text - thermal printer optimized */
+          .receipt-container p, 
+          .receipt-container span, 
+          .receipt-container div {
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 8pt !important;
+            line-height: 1.2 !important;
+            color: black !important;
+          }
+          /* Tables - fixed width for thermal printer alignment */
+          .receipt-container table {
+            width: 100% !important;
+            max-width: 79mm !important;
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 7pt !important;
+            border-collapse: collapse !important;
+            margin: 1mm 0 !important;
+            table-layout: fixed !important;
+          }
+          .receipt-container th, 
+          .receipt-container td {
+            padding: 0.5mm 0.25mm !important;
+            font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+            font-size: 7pt !important;
+            line-height: 1.1 !important;
+            word-wrap: break-word !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            border: none !important;
+            color: black !important;
+          }
+          .receipt-container th {
+            font-weight: bold !important;
+            text-align: left !important;
+          }
+          .receipt-container td {
+            text-align: left !important;
+          }
+          /* Right-aligned numeric columns */
+          .receipt-container td[class*="text-right"],
+          .receipt-container th[class*="text-right"] {
+            text-align: right !important;
+          }
+          /* Center-aligned columns */
+          .receipt-container td[class*="text-center"],
+          .receipt-container th[class*="text-center"] {
+            text-align: center !important;
+          }
+          /* Optimize borders for thermal printing */
+          .receipt-container [class*="border"] {
+            border-color: black !important;
+            border-width: 0.5pt !important;
+          }
+          /* Ensure all text is black for thermal printers */
+          .receipt-container * {
+            color: black !important;
+          }
+          /* Remove any background colors that won't print well */
+          .receipt-container [class*="bg-"] {
+            background: white !important;
+          }
+          /* Ensure no page breaks */
+          .receipt-container {
+            page-break-inside: avoid !important;
+          }
+          /* Hide sidebar in print */
+          aside,
+          [class*="sidebar"],
+          nav[class*="sidebar"] {
+            display: none !important;
+          }
+          /* Remove outer container padding in print */
+          body > div {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
+          }
+          /* Center receipt on page and remove flex layout */
+          body {
+            display: block !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
+          }
+          /* Remove flex layout from main container */
+          body > div > div[class*="flex"] {
+            display: block !important;
+          }
+          /* Hide main content wrapper padding in print */
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
     </div>
+  )
+}
+
+export default function ReceiptPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading receipt...</p>
+          </div>
+        </div>
+      }
+    >
+      <ReceiptPageContent />
+    </Suspense>
   )
 }
