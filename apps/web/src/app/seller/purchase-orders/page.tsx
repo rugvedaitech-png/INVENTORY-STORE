@@ -14,9 +14,12 @@ import {
   CubeIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/react/24/outline'
 import Pagination from '@/components/Pagination'
+import BulkUploadForm from '@/components/purchase-orders/BulkUploadForm'
+import SingleProductForm from '@/components/purchase-orders/SingleProductForm'
 
 interface PurchaseOrder {
   id: number
@@ -113,6 +116,8 @@ export default function PurchaseOrdersPage() {
   const [revisionModalPo, setRevisionModalPo] = useState<PurchaseOrder | null>(null)
   const [revisionNotes, setRevisionNotes] = useState('')
   const [revisionSubmitting, setRevisionSubmitting] = useState(false)
+  const [showBulkUploadForm, setShowBulkUploadForm] = useState(false)
+  const [showSingleProductForm, setShowSingleProductForm] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -507,7 +512,23 @@ export default function PurchaseOrdersPage() {
               </div>
             </div>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
+            <button
+              type="button"
+              onClick={() => setShowSingleProductForm(true)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Add Single Product
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowBulkUploadForm(true)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <ArrowUpTrayIcon className="h-4 w-4 mr-2" />
+              Bulk Upload
+            </button>
             <button
               type="button"
               onClick={() => setShowCreateForm(true)}
@@ -1141,6 +1162,30 @@ export default function PurchaseOrdersPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Single Product Form */}
+      {showSingleProductForm && (
+        <SingleProductForm
+          suppliers={suppliers}
+          onSuccess={() => {
+            fetchPurchaseOrders()
+            setShowSingleProductForm(false)
+          }}
+          onClose={() => setShowSingleProductForm(false)}
+        />
+      )}
+
+      {/* Bulk Upload Form */}
+      {showBulkUploadForm && (
+        <BulkUploadForm
+          suppliers={suppliers}
+          onSuccess={() => {
+            fetchPurchaseOrders()
+            setShowBulkUploadForm(false)
+          }}
+          onClose={() => setShowBulkUploadForm(false)}
+        />
       )}
     </div>
   )

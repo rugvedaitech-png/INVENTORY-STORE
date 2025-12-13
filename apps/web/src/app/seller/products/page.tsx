@@ -85,7 +85,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [showActiveOnly, setShowActiveOnly] = useState(true)
+  const [showActiveOnly, setShowActiveOnly] = useState(false) // Default to showing all products (active and inactive)
+  const [showInactiveOnly, setShowInactiveOnly] = useState(false) // Checkbox for inactive products only
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -134,9 +135,20 @@ export default function ProductsPage() {
         page: currentPage.toString(),
         limit: '10',
         search: searchTerm,
-        active: showActiveOnly ? 'true' : '',
-        categoryId: selectedCategory
       })
+
+      // Add active parameter based on checkbox selection
+      if (showActiveOnly && !showInactiveOnly) {
+        params.append('active', 'true')
+      } else if (showInactiveOnly && !showActiveOnly) {
+        params.append('active', 'false')
+      }
+      // If both are unchecked or both are checked, show all (no active parameter)
+
+      // Only add categoryId if a category is selected
+      if (selectedCategory) {
+        params.append('categoryId', selectedCategory)
+      }
 
       const response = await fetch(`/api/products?${params}`)
       if (!response.ok) throw new Error('Failed to fetch products')
@@ -149,7 +161,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchTerm, showActiveOnly, selectedCategory])
+  }, [currentPage, searchTerm, showActiveOnly, showInactiveOnly, selectedCategory])
 
   useEffect(() => {
     if (session?.user?.role === 'STORE_OWNER') {
@@ -342,11 +354,37 @@ export default function ProductsPage() {
                   <input
                     type="checkbox"
                     checked={showActiveOnly}
-                    onChange={(e) => setShowActiveOnly(e.target.checked)}
+                    onChange={(e) => {
+                      setShowActiveOnly(e.target.checked)
+                      if (e.target.checked && showInactiveOnly) {
+                        setShowInactiveOnly(false) // Uncheck inactive if active is checked
+                      }
+                    }}
                     className="mr-2"
                   />
-                  Active only
+                  <span>
+                    Active only
+                  </span>
                 </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={showInactiveOnly}
+                    onChange={(e) => {
+                      setShowInactiveOnly(e.target.checked)
+                      if (e.target.checked && showActiveOnly) {
+                        setShowActiveOnly(false) // Uncheck active if inactive is checked
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  <span>
+                    Inactive only
+                  </span>
+                </label>
+                {!showActiveOnly && !showInactiveOnly && (
+                  <span className="text-xs text-gray-500">(Showing all)</span>
+                )}
               </div>
             </div>
           </div>

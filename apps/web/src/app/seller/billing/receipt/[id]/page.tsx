@@ -46,6 +46,7 @@ function ReceiptPageContent() {
   const searchParams = useSearchParams()
   const orderId = params?.id as string
   const shouldPrint = searchParams?.get('print') === 'true'
+  const fromOrders = searchParams?.get('from') === 'orders'
 
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,10 +119,10 @@ function ReceiptPageContent() {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Order not found'}</p>
           <Link
-            href="/seller/billing"
+            href={fromOrders ? "/seller/orders" : "/seller/billing"}
             className="text-blue-600 hover:text-blue-800"
           >
-            Back to Billing
+            {fromOrders ? "Back to Orders" : "Back to Billing"}
           </Link>
         </div>
       </div>
@@ -199,11 +200,11 @@ function ReceiptPageContent() {
         {/* Action Buttons */}
         <div className="mb-6 flex items-center justify-between print:hidden">
           <Link
-            href="/seller/billing"
+            href={fromOrders ? "/seller/orders" : "/seller/billing"}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Back to Billing
+            {fromOrders ? "Back to Orders" : "Back to Billing"}
           </Link>
           <button
             onClick={handlePrint}

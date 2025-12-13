@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/money'
 import Pagination from '@/components/Pagination'
-import { EyeIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 interface OrderItem {
   id: number
-  quantity: number
-  price: number
+  qty: number
+  priceSnap: number
   product: {
     id: number
     title: string
@@ -480,7 +480,7 @@ export default function OrdersPage() {
                         <div className="max-w-xs">
                           {order.items.map((item, index) => (
                             <div key={item.id} className="truncate">
-                              {item.product?.title || 'Unknown Product'} × {item.quantity ?? 0}
+                              {item.product?.title || 'Unknown Product'} × {item.qty ?? 0}
                               {index < order.items.length - 1 && ', '}
                             </div>
                           ))}
@@ -576,6 +576,14 @@ export default function OrdersPage() {
                           >
                             <EyeIcon className="h-4 w-4 mr-1" />
                             View Details
+                          </Link>
+                          <Link 
+                            href={`/seller/billing/receipt/${order.id}?from=orders`}
+                            target="_blank"
+                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100 hover:text-green-700 transition-colors"
+                          >
+                            <DocumentTextIcon className="h-4 w-4 mr-1" />
+                            View Receipt
                           </Link>
                         </div>
                       </td>
