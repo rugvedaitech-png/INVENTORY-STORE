@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { 
-  BuildingOfficeIcon, 
-  EnvelopeIcon, 
-  PhoneIcon, 
-  MapPinIcon, 
+import {
+  BuildingOfficeIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
   ClockIcon,
   XMarkIcon,
   CheckIcon
@@ -57,9 +57,9 @@ export default function SuppliersPage() {
   const [submitting, setSubmitting] = useState(false)
   const [showLinkUserForm, setShowLinkUserForm] = useState(false)
   const [linkingSupplier, setLinkingSupplier] = useState<Supplier | null>(null)
-  const [availableUsers, setAvailableUsers] = useState<{id: number, name: string, email: string}[]>([])
+  const [availableUsers, setAvailableUsers] = useState<{ id: number, name: string, email: string }[]>([])
   const [selectedUserId, setSelectedUserId] = useState<string>('')
-  const [supplierUsers, setSupplierUsers] = useState<{id: number, name: string, email: string, phone: string | null}[]>([])
+  const [supplierUsers, setSupplierUsers] = useState<{ id: number, name: string, email: string, phone: string | null }[]>([])
   const [selectedSupplierUserId, setSelectedSupplierUserId] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState({
@@ -169,7 +169,7 @@ export default function SuppliersPage() {
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
+
     // Clear error when user starts typing
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: '' }))
@@ -183,7 +183,7 @@ export default function SuppliersPage() {
 
   const handleUserSelection = (userId: string) => {
     setSelectedSupplierUserId(userId)
-    
+
     if (userId) {
       const selectedUser = supplierUsers.find(user => user.id.toString() === userId)
       if (selectedUser) {
@@ -223,7 +223,7 @@ export default function SuppliersPage() {
     if (!storeId) return
     setLinkingSupplier(supplier)
     setShowLinkUserForm(true)
-    
+
     // Fetch available users with SUPPLIER role for this store
     try {
       const response = await fetch(`/api/auth/users?role=SUPPLIER&storeId=${storeId}`)
@@ -485,7 +485,7 @@ export default function SuppliersPage() {
                   <BuildingOfficeIcon className="h-4 w-4 mr-2 text-gray-500" />
                   Basic Information
                 </h4>
-                
+
                 {/* User Selection */}
                 <div className="sm:col-span-2">
                   <label htmlFor="supplierUser" className="block text-sm font-medium text-gray-700 mb-2">
@@ -513,7 +513,7 @@ export default function SuppliersPage() {
                     Select an existing user with SUPPLIER role to automatically populate name, email, and phone
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Supplier Name */}
                   <div className="sm:col-span-2">
@@ -532,11 +532,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         onBlur={() => handleInputBlur('name')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
-                          touched.name && formErrors.name
-                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                            : 'border-gray-300'
-                        } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.name && formErrors.name
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300'
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                         placeholder="Enter supplier name"
                       />
                     </div>
@@ -564,11 +563,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         onBlur={() => handleInputBlur('email')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
-                          touched.email && formErrors.email
-                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                            : 'border-gray-300'
-                        } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.email && formErrors.email
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300'
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                         placeholder="supplier@example.com"
                       />
                     </div>
@@ -596,11 +594,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         onBlur={() => handleInputBlur('phone')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
-                          touched.phone && formErrors.phone
-                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                            : 'border-gray-300'
-                        } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.phone && formErrors.phone
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                          : 'border-gray-300'
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                         placeholder="+91 xxxx xxxx xx"
                       />
                     </div>
@@ -640,7 +637,7 @@ export default function SuppliersPage() {
                   <ClockIcon className="h-4 w-4 mr-2 text-gray-500" />
                   Business Settings
                 </h4>
-                
+
                 <div>
                   <label htmlFor="leadTimeDays" className="block text-sm font-medium text-gray-700 mb-2">
                     Lead Time (Days) *
@@ -657,11 +654,10 @@ export default function SuppliersPage() {
                       value={formData.leadTimeDays}
                       onChange={(e) => handleInputChange('leadTimeDays', parseInt(e.target.value) || 1)}
                       onBlur={() => handleInputBlur('leadTimeDays')}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
-                        touched.leadTimeDays && formErrors.leadTimeDays
-                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                          : 'border-gray-300'
-                      }`}
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.leadTimeDays && formErrors.leadTimeDays
+                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-300'
+                        }`}
                       placeholder="3"
                     />
                   </div>
@@ -717,7 +713,7 @@ export default function SuppliersPage() {
               <div className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-medium text-sm">
                           {supplier.name.charAt(0).toUpperCase()}
@@ -823,7 +819,7 @@ export default function SuppliersPage() {
                   <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
-              
+
               <form onSubmit={handleLinkUserSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -843,7 +839,7 @@ export default function SuppliersPage() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="flex items-center justify-end space-x-3 pt-4">
                   <button
                     type="button"

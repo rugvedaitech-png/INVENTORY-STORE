@@ -118,7 +118,7 @@ export default function ProductsPage() {
     try {
       const response = await fetch('/api/categories?active=true')
       if (!response.ok) throw new Error('Failed to fetch categories')
-      
+
       const data = await response.json()
       setCategories(data.categories)
     } catch (error) {
@@ -140,7 +140,7 @@ export default function ProductsPage() {
 
       const response = await fetch(`/api/products?${params}`)
       if (!response.ok) throw new Error('Failed to fetch products')
-      
+
       const data: ProductsResponse = await response.json()
       setProducts(data.products)
       setPagination(data.pagination)
@@ -168,7 +168,7 @@ export default function ProductsPage() {
       })
 
       if (!response.ok) throw new Error('Failed to delete product')
-      
+
       setProducts(products.filter(p => p.id !== productId))
     } catch (error) {
       console.error('Error deleting product:', error)
@@ -186,7 +186,7 @@ export default function ProductsPage() {
       })
 
       if (!response.ok) throw new Error('Failed to update product')
-      
+
       const updatedProduct = await response.json()
       setProducts(products.map(p => p.id === product.id ? updatedProduct : p))
     } catch (error) {
@@ -203,7 +203,7 @@ export default function ProductsPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      
+
       // Add category filter if specified
       if (categoryIds && categoryIds.length > 0) {
         formData.append('allowedCategoryIds', JSON.stringify(categoryIds))
@@ -221,10 +221,10 @@ export default function ProductsPage() {
       }
 
       setUploadResults(result)
-      
+
       // Refresh products list
       fetchProducts()
-      
+
       // Close modal after 3 seconds
       setTimeout(() => {
         setShowBulkUpload(false)
@@ -253,10 +253,10 @@ export default function ProductsPage() {
       if (categoryIds && categoryIds.length > 0) {
         url += `?allowedCategoryIds=${JSON.stringify(categoryIds)}`
       }
-      
+
       const response = await fetch(url)
       const blob = await response.blob()
-      
+
       const downloadUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = downloadUrl
@@ -400,7 +400,7 @@ export default function ProductsPage() {
                           <tr key={product.id} className="hover:bg-gray-50">
                             <td className="px-4 py-4">
                               <div className="flex items-start">
-                                <div className="flex-shrink-0 h-12 w-12">
+                                <div className="shrink-0 h-12 w-12">
                                   {images.length > 0 ? (
                                     isAllowedImageDomain(images[0]) ? (
                                       <Image
@@ -412,6 +412,7 @@ export default function ProductsPage() {
                                       />
                                     ) : (
                                       // Use regular img tag for unconfigured domains
+                                      // eslint-disable-next-line @next/next/no-img-element
                                       <img
                                         className="h-12 w-12 rounded-lg object-cover"
                                         src={images[0]}
@@ -455,22 +456,20 @@ export default function ProductsPage() {
                               ₹{(product.price / 100).toFixed(2)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                product.stock > 10 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : product.stock > 0 
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10
+                                ? 'bg-green-100 text-green-800'
+                                : product.stock > 0
                                   ? 'bg-yellow-100 text-yellow-800'
                                   : 'bg-red-100 text-red-800'
-                              }`}>
+                                }`}>
                                 {product.stock}
                               </span>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                product.active 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.active
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                                }`}>
                                 {product.active ? 'Active' : 'Inactive'}
                               </span>
                             </td>
@@ -484,11 +483,10 @@ export default function ProductsPage() {
                                 </button>
                                 <button
                                   onClick={() => handleToggleActive(product)}
-                                  className={`text-xs font-medium ${
-                                    product.active 
-                                      ? 'text-red-600 hover:text-red-900' 
-                                      : 'text-green-600 hover:text-green-900'
-                                  }`}
+                                  className={`text-xs font-medium ${product.active
+                                    ? 'text-red-600 hover:text-red-900'
+                                    : 'text-green-600 hover:text-green-900'
+                                    }`}
                                 >
                                   {product.active ? 'Deactivate' : 'Activate'}
                                 </button>
@@ -514,7 +512,7 @@ export default function ProductsPage() {
                     return (
                       <div key={product.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                         <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 h-16 w-16">
+                          <div className="shrink-0 h-16 w-16">
                             {images.length > 0 ? (
                               <Image
                                 className="h-16 w-16 rounded-lg object-cover"
@@ -544,11 +542,10 @@ export default function ProductsPage() {
                                       {product.category.name}
                                     </span>
                                   )}
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    product.active 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.active
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {product.active ? 'Active' : 'Inactive'}
                                   </span>
                                 </div>
@@ -558,13 +555,12 @@ export default function ProductsPage() {
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 <span className="font-mono">{product.sku || '-'}</span>
                                 <span className="font-medium text-gray-900">₹{(product.price / 100).toFixed(2)}</span>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                  product.stock > 10 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : product.stock > 0 
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10
+                                  ? 'bg-green-100 text-green-800'
+                                  : product.stock > 0
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-red-100 text-red-800'
-                                }`}>
+                                  }`}>
                                   Stock: {product.stock}
                                 </span>
                               </div>
@@ -578,11 +574,10 @@ export default function ProductsPage() {
                               </button>
                               <button
                                 onClick={() => handleToggleActive(product)}
-                                className={`text-xs font-medium ${
-                                  product.active 
-                                    ? 'text-red-600 hover:text-red-900' 
-                                    : 'text-green-600 hover:text-green-900'
-                                }`}
+                                className={`text-xs font-medium ${product.active
+                                  ? 'text-red-600 hover:text-red-900'
+                                  : 'text-green-600 hover:text-green-900'
+                                  }`}
                               >
                                 {product.active ? 'Deactivate' : 'Activate'}
                               </button>
@@ -642,11 +637,10 @@ export default function ProductsPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === currentPage
-                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
+                          ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
                       >
                         {page}
                       </button>
@@ -698,12 +692,12 @@ export default function ProductsPage() {
 }
 
 // Product Form Component
-function ProductForm({ 
-  product, 
+function ProductForm({
+  product,
   categories,
-  onClose, 
-  onSuccess 
-}: { 
+  onClose,
+  onSuccess
+}: {
   product: Product | null
   categories: Category[]
   onClose: () => void
@@ -810,13 +804,13 @@ function ProductForm({
   // Validate image URL format
   const validateImageUrl = (url: string): boolean => {
     if (!url) return true // Empty URL is valid (optional field)
-    
+
     // Allow relative URLs (starting with /)
     if (url.startsWith('/')) return true
-    
+
     // Allow full URLs (starting with http:// or https://)
     if (url.startsWith('http://') || url.startsWith('https://')) return true
-    
+
     return false
   }
 
@@ -861,7 +855,7 @@ function ProductForm({
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             {product ? 'Edit Product' : 'Create Product'}
           </h3>
-          
+
           {error && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
               {error}
@@ -958,7 +952,7 @@ function ProductForm({
             {/* Product Images */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
-              
+
               {/* Image Preview Grid */}
               {imageUrls.length > 0 && (
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -1031,11 +1025,10 @@ function ProductForm({
                       value={newImageUrl}
                       onChange={(e) => setNewImageUrl(e.target.value)}
                       placeholder="https://example.com/image.jpg or /uploads/categories/image.jpg"
-                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                        newImageUrl && !validateImageUrl(newImageUrl)
-                          ? 'border-red-300 focus:ring-red-500'
-                          : 'border-gray-300 focus:ring-indigo-500'
-                      }`}
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${newImageUrl && !validateImageUrl(newImageUrl)
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-indigo-500'
+                        }`}
                     />
                     <button
                       type="button"
@@ -1094,16 +1087,16 @@ function ProductForm({
 }
 
 // Bulk Upload Modal Component
-function BulkUploadModal({ 
-  onClose, 
-  onUpload, 
-  onDownloadSample, 
-  uploading, 
+function BulkUploadModal({
+  onClose,
+  onUpload,
+  onDownloadSample,
+  uploading,
   results,
   categories,
   selectedCategories,
   onCategoryChange
-}: { 
+}: {
   onClose: () => void
   onUpload: (file: File, categoryIds?: number[]) => void
   onDownloadSample: (categoryIds?: number[]) => void
@@ -1137,7 +1130,7 @@ function BulkUploadModal({
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    
+
     const droppedFile = e.dataTransfer.files?.[0]
     if (droppedFile && droppedFile.name.endsWith('.csv')) {
       setFile(droppedFile)
@@ -1195,7 +1188,7 @@ function BulkUploadModal({
                 </div>
                 {selectedCategories.length > 0 && (
                   <div className="mt-2 text-xs text-blue-600">
-                    Products will only be uploaded to: {selectedCategories.map(id => 
+                    Products will only be uploaded to: {selectedCategories.map(id =>
                       categories.find(c => c.id === id)?.name
                     ).join(', ')}
                   </div>
@@ -1230,9 +1223,8 @@ function BulkUploadModal({
 
               {/* File Upload */}
               <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center ${
-                  dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
-                }`}
+                className={`border-2 border-dashed rounded-lg p-6 text-center ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                  }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -1289,11 +1281,10 @@ function BulkUploadModal({
           ) : (
             /* Results */
             <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${
-                results.results.failed === 0 
-                  ? 'bg-green-50 border border-green-200' 
-                  : 'bg-yellow-50 border border-yellow-200'
-              }`}>
+              <div className={`p-4 rounded-lg ${results.results.failed === 0
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-yellow-50 border border-yellow-200'
+                }`}>
                 <h4 className="text-lg font-medium mb-2">
                   {results.results.failed === 0 ? 'Upload Successful!' : 'Upload Completed with Errors'}
                 </h4>

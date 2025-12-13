@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { createOrderSchema } from '@/lib/validators'
+import { OrderStatus } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,11 +32,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: { storeId: number; status?: any } = { storeId: storeIdNum }
+    const where: { storeId: number; status?: OrderStatus } = { storeId: storeIdNum }
     if (status) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where.status = status as any
+      where.status = status as OrderStatus
     }
 
     const [orders, total] = await Promise.all([

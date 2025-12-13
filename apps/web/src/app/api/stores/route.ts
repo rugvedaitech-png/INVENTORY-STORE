@@ -13,7 +13,7 @@ const createStoreSchema = z.object({
 })
 
 // GET /api/stores - List stores for the authenticated user
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     
