@@ -67,21 +67,21 @@ export default async function CustomerDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <ShoppingBagIcon className="h-8 w-8 mr-3 text-blue-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+              <ShoppingBagIcon className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-blue-600" />
               Welcome back, {session.user.name || 'Customer'}!
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-sm sm:text-base text-gray-600">
               Manage your orders and explore our stores
             </p>
           </div>
-          <div className="hidden sm:block">
+          <div className="w-full sm:w-auto">
             <Link
               href="/customer/shop"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
             >
               <BuildingStorefrontIcon className="h-4 w-4 mr-2" />
               Browse Stores
@@ -188,20 +188,20 @@ export default async function CustomerDashboard() {
         ) : (
           <div className="divide-y divide-gray-200">
             {orders.slice(0, 5).map((order: { id: number; status: string; store: { name: string }; items: unknown[]; totalAmount: number; createdAt: Date }) => (
-              <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+              <div key={order.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                     <div className="shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                        <ShoppingBagIcon className="h-6 w-6 text-white" />
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                        <ShoppingBagIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-3">
-                        <h4 className="text-lg font-semibold text-gray-900">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-900">
                           Order #{order.id.toString().slice(-8)}
                         </h4>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                           order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
                             order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
                               order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
@@ -210,14 +210,14 @@ export default async function CustomerDashboard() {
                           {order.status}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                         <span className="flex items-center">
-                          <BuildingStorefrontIcon className="h-4 w-4 mr-1" />
-                          {order.store.name}
+                          <BuildingStorefrontIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <span className="truncate max-w-[150px] sm:max-w-none">{order.store.name}</span>
                         </span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span className="font-semibold text-gray-900">₹{(order.totalAmount / 100).toFixed(2)}</span>
                       </div>
                       <div className="mt-1 text-xs text-gray-400">
@@ -225,10 +225,10 @@ export default async function CustomerDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-end sm:justify-start sm:space-x-3">
                     <Link
                       href={`/customer/order-tracking?orderId=${order.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium whitespace-nowrap"
                     >
                       View Details
                     </Link>

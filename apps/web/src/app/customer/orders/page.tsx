@@ -206,33 +206,33 @@ export default function CustomerOrdersPage() {
           ) : (
             <div className="divide-y divide-gray-200">
               {orders.map((order) => (
-                <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={order.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                   {/* Order Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                          <ShoppingBagIcon className="h-6 w-6 text-white" />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                          <ShoppingBagIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-3">
-                          <h4 className="text-lg font-semibold text-gray-900">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                          <h4 className="text-base sm:text-lg font-semibold text-gray-900">
                             Order #{order.id.toString().slice(-8)}
                           </h4>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${getStatusColor(order.status)}`}>
                             {getStatusIcon(order.status)}
                             <span className="ml-1.5">{order.status}</span>
                           </span>
                         </div>
-                        <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                           <span className="flex items-center">
-                            <BuildingStorefrontIcon className="h-4 w-4 mr-1" />
-                            {order.store.name}
+                            <BuildingStorefrontIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            <span className="truncate max-w-[120px] sm:max-w-none">{order.store.name}</span>
                           </span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span className="font-semibold text-blue-600">Contact for Total</span>
                         </div>
                         <div className="mt-1 flex items-center text-xs text-gray-400">
@@ -243,29 +243,29 @@ export default function CustomerOrdersPage() {
                     </div>
                     
                     {/* Order Actions */}
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-blue-600">
+                    <div className="flex items-center justify-end sm:justify-start sm:space-x-3">
+                      <span className="text-xs sm:text-sm font-medium text-blue-600 whitespace-nowrap">
                         Contact Store for Pricing
                       </span>
                     </div>
                   </div>
 
                   {/* Order Items */}
-                  <div className="mt-6">
-                    <h5 className="text-sm font-medium text-gray-900 mb-4 flex items-center">
+                  <div className="mt-4 sm:mt-6">
+                    <h5 className="text-sm font-medium text-gray-900 mb-3 sm:mb-4 flex items-center">
                       <ShoppingBagIcon className="h-4 w-4 mr-2 text-gray-500" />
                       Order Items
                     </h5>
-                    <div className="grid gap-3">
+                    <div className="grid gap-2 sm:gap-3">
                       {order.items.map((item) => (
-                        <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
                                 <ShoppingBagIcon className="h-4 w-4 text-gray-600" />
                               </div>
-                              <div>
-                                <h6 className="text-sm font-medium text-gray-900">
+                              <div className="flex-1 min-w-0">
+                                <h6 className="text-sm font-medium text-gray-900 truncate">
                                   {item.product.title}
                                 </h6>
                                 <p className="text-xs text-gray-500">
@@ -273,11 +273,11 @@ export default function CustomerOrdersPage() {
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="flex items-center justify-between sm:justify-end sm:flex-col sm:items-end sm:text-right gap-2 sm:gap-1">
                               <div className="text-sm font-medium text-gray-900">
                                 Qty: {item.qty}
                               </div>
-                              <div className="text-sm text-blue-600">
+                              <div className="text-xs sm:text-sm text-blue-600">
                                 Contact for Price
                               </div>
                             </div>

@@ -330,7 +330,7 @@ export default function CustomerShopPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Filters Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:sticky lg:top-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
               <FunnelIcon className="h-5 w-5 mr-2 text-gray-500" />
               Filters

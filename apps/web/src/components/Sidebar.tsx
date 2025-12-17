@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { 
-  HomeIcon, 
-  UsersIcon, 
-  CalendarIcon, 
-  DocumentTextIcon, 
+import {
+  HomeIcon,
+  UsersIcon,
+  CalendarIcon,
+  DocumentTextIcon,
   ChartBarIcon,
   CogIcon,
   XMarkIcon,
@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import ThemeSwitcher from './ThemeSwitcher'
 import { signOut } from 'next-auth/react'
+import { cn } from '@/lib/utils'
 
 interface SidebarProps {
   userEmail?: string
@@ -24,6 +25,8 @@ interface SidebarProps {
   userAvatar?: string
   theme?: 'light' | 'dark' | 'purple'
   onThemeChange?: (theme: 'light' | 'dark' | 'purple') => void
+  isMobileMenuOpen?: boolean
+  setIsMobileMenuOpen?: (open: boolean) => void
 }
 
 const navigationItems = [
@@ -44,16 +47,25 @@ const navigationItems = [
 ]
 
 
-export default function Sidebar({ 
-  userEmail = 'user@example.com', 
-  userName = 'Dianne Robertson', 
+export default function Sidebar({
+  userEmail = 'user@example.com',
+  userName = 'Dianne Robertson',
   userAvatar = '/api/placeholder/40/40',
   theme = 'light',
-  onThemeChange
+  onThemeChange,
+  isMobileMenuOpen: externalIsMobileMenuOpen,
+  setIsMobileMenuOpen: externalSetIsMobileMenuOpen
 }: SidebarProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [internalMobileMenuOpen, setInternalMobileMenuOpen] = useState(false)
+  const isMobileMenuOpen = externalIsMobileMenuOpen !== undefined ? externalIsMobileMenuOpen : internalMobileMenuOpen
+  const setIsMobileMenuOpen = externalSetIsMobileMenuOpen || setInternalMobileMenuOpen
   const pathname = usePathname()
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSignOut = async () => {
     await signOut({ redirect: false })
@@ -93,6 +105,8 @@ export default function Sidebar({
   const currentTheme = themeClasses[theme]
 
   const isActive = (href: string) => {
+    // Only check active state after component has mounted to prevent hydration mismatch
+    if (!mounted || !pathname) return false
     if (href === '/seller') {
       return pathname === '/seller'
     }
@@ -103,33 +117,43 @@ export default function Sidebar({
     <>
       {/* Mobile overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className={`lg:hidden fixed inset-0 z-40 print:hidden ${currentTheme.mobileOverlay}`}
+        <div
+          className={cn('lg:hidden fixed inset-0 z-40 print:hidden', currentTheme.mobileOverlay)}
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        ${currentTheme.sidebar}
-        shadow-xl lg:shadow-none
-        print:hidden
-      `}>
+      <div className={cn(
+        'fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out',
+        'lg:translate-x-0 lg:static lg:inset-0',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+        currentTheme.sidebar,
+        'shadow-xl lg:shadow-none print:hidden'
+      )}>
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl font-semibold">
               Seller Dashboard
             </h1>
-            {onThemeChange && (
-              <ThemeSwitcher 
-                currentTheme={theme} 
-                onThemeChange={onThemeChange}
-              />
-            )}
+            <div className="flex items-center space-x-2">
+              {onThemeChange && (
+                <ThemeSwitcher
+                  currentTheme={theme}
+                  onThemeChange={onThemeChange}
+                />
+              )}
+              {/* Close button for mobile */}
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Close menu"
+                title="Close menu"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           {/* Navigation */}
@@ -137,24 +161,22 @@ export default function Sidebar({
             {navigationItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
-              
+
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`
-                    flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                    ${active ? currentTheme.navItemActive : currentTheme.navItem}
-                  `}
+                  className={cn(
+                    'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    active ? currentTheme.navItemActive : currentTheme.navItem
+                  )}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  suppressHydrationWarning
                 >
                   <Icon className="h-5 w-5 mr-3" />
                   <span className="flex-1">{item.name}</span>
                   {item.badge && (
-                    <span className={`
-                      ml-2 px-2 py-1 text-xs rounded-full
-                      ${currentTheme.badge}
-                    `}>
+                    <span className={cn('ml-2 px-2 py-1 text-xs rounded-full', currentTheme.badge)}>
                       {item.badge}
                     </span>
                   )}
@@ -175,10 +197,10 @@ export default function Sidebar({
                 />
               </div>
               <div className="ml-3 flex-1 min-w-0">
-                <p className={`text-sm font-medium ${currentTheme.userSection}`}>
+                <p className={cn('text-sm font-medium', currentTheme.userSection)}>
                   {userName}
                 </p>
-                <p className={`text-xs ${currentTheme.userSubtext}`}>
+                <p className={cn('text-xs', currentTheme.userSubtext)}>
                   {userEmail}
                 </p>
               </div>
@@ -186,14 +208,15 @@ export default function Sidebar({
                 <CogIcon className="h-4 w-4" />
               </button>
             </div>
-            
+
             {/* Logout Button */}
             <button
               onClick={handleSignOut}
-              className={`
-                w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
-                ${currentTheme.navItem} hover:bg-red-50 hover:text-red-700
-              `}
+              className={cn(
+                'w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                currentTheme.navItem,
+                'hover:bg-red-50 hover:text-red-700'
+              )}
             >
               <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
               Sign Out

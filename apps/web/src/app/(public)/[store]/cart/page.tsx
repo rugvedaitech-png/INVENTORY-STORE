@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
 import Image from 'next/image'
@@ -29,18 +29,10 @@ interface CartPageProps {
 }
 
 export default function CartPage({ params }: CartPageProps) {
+  const { store: storeSlug } = use(params)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [storeSlug, setStoreSlug] = useState<string>('')
   const router = useRouter()
-
-  useEffect(() => {
-    const getStoreSlug = async () => {
-      const { store } = await params
-      setStoreSlug(store)
-    }
-    getStoreSlug()
-  }, [params])
 
   useEffect(() => {
     // Load cart from localStorage

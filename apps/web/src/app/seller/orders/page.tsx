@@ -425,11 +425,130 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="mt-8 flow-root">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
+      <div className="mt-8">
+        {/* Mobile Card View */}
+        <div className="lg:hidden space-y-4">
+          {orders.map((order) => (
+            <div key={order.id} className="bg-white shadow rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Order #{order.id.toString().slice(-8)}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                  order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                  order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
+                  order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {order.status}
+                </span>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Customer: </span>
+                  <span className="font-medium text-gray-900">
+                    {order.customerAddress ? order.customerAddress.fullName : order.buyerName}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Phone: </span>
+                  <span className="text-gray-900">
+                    {order.customerAddress ? order.customerAddress.phone : order.phone}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Items: </span>
+                  <span className="text-gray-900">
+                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Total: </span>
+                  <span className="font-semibold text-gray-900">
+                    {formatCurrency(order.totalAmount)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-2">
+                <Link
+                  href={`/seller/orders/${order.id}`}
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
+                >
+                  <EyeIcon className="h-3 w-3 mr-1" />
+                  View
+                </Link>
+                <Link
+                  href={`/seller/billing/receipt/${order.id}?from=orders`}
+                  target="_blank"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
+                >
+                  <DocumentTextIcon className="h-3 w-3 mr-1" />
+                  Receipt
+                </Link>
+                {order.status === 'PENDING' && (
+                  <>
+                    <button
+                      onClick={() => confirmOrder(order.id)}
+                      className="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
+                      disabled={confirmingOrder === order.id}
+                    >
+                      {confirmingOrder === order.id ? 'Confirming...' : 'Confirm'}
+                    </button>
+                    <button
+                      onClick={() => rejectOrder(order.id)}
+                      className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
+                      disabled={rejectingOrder === order.id}
+                    >
+                      {rejectingOrder === order.id ? 'Rejecting...' : 'Reject'}
+                    </button>
+                  </>
+                )}
+                {order.status === 'CONFIRMED' && (
+                  <>
+                    <button
+                      onClick={() => openDiscountModal(order)}
+                      className="px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
+                      disabled={updatingDiscount}
+                    >
+                      {order.discountAmount > 0 ? 'Edit Discount' : 'Add Discount'}
+                    </button>
+                    <button
+                      onClick={() => markAsShipped(order.id)}
+                      className="px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100"
+                      disabled={markingShipped === order.id}
+                    >
+                      {markingShipped === order.id ? 'Marking...' : 'Ship'}
+                    </button>
+                  </>
+                )}
+                {order.status === 'SHIPPED' && (
+                  <button
+                    onClick={() => markAsDelivered(order.id)}
+                    className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
+                    disabled={markingDelivered === order.id}
+                  >
+                    {markingDelivered === order.id ? 'Marking...' : 'Deliver'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block flow-root">
+          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
@@ -594,6 +713,7 @@ export default function OrdersPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {orders.length === 0 && (

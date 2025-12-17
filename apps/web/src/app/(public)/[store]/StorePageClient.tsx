@@ -70,7 +70,7 @@ export default function StorePageClient({ store, storeSlug }: StorePageClientPro
   // Filter products when category changes
   useEffect(() => {
     if (selectedCategory) {
-      const filtered = store.products.filter(product => 
+      const filtered = store.products.filter(product =>
         product.categoryId === selectedCategory.id
       )
       setFilteredProducts(filtered)
@@ -95,7 +95,7 @@ export default function StorePageClient({ store, storeSlug }: StorePageClientPro
       newCartItems[productId] = qty
     }
     setCartItems(newCartItems)
-    
+
     // Save to localStorage
     const cartArray = Object.entries(newCartItems).map(([id, qty]) => ({
       id: parseInt(id),
@@ -226,7 +226,6 @@ export default function StorePageClient({ store, storeSlug }: StorePageClientPro
                           ...product,
                           images: parseImages(product.images)
                         }}
-                        storeSlug={storeSlug}
                         cartItems={cartItems}
                         onUpdateCart={updateCart}
                       />
@@ -253,12 +252,11 @@ interface ProductCardWithCartProps {
     images: string[]
     active: boolean
   }
-  storeSlug: string
   cartItems: Record<number, number>
   onUpdateCart: (productId: number, qty: number) => void
 }
 
-function ProductCardWithCart({ product, storeSlug, cartItems, onUpdateCart }: ProductCardWithCartProps) {
+function ProductCardWithCart({ product, cartItems, onUpdateCart }: ProductCardWithCartProps) {
   const currentQty = cartItems[product.id] || 0
 
   const handleAddToCart = () => {
@@ -309,7 +307,7 @@ function ProductCardWithCart({ product, storeSlug, cartItems, onUpdateCart }: Pr
           </div>
         )}
       </div>
-      
+
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2">{product.title}</h3>
         {product.description && (
@@ -325,7 +323,7 @@ function ProductCardWithCart({ product, storeSlug, cartItems, onUpdateCart }: Pr
             Stock: {product.stock}
           </span>
         </div>
-        
+
         {/* Cart Controls */}
         <div className="flex items-center justify-center space-x-2">
           {currentQty > 0 ? (

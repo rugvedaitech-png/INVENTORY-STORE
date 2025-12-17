@@ -199,10 +199,10 @@ export default function CustomerCheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Checkout</h1>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Order Summary */}
         <div className="lg:order-2">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -212,9 +212,9 @@ export default function CustomerCheckoutPage() {
             </h2>
 
             {/* Cart Items */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
               {items.map((item) => (
-                <div key={item.productId} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div key={item.productId} className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                   {/* Product Image */}
                   <div className="flex-shrink-0">
                     {item.imageUrl ? (
@@ -223,30 +223,30 @@ export default function CustomerCheckoutPage() {
                         alt={item.title}
                         width={60}
                         height={60}
-                        className="w-15 h-15 object-cover rounded-lg"
+                        className="w-12 h-12 sm:w-15 sm:h-15 object-cover rounded-lg"
                       />
                     ) : (
-                      <div className="w-15 h-15 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <ShoppingCartIcon className="h-6 w-6 text-gray-400" />
+                      <div className="w-12 h-12 sm:w-15 sm:h-15 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
                       </div>
                     )}
                   </div>
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
+                    <h4 className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2">
                       {item.title}
                     </h4>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1 truncate">
                       {item.store.name}
                     </p>
-                    <p className="text-sm font-semibold text-blue-600 mt-1">
+                    <p className="text-xs sm:text-sm font-semibold text-blue-600 mt-1">
                       Contact for Price
                     </p>
                   </div>
 
                   {/* Quantity */}
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                     Qty: {item.qty}
                   </div>
                 </div>

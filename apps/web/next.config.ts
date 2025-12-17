@@ -36,6 +36,42 @@ const nextConfig: NextConfig = {
   // Configure static file serving
   trailingSlash: false,
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
+  // Add headers for cache control and security
+  async headers() {
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self' http: https: data: blob: 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https: blob:; style-src 'self' 'unsafe-inline' http: https:; img-src 'self' data: blob: http: https:; font-src 'self' data: http: https:; connect-src 'self' http: https: ws: wss:;",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

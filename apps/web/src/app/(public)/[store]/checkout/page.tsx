@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/money'
 import Image from 'next/image'
@@ -24,6 +24,7 @@ interface CheckoutPageProps {
 }
 
 export default function CheckoutPage({ params }: CheckoutPageProps) {
+  const { store: storeSlug } = use(params)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -34,16 +35,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     paymentMethod: 'COD' as 'COD' | 'UPI' | 'CARD',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [storeSlug, setStoreSlug] = useState<string>('')
   const router = useRouter()
-
-  useEffect(() => {
-    const getStoreSlug = async () => {
-      const { store } = await params
-      setStoreSlug(store)
-    }
-    getStoreSlug()
-  }, [params])
 
   useEffect(() => {
     // Load cart from localStorage

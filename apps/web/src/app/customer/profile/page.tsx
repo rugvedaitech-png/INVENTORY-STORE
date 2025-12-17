@@ -61,18 +61,18 @@ export default async function CustomerProfilePage() {
   return (
     <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <UserIcon className="h-8 w-8 mr-3 text-blue-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <UserIcon className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-blue-600" />
                 My Profile
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Manage your account information and preferences
               </p>
             </div>
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
               <PencilIcon className="h-4 w-4 mr-2" />
               Edit Profile
             </button>
@@ -83,35 +83,35 @@ export default async function CustomerProfilePage() {
           {/* Profile Information */}
           <div className="lg:col-span-2 space-y-6">
             {/* Personal Information */}
-            <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Name</p>
-                    <p className="text-sm text-gray-600">{session.user.name || 'Not provided'}</p>
+            <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-start sm:items-center space-x-3">
+                  <UserIcon className="h-5 w-5 text-gray-400 shrink-0 mt-0.5 sm:mt-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">Name</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{session.user.name || 'Not provided'}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Email</p>
-                    <p className="text-sm text-gray-600">{session.user.email}</p>
+                <div className="flex items-start sm:items-center space-x-3">
+                  <EnvelopeIcon className="h-5 w-5 text-gray-400 shrink-0 mt-0.5 sm:mt-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">Email</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{session.user.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <PhoneIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Phone</p>
-                    <p className="text-sm text-gray-600">{customer?.phone || 'Not provided'}</p>
+                <div className="flex items-start sm:items-center space-x-3">
+                  <PhoneIcon className="h-5 w-5 text-gray-400 shrink-0 mt-0.5 sm:mt-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">Phone</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{customer?.phone || 'Not provided'}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CalendarIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Member Since</p>
-                    <p className="text-sm text-gray-600">
+                <div className="flex items-start sm:items-center space-x-3">
+                  <CalendarIcon className="h-5 w-5 text-gray-400 shrink-0 mt-0.5 sm:mt-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">Member Since</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       {customer?.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'Unknown'}
                     </p>
                   </div>
@@ -146,15 +146,15 @@ export default async function CustomerProfilePage() {
               {orders && orders.length > 0 ? (
                 <div className="space-y-3">
                   {orders.slice(0, 3).map((order: any) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
+                    <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">
                           Order #{order.id.toString().slice(-8)}
                         </p>
-                        <p className="text-xs text-gray-600">{order.store.name}</p>
+                        <p className="text-xs text-gray-600 truncate">{order.store.name}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">
+                      <div className="flex items-center justify-between sm:justify-end sm:flex-col sm:items-end sm:text-right gap-2 sm:gap-1">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900">
                           ₹{(order.totalAmount / 100).toFixed(2)}
                         </p>
                         <p className="text-xs text-gray-600">{order.status}</p>

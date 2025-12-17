@@ -90,7 +90,7 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-72 sm:w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
         lg:relative lg:translate-x-0 lg:z-0 lg:shadow-none lg:border-r lg:border-gray-200
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
