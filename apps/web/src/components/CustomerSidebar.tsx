@@ -98,7 +98,7 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                 <ShoppingCartIcon className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -161,7 +161,7 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
                   className={`
                     group flex items-start px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200
                     ${isActive(item.href)
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-r-2 border-blue-700 shadow-sm'
+                      ? 'bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 border-r-2 border-blue-700 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                     }
                   `}
@@ -174,9 +174,8 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
                   />
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold">{item.name}</div>
-                    <div className={`text-xs mt-0.5 ${
-                      isActive(item.href) ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-600'
-                    }`}>
+                    <div className={`text-xs mt-0.5 ${isActive(item.href) ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-600'
+                      }`}>
                       {item.description}
                     </div>
                   </div>
@@ -210,7 +209,7 @@ export default function CustomerSidebar({ userEmail, userName, onClose }: Custom
                 </div>
               </Link>
             </div>
-            
+
             {/* Sign Out */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <button

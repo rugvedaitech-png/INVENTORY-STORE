@@ -96,7 +96,7 @@ export default async function CustomerDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                 <ShoppingBagIcon className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -110,7 +110,7 @@ export default async function CustomerDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-linear-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-sm">
                 <CheckCircleIcon className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -124,7 +124,7 @@ export default async function CustomerDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-linear-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-sm">
                 <ClockIcon className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -138,7 +138,7 @@ export default async function CustomerDashboard() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="shrink-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
                 <CurrencyRupeeIcon className="h-6 w-6 text-white" />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default async function CustomerDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                     <div className="shrink-0">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
                         <ShoppingBagIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                       </div>
                     </div>
