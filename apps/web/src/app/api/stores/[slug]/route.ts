@@ -118,7 +118,7 @@ export async function PATCH(
 
     // Filter out undefined values (Prisma doesn't accept undefined)
     const updateData = Object.fromEntries(
-      Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+      Object.entries(validatedData).filter(([, value]) => value !== undefined)
     )
 
     // Update store
@@ -131,7 +131,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

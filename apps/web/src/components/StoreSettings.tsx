@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { DocumentTextIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
 interface Store {
@@ -15,7 +14,6 @@ interface Store {
 }
 
 export default function StoreSettings() {
-  const { data: session } = useSession()
   const [store, setStore] = useState<Store | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

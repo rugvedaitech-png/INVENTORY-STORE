@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { formatCurrency } from '@/lib/money'
 import { numberToWords } from '@/lib/numberToWords'
 import { PrinterIcon, ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'

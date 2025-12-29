@@ -36,6 +36,7 @@ interface Order {
     whatsapp: string | null
     upiId: string | null
     currency: string
+    billLayout: 'VERTICAL' | 'REGULAR'
     createdAt: Date
     updatedAt: Date
   }
@@ -111,9 +112,16 @@ function SuccessPageContent() {
   // Temporarily treat PENDING COD orders as awaiting confirmation
   const isAwaitingConfirmation = order.status === 'AWAITING_CONFIRMATION' || 
     (order.status === 'PENDING' && order.paymentMethod === 'COD')
+  
+  // Ensure store has billLayout (default to REGULAR if missing for backward compatibility)
+  const storeWithBillLayout = {
+    ...order.store,
+    billLayout: order.store.billLayout || 'REGULAR' as 'VERTICAL' | 'REGULAR'
+  }
+  
   const whatsappUrl = isAwaitingConfirmation
-    ? generateOrderConfirmationRequest(order.store, order as any)
-    : generateWhatsAppDeepLink(order.store, order as any)
+    ? generateOrderConfirmationRequest(storeWithBillLayout as any, order as any)
+    : generateWhatsAppDeepLink(storeWithBillLayout as any, order as any)
 
   return (
     <div className="min-h-screen bg-gray-50">
