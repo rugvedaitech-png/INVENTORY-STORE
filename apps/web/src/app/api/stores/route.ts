@@ -32,6 +32,7 @@ export async function GET() {
         whatsapp: true,
         upiId: true,
         currency: true,
+        billLayout: true,
         createdAt: true
       },
       orderBy: {

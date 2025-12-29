@@ -532,10 +532,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         onBlur={() => handleInputBlur('name')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.name && formErrors.name
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 ${touched.name && formErrors.name
                           ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                           : 'border-gray-300'
-                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`}
                         placeholder="Enter supplier name"
                       />
                     </div>
@@ -563,10 +563,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         onBlur={() => handleInputBlur('email')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.email && formErrors.email
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 ${touched.email && formErrors.email
                           ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                           : 'border-gray-300'
-                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`}
                         placeholder="supplier@example.com"
                       />
                     </div>
@@ -594,10 +594,10 @@ export default function SuppliersPage() {
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         onBlur={() => handleInputBlur('phone')}
                         disabled={!!selectedSupplierUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.phone && formErrors.phone
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 ${touched.phone && formErrors.phone
                           ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                           : 'border-gray-300'
-                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                          } ${selectedSupplierUserId ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`}
                         placeholder="+91 xxxx xxxx xx"
                       />
                     </div>
@@ -624,7 +624,7 @@ export default function SuppliersPage() {
                       rows={3}
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors resize-none"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors resize-none text-gray-900 bg-white"
                       placeholder="Enter complete address including street, city, state, and postal code"
                     />
                   </div>
@@ -654,7 +654,7 @@ export default function SuppliersPage() {
                       value={formData.leadTimeDays}
                       onChange={(e) => handleInputChange('leadTimeDays', parseInt(e.target.value) || 1)}
                       onBlur={() => handleInputBlur('leadTimeDays')}
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${touched.leadTimeDays && formErrors.leadTimeDays
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 bg-white ${touched.leadTimeDays && formErrors.leadTimeDays
                         ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                         : 'border-gray-300'
                         }`}
@@ -828,7 +828,7 @@ export default function SuppliersPage() {
                   <select
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     required
                   >
                     <option value="">Choose a user...</option>

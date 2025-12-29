@@ -673,7 +673,7 @@ export default function PurchaseOrdersPage() {
                           <select
                             value={item.productId}
                             onChange={(e) => updateItem(index, 'productId', e.target.value)}
-                            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
+                            className={`block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 bg-white ${
                               touched[`item_${index}_product`] && formErrors[`item_${index}_product`]
                                 ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                                 : 'border-gray-300'
@@ -705,7 +705,7 @@ export default function PurchaseOrdersPage() {
                           min="1"
                           value={item.qty}
                           onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 1)}
-                          className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
+                          className={`block w-full px-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors text-gray-900 bg-white ${
                             touched[`item_${index}_qty`] && formErrors[`item_${index}_qty`]
                               ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                               : 'border-gray-300'
@@ -1067,7 +1067,7 @@ export default function PurchaseOrdersPage() {
                   <textarea
                     value={confirmNotes}
                     onChange={(e) => setConfirmNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                     rows={3}
                     placeholder="Add any notes about this action..."
                   />
@@ -1129,7 +1129,7 @@ export default function PurchaseOrdersPage() {
                   value={revisionNotes}
                   onChange={(e) => setRevisionNotes(e.target.value)}
                   rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   placeholder="Explain what needs to be updated in this quotation..."
                 />
                 <p className="mt-2 text-xs text-gray-500">

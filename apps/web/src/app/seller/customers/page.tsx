@@ -378,10 +378,10 @@ export default function CustomersPage() {
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <input value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="Search (name/email/phone)" className="px-3 py-2 border rounded-lg" />
-          <input value={filterName} onChange={(e)=>setFilterName(e.target.value)} placeholder="Filter by name" className="px-3 py-2 border rounded-lg" />
-          <input value={filterEmail} onChange={(e)=>setFilterEmail(e.target.value)} placeholder="Filter by email" className="px-3 py-2 border rounded-lg" />
-          <input value={filterPhone} onChange={(e)=>setFilterPhone(e.target.value)} placeholder="Filter by phone" className="px-3 py-2 border rounded-lg" />
+          <input value={searchTerm} onChange={(e)=>setSearchTerm(e.target.value)} placeholder="Search (name/email/phone)" className="px-3 py-2 border rounded-lg text-gray-900 bg-white" />
+          <input value={filterName} onChange={(e)=>setFilterName(e.target.value)} placeholder="Filter by name" className="px-3 py-2 border rounded-lg text-gray-900 bg-white" />
+          <input value={filterEmail} onChange={(e)=>setFilterEmail(e.target.value)} placeholder="Filter by email" className="px-3 py-2 border rounded-lg text-gray-900 bg-white" />
+          <input value={filterPhone} onChange={(e)=>setFilterPhone(e.target.value)} placeholder="Filter by phone" className="px-3 py-2 border rounded-lg text-gray-900 bg-white" />
         </div>
       </div>
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -453,7 +453,7 @@ export default function CustomersPage() {
                         searchUsers(e.target.value)
                       }}
                       onFocus={() => setShowUserDropdown(true)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                       placeholder="Search for customer user by name or email..."
                     />
                     {showUserDropdown && (userSearchResults.length > 0 || userSearchTerm.length >= 2) && (
@@ -492,27 +492,27 @@ export default function CustomersPage() {
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserIcon className="h-5 w-5 text-gray-400" /></div>
                       <input type="text" required value={formData.name} onChange={(e)=>handleInputChange('name', e.target.value)} onBlur={()=>handleInputBlur('name')} disabled={!!selectedCustomerUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg ${touched.name && formErrors.name ? 'border-red-300' : 'border-gray-300'} ${selectedCustomerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`} />
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg text-gray-900 ${touched.name && formErrors.name ? 'border-red-300' : 'border-gray-300'} ${selectedCustomerUserId ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`} />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email * {selectedCustomerUserId && <span className="text-green-600 text-xs">(Auto-filled)</span>}</label>
                     <div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><EnvelopeIcon className="h-5 w-5 text-gray-400" /></div>
                       <input type="email" value={formData.email} onChange={(e)=>handleInputChange('email', e.target.value)} onBlur={()=>handleInputBlur('email')} disabled={!!selectedCustomerUserId}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg ${touched.email && formErrors.email ? 'border-red-300' : 'border-gray-300'} ${selectedCustomerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`} />
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg text-gray-900 ${touched.email && formErrors.email ? 'border-red-300' : 'border-gray-300'} ${selectedCustomerUserId ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'}`} />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
                     <div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><PhoneIcon className="h-5 w-5 text-gray-400" /></div>
                       <input type="tel" value={formData.phone} onChange={(e)=>handleInputChange('phone', e.target.value)} onBlur={()=>handleInputBlur('phone')}
-                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg ${touched.phone && formErrors.phone ? 'border-red-300' : 'border-gray-300'}`} />
+                        className={`block w-full pl-10 pr-3 py-3 border rounded-lg text-gray-900 bg-white ${touched.phone && formErrors.phone ? 'border-red-300' : 'border-gray-300'}`} />
                     </div>
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                     <div className="relative"><div className="absolute top-3 left-3 pointer-events-none"><MapPinIcon className="h-5 w-5 text-gray-400" /></div>
-                      <textarea rows={3} value={formData.address} onChange={(e)=>handleInputChange('address', e.target.value)} className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg resize-none" />
+                      <textarea rows={3} value={formData.address} onChange={(e)=>handleInputChange('address', e.target.value)} className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg resize-none text-gray-900 bg-white" />
                     </div>
                   </div>
                 </div>
@@ -705,7 +705,7 @@ export default function CustomersPage() {
                       type="text"
                       value={inviteResults.inviteLink}
                       readOnly
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-sm"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-sm text-gray-900"
                     />
                     <button
                       onClick={copyInviteLink}

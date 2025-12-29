@@ -68,6 +68,7 @@ model Store {
   whatsapp       String? // digits only, e.g., 9198xxxxxx
   upiId          String?
   currency       String          @default("INR")
+  billLayout     BillLayout      @default(REGULAR)
   products       Product[]
   orders         Order[]
   customers      Customer[]
@@ -283,6 +284,11 @@ enum UserRole {
   STORE_OWNER
   SUPPLIER
   CUSTOMER
+}
+
+enum BillLayout {
+  VERTICAL
+  REGULAR
 }
 
 model Wishlist {

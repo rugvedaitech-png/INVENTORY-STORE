@@ -363,7 +363,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                                     setTitle('')
                                                 }
                                             }}
-                                            className={`w-full px-3 py-2 border rounded-md ${errors.sku ? 'border-red-500' : 'border-gray-300'
+                                            className={`w-full px-3 py-2 border rounded-md text-gray-900 bg-white ${errors.sku ? 'border-red-500' : 'border-gray-300'
                                                 }`}
                                             disabled={loadingProducts}
                                         >
@@ -379,7 +379,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                             type="text"
                                             value={sku}
                                             onChange={(e) => setSku(e.target.value)}
-                                            className={`w-full px-3 py-2 border rounded-md ${errors.sku ? 'border-red-500' : 'border-gray-300'
+                                            className={`w-full px-3 py-2 border rounded-md text-gray-900 bg-white ${errors.sku ? 'border-red-500' : 'border-gray-300'
                                                 }`}
                                             placeholder="e.g., ELEC001"
                                         />
@@ -407,8 +407,8 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         disabled={selectedProductId !== '' && products.length > 0}
-                                        className={`w-full px-3 py-2 border rounded-md ${errors.title ? 'border-red-500' : 'border-gray-300'
-                                            } ${selectedProductId !== '' && products.length > 0 ? 'bg-gray-100' : ''}`}
+                                        className={`w-full px-3 py-2 border rounded-md text-gray-900 ${errors.title ? 'border-red-500' : 'border-gray-300'
+                                            } ${selectedProductId !== '' && products.length > 0 ? 'bg-gray-100' : 'bg-white'}`}
                                         placeholder="e.g., LED Bulb 10W"
                                     />
                                     {errors.title && (
@@ -426,7 +426,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows={2}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                                     placeholder="Product description..."
                                 />
                             </div>
@@ -444,7 +444,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                         onChange={(e) => {
                                             setQuantity(e.target.value)
                                         }}
-                                        className={`w-full px-3 py-2 border rounded-md ${errors.quantity ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2 border rounded-md text-gray-900 bg-white ${errors.quantity ? 'border-red-500' : 'border-gray-300'
                                             }`}
                                         placeholder="0"
                                     />
@@ -465,7 +465,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                         onChange={(e) => {
                                             setUnitCost(e.target.value)
                                         }}
-                                        className={`w-full px-3 py-2 border rounded-md ${errors.unitCost ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2 border rounded-md text-gray-900 bg-white ${errors.unitCost ? 'border-red-500' : 'border-gray-300'
                                             }`}
                                         placeholder="0.00"
                                     />
@@ -486,7 +486,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                     min="0"
                                     value={price}
                                     onChange={(e) => setPrice(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                                     placeholder="0.00 (defaults to 150% of unit cost)"
                                 />
                                 <p className="mt-1 text-xs text-gray-500">
@@ -512,7 +512,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                                 setTotalAmount(value)
                                             }
                                         }}
-                                        className={`flex-1 px-3 py-2 border rounded-md ${errors.totalAmount ? 'border-red-500' : 'border-gray-300'
+                                        className={`flex-1 px-3 py-2 border rounded-md text-gray-900 bg-white ${errors.totalAmount ? 'border-red-500' : 'border-gray-300'
                                             }`}
                                         placeholder="0.00"
                                     />
@@ -561,7 +561,7 @@ export default function SingleProductForm({ suppliers, onSuccess, onClose }: Sin
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     rows={2}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
                                     placeholder="Additional notes about this purchase..."
                                 />
                             </div>

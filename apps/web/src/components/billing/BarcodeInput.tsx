@@ -70,7 +70,7 @@ export default function BarcodeInput({
         placeholder={placeholder}
         className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 
                    focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 
-                   text-lg font-mono"
+                   text-lg font-mono text-gray-900"
         autoFocus
       />
     </div>

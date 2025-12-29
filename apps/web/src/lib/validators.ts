@@ -69,11 +69,14 @@ export const receivePurchaseOrderSchema = z.object({
 
 // Store validators
 export const updateStoreSchema = z.object({
-  name: z.string().min(1, 'Store name is required'),
-  slug: z.string().min(1, 'Store slug is required'),
+  name: z.string().min(1, 'Store name is required').optional(),
+  slug: z.string().min(1, 'Store slug is required').optional(),
   whatsapp: z.string().optional(),
   upiId: z.string().optional(),
-  currency: z.string().default('INR'),
+  currency: z.string().default('INR').optional(),
+  billLayout: z.enum(['VERTICAL', 'REGULAR']).optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: 'At least one field must be provided for update',
 })
 
 // Auth validators
