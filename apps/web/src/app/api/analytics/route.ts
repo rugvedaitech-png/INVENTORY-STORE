@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 export async function GET(request: NextRequest) {
   try {
@@ -195,7 +196,7 @@ export async function GET(request: NextRequest) {
           id: item.productId,
           title: product?.title || 'Unknown Product',
           totalSold: item._sum.qty || 0,
-          revenue: (productRevenue._sum.priceSnap || 0) * (item._sum.qty || 0)
+          revenue: decimalToNumber(productRevenue._sum.priceSnap || 0) * (item._sum.qty || 0)
         }
       })
     )
@@ -251,8 +252,8 @@ export async function GET(request: NextRequest) {
 
     const analytics = {
       revenue: {
-        total: totalRevenue._sum.totalAmount || 0,
-        monthly: periodRevenue._sum.totalAmount || 0,
+        total: decimalToNumber(totalRevenue._sum.totalAmount || 0),
+        monthly: decimalToNumber(periodRevenue._sum.totalAmount || 0),
         weekly: 0, // Could be calculated separately
         daily: 0   // Could be calculated separately
       },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -157,8 +158,8 @@ export async function GET(request: NextRequest) {
     // Calculate metrics
     const totalOrders = ordersData._count.id || 0
     const totalPurchaseOrders = purchaseOrdersData._count.id || 0
-    const totalRevenue = revenueData._sum.totalAmount || 0
-    const totalPurchaseCost = purchaseCostData._sum.total || 0
+    const totalRevenue = decimalToNumber(revenueData._sum.totalAmount || 0)
+    const totalPurchaseCost = decimalToNumber(purchaseCostData._sum.total || 0)
     const netProfit = totalRevenue - totalPurchaseCost
 
     const summary = {

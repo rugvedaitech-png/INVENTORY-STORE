@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { decimalToNumber, numberToDecimal } from '@/lib/money'
 
 const updateDiscountSchema = z.object({
   discountAmount: z.number().int().min(0, 'Discount amount must be non-negative'),
@@ -52,7 +53,7 @@ export async function PUT(
     }
 
     // Calculate subtotal from items
-    const subtotal = order.items.reduce((sum, item) => sum + (item.priceSnap * item.qty), 0)
+    const subtotal = order.items.reduce((sum, item) => sum + (decimalToNumber(item.priceSnap) * item.qty), 0)
 
     // Calculate discount amount
     let discountAmount = 0
@@ -72,10 +73,10 @@ export async function PUT(
     const updatedOrder = await db.order.update({
       where: { id: orderId },
       data: {
-        subtotal,
-        discountAmount,
+        subtotal: numberToDecimal(subtotal),
+        discountAmount: numberToDecimal(discountAmount),
         discountType: validatedData.discountType,
-        totalAmount
+        totalAmount: numberToDecimal(totalAmount)
       },
       include: {
         items: {
@@ -152,16 +153,16 @@ export async function DELETE(
     }
 
     // Calculate subtotal from items
-    const subtotal = order.items.reduce((sum, item) => sum + (item.priceSnap * item.qty), 0)
+    const subtotal = order.items.reduce((sum, item) => sum + (decimalToNumber(item.priceSnap) * item.qty), 0)
 
     // Remove discount (set to 0)
     const updatedOrder = await db.order.update({
       where: { id: orderId },
       data: {
-        subtotal,
-        discountAmount: 0,
+        subtotal: numberToDecimal(subtotal),
+        discountAmount: numberToDecimal(0),
         discountType: 'AMOUNT',
-        totalAmount: subtotal
+        totalAmount: numberToDecimal(subtotal)
       },
       include: {
         items: {

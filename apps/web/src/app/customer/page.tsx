@@ -63,7 +63,7 @@ export default async function CustomerDashboard() {
   const totalOrders = orders.length
   const deliveredOrders = orders.filter((order: { status: string }) => order.status === 'DELIVERED').length
   const pendingOrders = orders.filter((order: { status: string }) => ['PENDING', 'CONFIRMED', 'SHIPPED'].includes(order.status)).length
-  const totalSpent = orders.reduce((sum: number, order: { totalAmount: number }) => sum + order.totalAmount, 0)
+  const totalSpent = orders.reduce((sum: number, order: { totalAmount: any }) => sum + decimalToNumber(order.totalAmount), 0)
 
   return (
     <div className="space-y-6">

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { receivePurchaseOrderSchema } from '@/lib/validators'
-import { decimalToNumber } from '@/lib/money'
+import { decimalToNumber, numberToDecimal } from '@/lib/money'
 
 export async function POST(
   request: NextRequest,
@@ -88,13 +88,13 @@ export async function POST(
         const product = poItem.product
         const newStock = product.stock + receiveItem.receivedQty
         
-        let newCostPrice = product.costPrice
+        let newCostPrice: string
         if (product.costPrice && product.stock > 0) {
         // Moving average calculation
         const totalCost = (decimalToNumber(product.costPrice) * product.stock) + (decimalToNumber(poItem.cost) * receiveItem.receivedQty)
-        newCostPrice = totalCost / newStock
+        newCostPrice = numberToDecimal(totalCost / newStock)
       } else {
-        newCostPrice = poItem.cost
+        newCostPrice = numberToDecimal(decimalToNumber(poItem.cost))
       }
 
         await tx.product.update({

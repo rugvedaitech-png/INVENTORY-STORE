@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
     const totalOrders = orders.length
     const totalRevenue = orders
       .filter(order => order.status === 'CONFIRMED')
-      .reduce((sum, order) => sum + order.totalAmount, 0)
+      .reduce((sum, order) => sum + decimalToNumber(order.totalAmount), 0)
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
     // Status breakdown
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
             revenue: 0
           }
           existing.totalSold += item.qty
-          existing.revenue += item.qty * item.priceSnap
+          existing.revenue += item.qty * decimalToNumber(item.priceSnap)
           productRevenue.set(item.productId, existing)
         })
       }
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
       if (order.status === 'CONFIRMED') {
         const date = order.createdAt.toISOString().split('T')[0]
         const existing = dailyRevenue.get(date) || { revenue: 0, orders: 0 }
-        existing.revenue += order.totalAmount
+        existing.revenue += decimalToNumber(order.totalAmount)
         existing.orders += 1
         dailyRevenue.set(date, existing)
       }
@@ -157,14 +158,14 @@ export async function GET(request: NextRequest) {
         buyerName: order.buyerName,
         phone: order.phone,
         status: order.status,
-        totalAmount: order.totalAmount,
+        totalAmount: decimalToNumber(order.totalAmount),
         createdAt: order.createdAt.toISOString(),
         items: order.items.map(item => ({
           product: {
             title: item.product.title
           },
           qty: item.qty,
-          priceSnap: item.priceSnap
+          priceSnap: decimalToNumber(item.priceSnap)
         }))
       })),
       summary: {

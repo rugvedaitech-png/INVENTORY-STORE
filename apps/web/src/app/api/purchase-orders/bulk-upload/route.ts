@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
-import { decimalToNumber } from '@/lib/money'
+import { decimalToNumber, numberToDecimal } from '@/lib/money'
 
 // Helper function to create slug from name
 function createSlug(name: string): string {
@@ -234,12 +234,12 @@ export async function POST(request: NextRequest) {
         const newStock = product.stock + item.qty
 
         // Update cost price (moving average)
-        let newCostPrice = product.costPrice
+        let newCostPrice: string
         if (product.costPrice && product.stock > 0) {
           const totalCost = (decimalToNumber(product.costPrice) * product.stock) + (decimalToNumber(item.cost) * item.qty)
-          newCostPrice = totalCost / newStock
+          newCostPrice = numberToDecimal(totalCost / newStock)
         } else {
-          newCostPrice = item.cost
+          newCostPrice = numberToDecimal(decimalToNumber(item.cost))
         }
 
         // Update product stock and cost price

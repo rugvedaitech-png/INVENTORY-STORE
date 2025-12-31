@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { createOrderSchema } from '@/lib/validators'
 import { OrderStatus } from '@prisma/client'
+import { decimalToNumber, numberToDecimal } from '@/lib/money'
 
 export async function GET(request: NextRequest) {
   try {
@@ -140,13 +141,13 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const itemTotal = product.price * item.qty
+      const itemTotal = decimalToNumber(product.price) * item.qty
       totalAmount += itemTotal
 
       orderItems.push({
         productId: parseInt(item.productId),
         qty: item.qty,
-        priceSnap: product.price,
+        priceSnap: numberToDecimal(decimalToNumber(product.price)),
       })
     }
 
@@ -162,8 +163,8 @@ export async function POST(request: NextRequest) {
             phone: validatedData.phone,
             address: validatedData.address, // Keep for backward compatibility
             paymentMethod: validatedData.paymentMethod,
-            subtotal: totalAmount,
-            totalAmount,
+            subtotal: numberToDecimal(totalAmount),
+            totalAmount: numberToDecimal(totalAmount),
             items: {
               create: orderItems,
             },

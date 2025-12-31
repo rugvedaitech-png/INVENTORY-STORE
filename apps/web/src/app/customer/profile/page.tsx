@@ -57,7 +57,7 @@ export default async function CustomerProfilePage() {
   })
 
   const totalOrders = orders.length
-  const totalSpent = orders.reduce((sum, order) => sum + order.totalAmount, 0)
+  const totalSpent = orders.reduce((sum, order) => sum + decimalToNumber(order.totalAmount), 0)
 
   return (
     <div className="space-y-6">

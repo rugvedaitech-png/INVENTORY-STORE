@@ -38,7 +38,7 @@ function generateOrderMessage(store: Store, order: OrderWithItems): string {
   ]
   
   order.items.forEach((item) => {
-    const total = item.qty * item.priceSnap
+    const total = item.qty * decimalToNumber(item.priceSnap)
     lines.push(`• ${item.product.title} x${item.qty} — ${formatCurrency(total)}`)
   })
   

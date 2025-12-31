@@ -96,11 +96,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate totals (all in rupees)
     const subtotal = items.reduce(
-      (sum: number, item: { qty: number; price: number }) => {
+      (sum: number, item: { qty: number; price: number | string | Decimal }) => {
         // Convert price to number if it's a Decimal
-        const price = typeof item.price === 'object' && 'toNumber' in item.price 
-          ? item.price.toNumber() 
-          : Number(item.price)
+        const price = decimalToNumber(item.price)
         return sum + item.qty * price
       },
       0

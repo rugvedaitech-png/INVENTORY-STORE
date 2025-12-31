@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
     const totalPurchaseOrders = purchaseOrders.length
     const totalCost = purchaseOrders
       .filter(po => po.status === 'RECEIVED')
-      .reduce((sum, po) => sum + po.total, 0)
+      .reduce((sum, po) => sum + decimalToNumber(po.total), 0)
     const averageOrderValue = totalPurchaseOrders > 0 ? totalCost / totalPurchaseOrders : 0
 
     // Status breakdown
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
           totalCost: 0
         }
         existing.totalOrders += 1
-        existing.totalCost += po.total
+        existing.totalCost += decimalToNumber(po.total)
         supplierCosts.set(po.supplierId, existing)
       }
     })
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
         const month = po.createdAt.toISOString().substring(0, 7) // YYYY-MM
         const existing = monthlyTrends.get(month) || { orders: 0, cost: 0 }
         existing.orders += 1
-        existing.cost += po.total
+        existing.cost += decimalToNumber(po.total)
         monthlyTrends.set(month, existing)
       }
     })
@@ -192,9 +193,9 @@ export async function GET(request: NextRequest) {
           phone: po.supplier.phone
         },
         status: po.status,
-        total: po.total,
-        subtotal: po.subtotal,
-        taxTotal: po.taxTotal,
+        total: decimalToNumber(po.total),
+        subtotal: decimalToNumber(po.subtotal),
+        taxTotal: decimalToNumber(po.taxTotal),
         createdAt: po.createdAt.toISOString(),
         placedAt: po.placedAt?.toISOString(),
         items: po.items.map(item => ({
