@@ -37,6 +37,7 @@ interface Order {
     name: string
     whatsapp: string | null
     upiId: string | null
+    address: string | null
     billLayout: 'VERTICAL' | 'REGULAR'
   }
   items: OrderItem[]
