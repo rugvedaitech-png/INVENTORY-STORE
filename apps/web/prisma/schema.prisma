@@ -67,6 +67,7 @@ model Store {
   slug           String          @unique
   whatsapp       String? // digits only, e.g., 9198xxxxxx
   upiId          String?
+  address        String? // Store address to display on bills
   currency       String          @default("INR")
   billLayout     BillLayout      @default(REGULAR)
   products       Product[]

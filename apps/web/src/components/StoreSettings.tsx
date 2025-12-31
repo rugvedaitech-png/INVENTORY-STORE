@@ -9,6 +9,7 @@ interface Store {
   slug: string
   whatsapp: string | null
   upiId: string | null
+  address: string | null
   currency: string
   billLayout: 'VERTICAL' | 'REGULAR'
 }
@@ -20,6 +21,7 @@ export default function StoreSettings() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [billLayout, setBillLayout] = useState<'VERTICAL' | 'REGULAR'>('REGULAR')
+  const [address, setAddress] = useState<string>('')
 
   useEffect(() => {
     fetchStore()
@@ -37,6 +39,7 @@ export default function StoreSettings() {
         const storeData = data.stores[0]
         setStore(storeData)
         setBillLayout(storeData.billLayout || 'REGULAR')
+        setAddress(storeData.address || '')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch store')
@@ -60,6 +63,7 @@ export default function StoreSettings() {
         },
         body: JSON.stringify({
           billLayout,
+          address: address || null,
         }),
       })
 
@@ -103,6 +107,23 @@ export default function StoreSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Store Address Setting */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Store Address
+        </label>
+        <p className="text-sm text-gray-500 mb-4">
+          Enter your store address to display on bills and invoices. You can use multiple lines.
+        </p>
+        <textarea
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          rows={4}
+          placeholder="Enter store address&#10;Line 1&#10;Line 2, City - PIN Code"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
       {/* Bill Layout Setting */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -169,7 +190,7 @@ export default function StoreSettings() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          disabled={saving || billLayout === store.billLayout}
+          disabled={saving || (billLayout === store.billLayout && address === (store.address || ''))}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? 'Saving...' : 'Save Settings'}

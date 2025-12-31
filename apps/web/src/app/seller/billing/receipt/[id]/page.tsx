@@ -222,11 +222,14 @@ function ReceiptPageContent() {
         </h1>
       </div>
 
-      {/* Store Address - Placeholder */}
-      <div className="text-center text-xs text-gray-700 mb-2">
-        <p>Address Line 1</p>
-        <p>Address Line 2, City - PIN</p>
-      </div>
+      {/* Store Address */}
+      {order.store.address && (
+        <div className="text-center text-xs text-gray-700 mb-2">
+          {order.store.address.split('\n').map((line, index) => (
+            <p key={index}>{line}</p>
+          ))}
+        </div>
+      )}
 
       {/* Phone Numbers */}
       {order.store.whatsapp && (
@@ -434,8 +437,16 @@ function ReceiptPageContent() {
               </div>
             </div>
             <div className="space-y-1 text-sm text-gray-600">
-              <p>Address Line 1, Address Line 2</p>
-              <p>City - PIN Code</p>
+              {order.store.address ? (
+                order.store.address.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))
+              ) : (
+                <>
+                  <p>Address Line 1, Address Line 2</p>
+                  <p>City - PIN Code</p>
+                </>
+              )}
               {order.store.whatsapp && (
                 <p>Phone: {formatPhone(order.store.whatsapp)}</p>
               )}

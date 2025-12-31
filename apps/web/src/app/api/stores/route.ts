@@ -31,6 +31,7 @@ export async function GET() {
         slug: true,
         whatsapp: true,
         upiId: true,
+        address: true,
         currency: true,
         billLayout: true,
         createdAt: true
