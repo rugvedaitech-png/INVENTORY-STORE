@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { Decimal } from '@prisma/client/runtime/library'
+import { decimalToNumber } from '@/lib/money'
 
 // POST /api/billing/create - Create a POS bill/order
 export async function POST(request: NextRequest) {
