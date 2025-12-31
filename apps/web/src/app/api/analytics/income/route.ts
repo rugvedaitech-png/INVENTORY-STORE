@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 // GET /api/analytics/income - Get income analysis by user
 export async function GET(request: NextRequest) {
@@ -84,10 +85,11 @@ export async function GET(request: NextRequest) {
       }
       
       acc[userId].totalOrders += 1
-      acc[userId].totalAmount += order.totalAmount
+      const orderAmount = decimalToNumber(order.totalAmount)
+      acc[userId].totalAmount += orderAmount
       acc[userId].orders.push({
         id: order.id,
-        amount: order.totalAmount,
+        amount: orderAmount,
         date: order.createdAt,
         items: order.items.length
       })
@@ -99,7 +101,7 @@ export async function GET(request: NextRequest) {
     const incomeAnalysis = Object.values(incomeByUser).sort((a: any, b: any) => b.totalAmount - a.totalAmount)
 
     // Calculate total income
-    const totalIncome = orders.reduce((sum, order) => sum + order.totalAmount, 0)
+    const totalIncome = orders.reduce((sum, order) => sum + decimalToNumber(order.totalAmount), 0)
 
     return NextResponse.json({
       totalIncome,
