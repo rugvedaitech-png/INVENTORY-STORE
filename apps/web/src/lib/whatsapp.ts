@@ -1,5 +1,5 @@
 import { Store, Order, OrderItem } from '@prisma/client'
-import { formatCurrency } from './money'
+import { formatCurrency, decimalToNumber } from './money'
 
 type OrderWithItems = Order & {
   items: (OrderItem & {
@@ -43,7 +43,7 @@ function generateOrderMessage(store: Store, order: OrderWithItems): string {
   })
   
   lines.push('')
-  lines.push(`💰 *Total:* ${formatCurrency(order.totalAmount)}`)
+  lines.push(`💰 *Total:* ${formatCurrency(decimalToNumber(order.totalAmount))}`)
   lines.push('')
   lines.push(`📍 *Delivery Address:*`)
   lines.push(order.address ?? 'No address provided')

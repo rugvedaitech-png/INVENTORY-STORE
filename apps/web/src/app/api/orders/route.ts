@@ -141,13 +141,14 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const itemTotal = decimalToNumber(product.price) * item.qty
+      const price = decimalToNumber(product.price)
+      const itemTotal = price * item.qty
       totalAmount += itemTotal
 
       orderItems.push({
         productId: parseInt(item.productId),
         qty: item.qty,
-        priceSnap: numberToDecimal(decimalToNumber(product.price)),
+        priceSnap: price,
       })
     }
 

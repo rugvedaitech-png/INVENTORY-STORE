@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { formatCurrency, decimalToNumber } from '@/lib/money'
+import { Decimal } from '@prisma/client/runtime/library'
 import {
   ShoppingBagIcon,
   CheckCircleIcon,
@@ -188,7 +189,7 @@ export default async function CustomerDashboard() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {orders.slice(0, 5).map((order: { id: number; status: string; store: { name: string }; items: unknown[]; totalAmount: number; createdAt: Date }) => (
+            {orders.slice(0, 5).map((order: { id: number; status: string; store: { name: string }; items: unknown[]; totalAmount: Decimal; createdAt: Date }) => (
               <div key={order.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
