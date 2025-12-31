@@ -62,7 +62,15 @@ export async function POST(
 
     // In a real implementation, you'd store this in a dedicated invitations table
     // For demo purposes, we'll return the invite link directly
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    // Use the request origin to ensure we use the correct domain (not IP address)
+    const requestUrl = new URL(request.url)
+    // Prefer NEXTAUTH_URL if it's set and contains a domain (not IP), otherwise use request origin
+    let baseUrl = process.env.NEXTAUTH_URL
+    const ipAddressPattern = /^https?:\/\/(\d{1,3}\.){3}\d{1,3}/
+    if (!baseUrl || baseUrl.includes('localhost') || ipAddressPattern.test(baseUrl)) {
+      // Use request origin if NEXTAUTH_URL is not set, is localhost, or is an IP address
+      baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+    }
     const inviteLink = `${baseUrl}/auth/register?invite=${inviteToken}&email=${encodeURIComponent(customer.email)}&name=${encodeURIComponent(customer.name)}&phone=${encodeURIComponent(customer.phone)}&storeId=${customer.storeId}&customerId=${customer.id}`
 
     return NextResponse.json({
