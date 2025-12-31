@@ -6,8 +6,8 @@
 echo "Running tax fields migration..."
 
 # Try to get MySQL credentials from environment or docker-compose
-MYSQL_USER="${MYSQL_USER:-root}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-inventory_root_}"
+MYSQL_USER="${MYSQL_USER:-inventory_user}"
+MYSQL_PASSWORD="${MYSQL_PASSWORD:-inventory_password}"
 MYSQL_DATABASE="${MYSQL_DATABASE:-inventory_store}"
 
 # Check if MySQL is available
