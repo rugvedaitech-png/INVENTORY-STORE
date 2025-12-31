@@ -67,7 +67,7 @@ export async function POST(
       if (quotedCost !== undefined && quotedCost > 0) {
         return db.purchaseOrderItem.update({
           where: { id: item.id },
-          data: { quotedCostPaise: Math.round(quotedCost * 100) }
+          data: { quotedCost: quotedCost } // Price is now in rupees
         })
       }
       return Promise.resolve()
@@ -81,7 +81,7 @@ export async function POST(
     })
 
     const subtotal = updatedItems.reduce((sum, item) => {
-      return sum + (item.quotedCostPaise || item.costPaise) * item.qty
+      return sum + (decimalToNumber(item.quotedCost || item.cost) * item.qty)
     }, 0)
 
     const taxTotal = Math.round(subtotal * 0.18) // 18% GST

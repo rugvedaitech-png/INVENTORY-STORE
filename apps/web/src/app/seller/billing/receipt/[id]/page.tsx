@@ -27,6 +27,9 @@ interface Order {
   paymentMethod: string
   subtotal: number
   discountAmount: number
+  taxRate: number | null
+  taxableAmount: number | null
+  taxAmount: number | null
   totalAmount: number
   createdAt: string
   store: {
@@ -135,33 +138,38 @@ function ReceiptPageContent() {
   const grossAmount = order.subtotal
   const totalPayable = order.totalAmount
   
-  // Calculate GST (18% = 9% CGST + 9% SGST)
-  const GST_RATE = 18 // 18% total GST
-  const CGST_RATE = 9 // 9% CGST
-  const SGST_RATE = 9 // 9% SGST
+  // Use stored tax values from order (tax-inclusive pricing)
+  const taxRate = order.taxRate || 0
+  const taxableAmount = order.taxableAmount || 0
+  const taxAmount = order.taxAmount || 0
   
-  // Calculate basic rate (amount before GST)
-  // If total includes GST: basicRate = total / (1 + GST_RATE/100)
-  // For simplicity, we'll calculate from the line total
-  const calculateGST = (amount: number) => {
-    const basicRate = amount / (1 + GST_RATE / 100)
-    const cgst = basicRate * (CGST_RATE / 100)
-    const sgst = basicRate * (SGST_RATE / 100)
-    const totalGST = cgst + sgst
-    return { basicRate, cgst, sgst, totalGST }
-  }
+  // Calculate CGST and SGST (split tax amount equally if tax rate is 18%)
+  // For 18% GST: 9% CGST + 9% SGST
+  const CGST_RATE = taxRate > 0 ? taxRate / 2 : 0 // Split tax rate in half
+  const SGST_RATE = taxRate > 0 ? taxRate / 2 : 0
+  const totalCGST = taxAmount / 2
+  const totalSGST = taxAmount / 2
+  const totalGST = taxAmount
   
-  // Calculate GST for each item
+  // Calculate GST for each item (proportional to line total)
+  const amountAfterDiscount = grossAmount - order.discountAmount
   const itemsWithGST = order.items.map((item) => {
-    const gst = calculateGST(item.lineTotal)
-    return { ...item, ...gst }
+    // Calculate item's share of taxable amount and tax
+    const itemShare = item.lineTotal / amountAfterDiscount
+    const itemTaxableAmount = taxableAmount * itemShare
+    const itemTaxAmount = taxAmount * itemShare
+    const itemCGST = itemTaxAmount / 2
+    const itemSGST = itemTaxAmount / 2
+    return { 
+      ...item, 
+      basicRate: itemTaxableAmount,
+      cgst: itemCGST,
+      sgst: itemSGST,
+      totalGST: itemTaxAmount
+    }
   })
   
-  // Calculate total GST
-  const totalBasicRate = itemsWithGST.reduce((sum, item) => sum + item.basicRate, 0)
-  const totalCGST = itemsWithGST.reduce((sum, item) => sum + item.cgst, 0)
-  const totalSGST = itemsWithGST.reduce((sum, item) => sum + item.sgst, 0)
-  const totalGST = totalCGST + totalSGST
+  const totalBasicRate = taxableAmount
   
   const savings = order.items.reduce((sum, item) => {
     const mrpTotal = item.mrp * item.qty
@@ -272,16 +280,16 @@ function ReceiptPageContent() {
                   {item.productTitle}
                 </td>
                 <td className="py-1 px-1 text-right text-gray-700">
-                  {(item.mrp / 100).toFixed(2)}
+                  {item.mrp.toFixed(2)}
                 </td>
                 <td className="py-1 px-1 text-right text-gray-700">
-                  {(item.price / 100).toFixed(2)}
+                  {item.price.toFixed(2)}
                 </td>
                 <td className="py-1 px-1 text-right text-gray-700">{item.qty}</td>
                 <td className="py-1 px-1 text-center text-gray-700">NOS</td>
-                <td className="py-1 px-1 text-center text-gray-700">18%</td>
+                <td className="py-1 px-1 text-center text-gray-700">{taxRate > 0 ? `${taxRate.toFixed(0)}%` : '-'}</td>
                 <td className="py-1 px-1 text-right font-semibold text-black">
-                  {(item.lineTotal / 100).toFixed(2)}
+                  {item.lineTotal.toFixed(2)}
                 </td>
               </tr>
             ))}
@@ -299,13 +307,31 @@ function ReceiptPageContent() {
           <span>Items:</span>
           <span className="font-semibold">{totalItems.toFixed(2)}</span>
         </div>
+        {order.discountAmount > 0 && (
+          <div className="flex justify-between text-xs text-black mb-1">
+            <span>Discount:</span>
+            <span className="font-semibold text-green-600">-{order.discountAmount.toFixed(2)}</span>
+          </div>
+        )}
+        {taxableAmount > 0 && (
+          <div className="flex justify-between text-xs text-black mb-1">
+            <span>Taxable Amount:</span>
+            <span className="font-semibold">{taxableAmount.toFixed(2)}</span>
+          </div>
+        )}
+        {taxAmount > 0 && (
+          <div className="flex justify-between text-xs text-black mb-1">
+            <span>Tax ({taxRate.toFixed(0)}%):</span>
+            <span className="font-semibold">{taxAmount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-xs text-black mb-1">
           <span>Gross Amt:</span>
-          <span className="font-semibold">{(grossAmount / 100).toFixed(2)}</span>
+          <span className="font-semibold">{grossAmount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-xs text-black mb-1">
           <span>Total Payable:</span>
-          <span className="font-semibold">{(totalPayable / 100).toFixed(2)}</span>
+          <span className="font-semibold">{totalPayable.toFixed(2)}</span>
         </div>
         {order.paymentMethod && (
           <div className="flex justify-between text-xs text-black mb-1">
@@ -327,7 +353,7 @@ function ReceiptPageContent() {
       {savings > 0 && (
         <div className="mb-4">
           <p className="text-xs text-black text-center">
-            <span className="font-semibold">Savings:</span> YOU HAVE SAVED ON MRP RS: {(savings / 100).toFixed(2)}
+            <span className="font-semibold">Savings:</span> YOU HAVE SAVED ON MRP RS: {savings.toFixed(2)}
           </p>
         </div>
       )}
@@ -348,28 +374,28 @@ function ReceiptPageContent() {
           </thead>
           <tbody>
             <tr>
-              <td className="py-1 px-1 text-gray-700">18%</td>
+              <td className="py-1 px-1 text-gray-700">{taxRate > 0 ? `${taxRate.toFixed(0)}%` : '-'}</td>
               <td className="py-1 px-1 text-right text-gray-700">
-                {(totalBasicRate / 100).toFixed(2)}
+                {totalBasicRate.toFixed(2)}
               </td>
-              <td className="py-1 px-1 text-right text-gray-700">9%</td>
+              <td className="py-1 px-1 text-right text-gray-700">{CGST_RATE > 0 ? `${CGST_RATE.toFixed(0)}%` : '-'}</td>
               <td className="py-1 px-1 text-right text-gray-700">
-                {(totalCGST / 100).toFixed(2)}
+                {totalCGST.toFixed(2)}
               </td>
-              <td className="py-1 px-1 text-right text-gray-700">9%</td>
+              <td className="py-1 px-1 text-right text-gray-700">{SGST_RATE > 0 ? `${SGST_RATE.toFixed(0)}%` : '-'}</td>
               <td className="py-1 px-1 text-right text-gray-700">
-                {(totalSGST / 100).toFixed(2)}
+                {totalSGST.toFixed(2)}
               </td>
             </tr>
           </tbody>
         </table>
         <div className="flex justify-between text-xs text-black mt-2 pt-2 border-t border-gray-300">
           <span className="font-semibold">Total GST:</span>
-          <span className="font-semibold">{(totalGST / 100).toFixed(2)}</span>
+          <span className="font-semibold">{totalGST.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-xs text-black mt-1">
           <span className="font-semibold">Total (Overall Amount):</span>
-          <span className="font-semibold">{(totalPayable / 100).toFixed(2)}</span>
+          <span className="font-semibold">{totalPayable.toFixed(2)}</span>
         </div>
       </div>
 
@@ -484,10 +510,10 @@ function ReceiptPageContent() {
                 </td>
                 <td className="py-3 px-4 text-sm text-center text-gray-600">{item.productSku || '-'}</td>
                 <td className="py-3 px-4 text-sm text-right text-gray-600">{item.qty}</td>
-                <td className="py-3 px-4 text-sm text-right text-gray-600">{(item.price / 100).toFixed(2)}</td>
-                <td className="py-3 px-4 text-sm text-right text-gray-600">18%</td>
+                <td className="py-3 px-4 text-sm text-right text-gray-600">{item.price.toFixed(2)}</td>
+                <td className="py-3 px-4 text-sm text-right text-gray-600">{taxRate > 0 ? `${taxRate.toFixed(0)}%` : '-'}</td>
                 <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900">
-                  {(item.lineTotal / 100).toFixed(2)}
+                  {item.lineTotal.toFixed(2)}
                 </td>
               </tr>
             ))}
@@ -507,25 +533,41 @@ function ReceiptPageContent() {
 
         {/* Right: Totals */}
         <div className="space-y-2">
+          {order.discountAmount > 0 && (
+            <div className="flex justify-between py-2 border-b border-gray-200">
+              <span className="text-sm text-gray-600">Discount:</span>
+              <span className="text-sm font-medium text-green-600">-{order.discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+          {taxableAmount > 0 && (
+            <div className="flex justify-between py-2 border-b border-gray-200">
+              <span className="text-sm text-gray-600">Taxable Amount:</span>
+              <span className="text-sm font-medium text-gray-900">{taxableAmount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between py-2 border-b border-gray-200">
             <span className="text-sm text-gray-600">Subtotal:</span>
-            <span className="text-sm font-medium text-gray-900">{(grossAmount / 100).toFixed(2)}</span>
+            <span className="text-sm font-medium text-gray-900">{grossAmount.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="text-sm text-gray-600">CGST (9%):</span>
-            <span className="text-sm font-medium text-gray-900">{(totalCGST / 100).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b border-gray-200">
-            <span className="text-sm text-gray-600">SGST (9%):</span>
-            <span className="text-sm font-medium text-gray-900">{(totalSGST / 100).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between py-2 border-b-2 border-gray-300">
-            <span className="text-sm text-gray-600">Total GST:</span>
-            <span className="text-sm font-medium text-gray-900">{(totalGST / 100).toFixed(2)}</span>
-          </div>
+          {taxAmount > 0 && (
+            <>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-600">CGST ({CGST_RATE.toFixed(0)}%):</span>
+                <span className="text-sm font-medium text-gray-900">{totalCGST.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-600">SGST ({SGST_RATE.toFixed(0)}%):</span>
+                <span className="text-sm font-medium text-gray-900">{totalSGST.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b-2 border-gray-300">
+                <span className="text-sm text-gray-600">Total GST:</span>
+                <span className="text-sm font-medium text-gray-900">{totalGST.toFixed(2)}</span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between py-3 bg-blue-50 rounded-lg px-4 mt-2">
             <span className="text-base font-bold text-gray-900">Total Amount:</span>
-            <span className="text-lg font-bold text-blue-600">{(totalPayable / 100).toFixed(2)}</span>
+            <span className="text-lg font-bold text-blue-600">{totalPayable.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -546,11 +588,11 @@ function ReceiptPageContent() {
             </thead>
             <tbody>
               <tr>
-                <td className="py-2 text-gray-600">18%</td>
-                <td className="py-2 text-right text-gray-600">{(totalBasicRate / 100).toFixed(2)}</td>
-                <td className="py-2 text-right text-gray-600">{(totalCGST / 100).toFixed(2)}</td>
-                <td className="py-2 text-right text-gray-600">{(totalSGST / 100).toFixed(2)}</td>
-                <td className="py-2 text-right font-semibold text-gray-900">{(totalGST / 100).toFixed(2)}</td>
+                <td className="py-2 text-gray-600">{taxRate > 0 ? `${taxRate.toFixed(0)}%` : '-'}</td>
+                <td className="py-2 text-right text-gray-600">{totalBasicRate.toFixed(2)}</td>
+                <td className="py-2 text-right text-gray-600">{totalCGST.toFixed(2)}</td>
+                <td className="py-2 text-right text-gray-600">{totalSGST.toFixed(2)}</td>
+                <td className="py-2 text-right font-semibold text-gray-900">{totalGST.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
@@ -561,7 +603,7 @@ function ReceiptPageContent() {
       {savings > 0 && (
         <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-sm text-green-800 text-center">
-            <span className="font-semibold">You saved:</span> {(savings / 100).toFixed(2)} on MRP
+            <span className="font-semibold">You saved:</span> {savings.toFixed(2)} on MRP
           </p>
         </div>
       )}

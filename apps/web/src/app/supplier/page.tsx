@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import SupplierLayoutClient from './SupplierLayoutClient'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -251,7 +252,7 @@ export default async function SupplierDashboard() {
                                   {order.code}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {order.items.length} items • ₹{(order.total / 100).toFixed(2)}
+                                  {order.items.length} items • {formatCurrency(decimalToNumber(order.total))}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1">
                                   Created: {new Date(order.createdAt).toLocaleDateString()}

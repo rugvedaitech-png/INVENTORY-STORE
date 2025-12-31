@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import BarcodeInput from '@/components/billing/BarcodeInput'
 import BillingCart from '@/components/billing/BillingCart'
 import BillingSummary from '@/components/billing/BillingSummary'
+import CustomerSelector from '@/components/billing/CustomerSelector'
 import { cartStorage, type CartItem } from '@/lib/cartStorage'
 import {
   CheckCircleIcon,
@@ -39,6 +40,8 @@ export default function BillingPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [foundProduct, setFoundProduct] = useState<Product | null>(null)
   const [productNotFound, setProductNotFound] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string; phone: string; email: string } | null>(null)
+  const [customerSelected, setCustomerSelected] = useState(false) // Track if customer selection is complete
 
   // Fetch store ID
   useEffect(() => {
@@ -154,7 +157,7 @@ export default function BillingPage() {
     setCartItems(updatedItems)
   }
 
-  const handleCompleteBill = async () => {
+  const handleCompleteBill = async (discount: { type: 'PERCENTAGE' | 'AMOUNT'; value: number }, taxRate: number) => {
     if (!storeId || cartItems.length === 0) return
 
     setProcessing(true)
@@ -173,6 +176,9 @@ export default function BillingPage() {
             price: item.price,
           })),
           paymentMethod: 'COD',
+          customerId: selectedCustomer?.id || null,
+          discount: discount.value > 0 ? discount : null,
+          taxRate: taxRate || 0,
         }),
       })
 
@@ -182,10 +188,12 @@ export default function BillingPage() {
         throw new Error(data.error || 'Failed to create bill')
       }
 
-      // Clear cart
+      // Clear cart and customer selection
       cartStorage.clearCart()
       setCartItems([])
       setBarcodeInput('')
+      setSelectedCustomer(null)
+      setCustomerSelected(false) // Reset customer selection state
 
       // Show success and redirect with print parameter
       setSuccess(`Bill created successfully! Order #${data.orderId}`)
@@ -217,7 +225,10 @@ export default function BillingPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">POS Billing</h1>
           <p className="mt-2 text-gray-600">
-            Scan barcode or enter SKU to add products
+            {customerSelected 
+              ? 'Scan barcode or enter SKU to add products'
+              : 'Select a customer to start billing'
+            }
           </p>
         </div>
 
@@ -251,43 +262,114 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Barcode Input and Cart */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Barcode Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Barcode Scanner / SKU Input
-              </label>
-              <BarcodeInput
-                value={barcodeInput}
-                onChange={setBarcodeInput}
-                onEnter={handleBarcodeEnter}
-                disabled={loading || processing}
+        {/* Customer Selection Step - Show first */}
+        {!customerSelected ? (
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-lg shadow-lg border-2 border-blue-200 p-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Customer Search</h2>
+                <p className="text-gray-600 text-lg">Search by phone number to find or create a customer</p>
+              </div>
+
+              {/* Customer Selection - Prominent Search */}
+              <div className="mb-6">
+                <CustomerSelector
+                  storeId={storeId}
+                  selectedCustomer={selectedCustomer}
+                  onSelectCustomer={(customer) => {
+                    setSelectedCustomer(customer)
+                    if (customer) {
+                      setCustomerSelected(true)
+                    }
+                  }}
+                  disabled={processing}
+                />
+              </div>
+
+              {/* Walk-in Option */}
+              <div className="mt-8 pt-6 border-t-2 border-gray-300">
+                <p className="text-center text-sm text-gray-600 mb-3">Or continue without a customer</p>
+                <button
+                  onClick={() => {
+                    setSelectedCustomer(null)
+                    setCustomerSelected(true)
+                  }}
+                  disabled={processing}
+                  className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg"
+                >
+                  Continue as Walk-in Customer
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Main Layout - Show after customer selection */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Customer Info, Barcode Input and Cart */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Customer Info Display */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Customer</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {selectedCustomer ? selectedCustomer.name : 'Walk-in Customer'}
+                    </p>
+                    {selectedCustomer && (
+                      <p className="text-sm text-gray-500">{selectedCustomer.phone}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCustomer(null)
+                      setCustomerSelected(false)
+                      // Clear cart when changing customer
+                      cartStorage.clearCart()
+                      setCartItems([])
+                      setBarcodeInput('')
+                    }}
+                    disabled={processing}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50"
+                  >
+                    Change Customer
+                  </button>
+                </div>
+              </div>
+
+              {/* Barcode Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Barcode Scanner / SKU Input
+                </label>
+                <BarcodeInput
+                  value={barcodeInput}
+                  onChange={setBarcodeInput}
+                  onEnter={handleBarcodeEnter}
+                  disabled={loading || processing}
+                />
+                {loading && (
+                  <p className="mt-2 text-sm text-gray-500">Looking up product...</p>
+                )}
+              </div>
+
+              {/* Cart */}
+              <BillingCart
+                items={cartItems}
+                onUpdateQty={handleUpdateQty}
+                onRemoveItem={handleRemoveItem}
               />
-              {loading && (
-                <p className="mt-2 text-sm text-gray-500">Looking up product...</p>
-              )}
             </div>
 
-            {/* Cart */}
-            <BillingCart
-              items={cartItems}
-              onUpdateQty={handleUpdateQty}
-              onRemoveItem={handleRemoveItem}
-            />
+            {/* Right Column - Summary */}
+            <div className="lg:col-span-1">
+              <BillingSummary
+                items={cartItems}
+                onCompleteBill={handleCompleteBill}
+                loading={processing}
+              />
+            </div>
           </div>
-
-          {/* Right Column - Summary */}
-          <div className="lg:col-span-1">
-            <BillingSummary
-              items={cartItems}
-              onCompleteBill={handleCompleteBill}
-              loading={processing}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

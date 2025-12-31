@@ -149,14 +149,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Set default cost to 0 since supplier will provide pricing
-      const costPaise = 0
-      const itemTotal = item.qty * costPaise
+      const cost = 0
+      const itemTotal = item.qty * cost
       subtotal += itemTotal
 
       items.push({
         productId: item.productId,
         qty: item.qty,
-        costPaise: costPaise,
+        cost: cost, // Price is now in rupees
       })
     }
 

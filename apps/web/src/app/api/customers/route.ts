@@ -42,15 +42,15 @@ export async function GET(request: NextRequest) {
     if (search) {
       andFilters.push({
         OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search } },
+          { email: { contains: search } },
+          { phone: { contains: search } },
         ],
       })
     }
-    if (name) andFilters.push({ name: { contains: name, mode: 'insensitive' } })
-    if (email) andFilters.push({ email: { contains: email, mode: 'insensitive' } })
-    if (phone) andFilters.push({ phone: { contains: phone, mode: 'insensitive' } })
+    if (name) andFilters.push({ name: { contains: name } })
+    if (email) andFilters.push({ email: { contains: email } })
+    if (phone) andFilters.push({ phone: { contains: phone } })
     if (andFilters.length > 0) where.AND = andFilters
     const [customers, total] = await Promise.all([
       db.customer.findMany({

@@ -70,6 +70,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Convert Decimal values to numbers
+    const convertDecimal = (value: any): number => {
+      if (typeof value === 'number') return value
+      if (typeof value === 'string') return parseFloat(value)
+      if (value && typeof value === 'object' && 'toNumber' in value) return value.toNumber()
+      return 0
+    }
+
     return NextResponse.json({
       order: {
         id: order.id,
@@ -78,9 +86,12 @@ export async function GET(request: NextRequest) {
         phone: order.phone,
         status: order.status,
         paymentMethod: order.paymentMethod,
-        subtotal: order.subtotal,
-        discountAmount: order.discountAmount,
-        totalAmount: order.totalAmount,
+        subtotal: convertDecimal(order.subtotal),
+        discountAmount: convertDecimal(order.discountAmount),
+        taxRate: order.taxRate ? convertDecimal(order.taxRate) : null,
+        taxableAmount: order.taxableAmount ? convertDecimal(order.taxableAmount) : null,
+        taxAmount: order.taxAmount ? convertDecimal(order.taxAmount) : null,
+        totalAmount: convertDecimal(order.totalAmount),
         createdAt: order.createdAt,
         store: order.store,
         items: order.items.map((item) => ({
@@ -89,9 +100,9 @@ export async function GET(request: NextRequest) {
           productTitle: item.product.title,
           productSku: item.product.sku,
           qty: item.qty,
-          price: item.priceSnap,
-          mrp: item.product.price, // Use current price as MRP
-          lineTotal: item.qty * item.priceSnap,
+          price: convertDecimal(item.priceSnap),
+          mrp: convertDecimal(item.product.price), // Use current price as MRP
+          lineTotal: item.qty * convertDecimal(item.priceSnap),
         })),
       },
     })

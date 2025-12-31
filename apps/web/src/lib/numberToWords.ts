@@ -83,9 +83,10 @@ export function numberToWords(amount: number): string {
     return result.trim()
   }
 
-  // Convert paise to rupees
-  const rupees = Math.floor(amount / 100)
-  const paise = amount % 100
+  // Amount is now in rupees (not paise)
+  // Split into rupees and paise (decimal part)
+  const rupees = Math.floor(amount)
+  const paise = Math.round((amount - rupees) * 100)
 
   let words = convert(rupees)
   if (words) {

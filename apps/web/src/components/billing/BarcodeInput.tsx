@@ -21,23 +21,81 @@ export default function BarcodeInput({
   const inputRef = useRef<HTMLInputElement>(null)
 
   // ⚡ KEEP INPUT ALWAYS FOCUSED (required for scanner)
+  // But don't interfere with other form inputs
   useEffect(() => {
-    const refocus = () => {
+    const refocus = (e?: Event) => {
       if (inputRef.current && !disabled) {
-        inputRef.current.focus()
+        // Check if user is interacting with another input field
+        const activeElement = document.activeElement
+        const isInputField = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.tagName === 'SELECT' ||
+          activeElement.getAttribute('contenteditable') === 'true'
+        )
+
+        // Don't refocus if user is typing in another input
+        if (!isInputField) {
+          // Only refocus if the barcode input is not already focused
+          if (activeElement !== inputRef.current) {
+            inputRef.current.focus()
+          }
+        }
       }
     }
 
-    // Focus on load
-    refocus()
+    // Focus on load (only if no other input is focused)
+    const timer = setTimeout(() => {
+      const activeElement = document.activeElement
+      const isInputField = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'SELECT'
+      )
+      if (!isInputField && inputRef.current && !disabled) {
+        inputRef.current.focus()
+      }
+    }, 100)
 
-    // Keep focus even if user clicks or tabs away
-    window.addEventListener('click', refocus)
-    window.addEventListener('keydown', refocus)
+    // Keep focus when clicking outside of input fields
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const isInputField = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.closest('input, textarea, select')
+      )
+      
+      // Only refocus if clicking outside of input fields
+      if (!isInputField) {
+        refocus(e)
+      }
+    }
+
+    // Only refocus on keydown if it's not a typing key in another input
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement
+      const isInputField = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'SELECT'
+      )
+
+      // Don't refocus if user is typing in another input
+      // Only refocus for navigation keys (Tab, Escape) when not in an input
+      if (!isInputField && (e.key === 'Tab' || e.key === 'Escape')) {
+        refocus(e)
+      }
+    }
+
+    window.addEventListener('click', handleClick)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener('click', refocus)
-      window.removeEventListener('keydown', refocus)
+      clearTimeout(timer)
+      window.removeEventListener('click', handleClick)
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [disabled])
 

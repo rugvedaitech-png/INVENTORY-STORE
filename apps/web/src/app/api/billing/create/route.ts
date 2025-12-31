@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { storeId, items, paymentMethod } = await request.json()
+    const { storeId, items, paymentMethod, customerId, discount, taxRate } = await request.json()
 
     if (!storeId || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -70,33 +70,92 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate totals
+    // Get customer info if customerId is provided
+    let customer = null
+    let buyerName = 'Walk-In'
+    let customerPhone = ''
+    
+    if (customerId) {
+      customer = await db.customer.findFirst({
+        where: {
+          id: parseInt(customerId),
+          storeId: parseInt(storeId),
+        },
+      })
+      
+      if (!customer) {
+        return NextResponse.json(
+          { error: 'Customer not found' },
+          { status: 404 }
+        )
+      }
+      
+      buyerName = customer.name
+      customerPhone = customer.phone
+    }
+
+    // Calculate totals (all in rupees)
     const subtotal = items.reduce(
-      (sum: number, item: { qty: number; price: number }) =>
-        sum + item.qty * item.price,
+      (sum: number, item: { qty: number; price: number }) => {
+        // Convert price to number if it's a Decimal
+        const price = typeof item.price === 'object' && 'toNumber' in item.price 
+          ? item.price.toNumber() 
+          : Number(item.price)
+        return sum + item.qty * price
+      },
       0
     )
-    const discountAmount = 0
-    const totalAmount = subtotal - discountAmount
+
+    // Calculate discount
+    let discountAmount = 0
+    let discountType: 'AMOUNT' | 'PERCENTAGE' = 'AMOUNT'
+    
+    if (discount && discount.value > 0) {
+      discountType = discount.type || 'AMOUNT'
+      if (discountType === 'PERCENTAGE') {
+        discountAmount = (subtotal * discount.value) / 100
+      } else {
+        discountAmount = Math.min(discount.value, subtotal)
+      }
+    }
+
+    // Calculate amount after discount
+    const amountAfterDiscount = subtotal - discountAmount
+
+    // Calculate tax-inclusive pricing
+    // Tax is included in the price, so we extract it from the total
+    // Taxable amount = Total / (1 + taxRate/100)
+    // Tax amount = Total - Taxable amount
+    const taxRateValue = taxRate || 0
+    const taxableAmount = taxRateValue > 0 
+      ? amountAfterDiscount / (1 + taxRateValue / 100)
+      : amountAfterDiscount
+    const taxAmount = amountAfterDiscount - taxableAmount
+
+    // Total is the amount after discount (which already includes tax)
+    const totalAmount = amountAfterDiscount
 
     // Create order in a transaction
     const result = await db.$transaction(async (tx) => {
-      // Create order
+      // Create order (convert to Decimal strings for Prisma)
       const order = await tx.order.create({
         data: {
           storeId: parseInt(storeId),
-          customerId: null, // Walk-in customer
+          customerId: customer ? customer.id : null,
           addressId: null,
-          buyerName: 'Walk-In',
-          phone: '',
+          buyerName: buyerName,
+          phone: customerPhone,
           address: null,
           status: 'CONFIRMED', // POS orders are auto-confirmed
           paymentMethod: paymentMethod || 'COD',
           paymentRef: null,
-          subtotal,
-          discountAmount,
-          discountType: 'AMOUNT',
-          totalAmount,
+          subtotal: subtotal.toFixed(2),
+          discountAmount: discountAmount.toFixed(2),
+          discountType: discountType,
+          taxRate: taxRateValue > 0 ? taxRateValue.toFixed(2) : null,
+          taxableAmount: taxRateValue > 0 ? taxableAmount.toFixed(2) : null,
+          taxAmount: taxRateValue > 0 ? taxAmount.toFixed(2) : null,
+          totalAmount: totalAmount.toFixed(2),
         },
       })
 
@@ -107,13 +166,16 @@ export async function POST(request: NextRequest) {
       for (const item of items) {
         const product = products.find((p) => p.id === item.productId)!
         
-        // Create order item
+        // Create order item (convert price to Decimal string)
+        const priceValue = typeof item.price === 'object' && 'toNumber' in item.price 
+          ? item.price.toNumber() 
+          : Number(item.price)
         const orderItem = await tx.orderItem.create({
           data: {
             orderId: order.id,
             productId: item.productId,
             qty: item.qty,
-            priceSnap: item.price,
+            priceSnap: priceValue.toFixed(2),
           },
         })
         orderItems.push(orderItem)

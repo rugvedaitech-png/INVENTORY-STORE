@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 
 interface Category {
   id: number
@@ -317,7 +318,7 @@ function ProductCardWithCart({ product, cartItems, onUpdateCart }: ProductCardWi
         )}
         <div className="flex items-center justify-between mb-3">
           <span className="text-lg font-bold text-gray-900">
-            ₹{(product.price / 100).toFixed(2)}
+            {formatCurrency(decimalToNumber(product.price))}
           </span>
           <span className="text-sm text-gray-500">
             Stock: {product.stock}

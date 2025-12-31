@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 export async function POST(
   request: NextRequest,
@@ -100,7 +101,7 @@ export async function POST(
             refType: 'PO_RECEIPT',
             refId: poId,
             delta: item.qty,
-            unitCost: item.costPaise
+            unitCost: item.cost
           }
         })
 

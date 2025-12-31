@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
             totalCost: 0
           }
           existing.totalQty += item.qty
-          existing.totalCost += item.qty * item.costPaise
+          existing.totalCost += item.qty * decimalToNumber(item.cost)
           productPurchases.set(item.productId, existing)
         })
       }
@@ -202,7 +202,7 @@ export async function GET(request: NextRequest) {
             title: item.product.title
           },
           qty: item.qty,
-          costPaise: item.costPaise,
+          cost: decimalToNumber(item.cost),
           receivedQty: item.receivedQty
         }))
       })),

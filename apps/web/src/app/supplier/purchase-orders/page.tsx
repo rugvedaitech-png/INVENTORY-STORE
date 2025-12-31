@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import { 
   TruckIcon, 
   CheckCircleIcon, 
@@ -32,8 +33,8 @@ interface PurchaseOrder {
   items: {
     id: number
     qty: number
-    costPaise: number
-    quotedCostPaise?: number | null
+    cost: number
+    quotedCost?: number | null
     product: {
       id: number
       title: string
@@ -274,7 +275,7 @@ export default function SupplierPurchaseOrdersPage() {
                               <span>•</span>
                               <span>{po.items.length} item{po.items.length !== 1 ? 's' : ''}</span>
                               <span>•</span>
-                              <span className="font-semibold text-gray-900">₹{((po.total || 0) / 100).toFixed(2)}</span>
+                              <span className="font-semibold text-gray-900">{formatCurrency(decimalToNumber(po.total || 0))}</span>
                             </div>
                             <div className="mt-1 text-xs text-gray-400">
                               Created: {new Date(po.createdAt).toLocaleDateString()}
@@ -367,7 +368,7 @@ export default function SupplierPurchaseOrdersPage() {
                                     Qty: {item.qty}
                                   </div>
                                   <div className="text-sm text-gray-600">
-                                    ₹{((item.quotedCostPaise || item.costPaise || 0) / 100).toFixed(2)} each
+                                    {formatCurrency(decimalToNumber(item.quotedCost || item.cost || 0))} each
                                   </div>
                                 </div>
                               </div>
@@ -422,7 +423,7 @@ export default function SupplierPurchaseOrdersPage() {
                     Order: <span className="font-medium">{selectedPO.code}</span>
                   </p>
                   <p className="text-sm text-gray-600">
-                    Total: <span className="font-medium">₹{((selectedPO.total || 0) / 100).toFixed(2)}</span>
+                    Total: <span className="font-medium">{formatCurrency(decimalToNumber(selectedPO.total || 0))}</span>
                   </p>
                 </div>
                 

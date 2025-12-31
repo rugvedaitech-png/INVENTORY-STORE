@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import {
   DocumentTextIcon,
   ShoppingBagIcon,
@@ -248,11 +249,11 @@ export default function OrderSummaryPage() {
   })
 
   const calculateSubtotal = (order: Order) => {
-    return order.items.reduce((total, item) => total + (item.product.price * item.quantity), 0)
+    return order.items.reduce((total, item) => total + (decimalToNumber(item.product.price) * item.quantity), 0)
   }
 
   const calculateTax = (subtotal: number) => {
-    return Math.round(subtotal * 0.18) // 18% GST
+    return subtotal * 0.18 // 18% GST
   }
 
   if (loading) {
@@ -376,7 +377,7 @@ export default function OrderSummaryPage() {
                             </div>
                           )}
                           <div className="text-sm font-semibold text-gray-900">
-                            ₹{(order.totalAmount / 100).toFixed(2)}
+                            {formatCurrency(decimalToNumber(order.totalAmount))}
                           </div>
                         </div>
                       )
@@ -529,13 +530,13 @@ export default function OrderSummaryPage() {
                               <div className="flex items-center space-x-4 mt-2">
                                 <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
                                 <span className="text-sm text-gray-600">
-                                  ₹{(item.product.price / 100).toFixed(2)} each
+                                  {formatCurrency(decimalToNumber(item.product.price))} each
                                 </span>
                               </div>
                             </div>
                             <div className="text-right">
                               <p className="text-lg font-bold text-gray-900">
-                                ₹{((item.product.price * item.quantity) / 100).toFixed(2)}
+                                {formatCurrency(decimalToNumber(item.product.price) * item.quantity)}
                               </p>
                             </div>
                           </div>
@@ -549,11 +550,11 @@ export default function OrderSummaryPage() {
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Subtotal:</span>
-                          <span className="font-medium">₹{(calculateSubtotal(selectedOrder) / 100).toFixed(2)}</span>
+                          <span className="font-medium">{formatCurrency(calculateSubtotal(selectedOrder))}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">GST (18%):</span>
-                          <span className="font-medium">₹{(calculateTax(calculateSubtotal(selectedOrder)) / 100).toFixed(2)}</span>
+                          <span className="font-medium">{formatCurrency(calculateTax(calculateSubtotal(selectedOrder)))}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Shipping:</span>
@@ -562,7 +563,7 @@ export default function OrderSummaryPage() {
                         <div className="border-t border-gray-200 pt-3">
                           <div className="flex justify-between text-lg font-bold">
                             <span>Total:</span>
-                            <span>₹{(selectedOrder.totalAmount / 100).toFixed(2)}</span>
+                            <span>{formatCurrency(decimalToNumber(selectedOrder.totalAmount))}</span>
                           </div>
                         </div>
                       </div>

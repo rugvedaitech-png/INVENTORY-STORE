@@ -223,7 +223,7 @@ export async function GET(request: NextRequest) {
       ...recentOrders.map(order => ({
         id: `order-${order.id}`,
         type: 'order' as const,
-        description: `New order #${order.id} for ${(order.totalAmount / 100).toFixed(2)}`,
+        description: `New order #${order.id} for ${decimalToNumber(order.totalAmount).toFixed(2)}`,
         timestamp: order.createdAt.toISOString()
       })),
       ...recentProducts.map(product => ({

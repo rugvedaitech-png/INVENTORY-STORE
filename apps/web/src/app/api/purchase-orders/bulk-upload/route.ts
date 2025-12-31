@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { decimalToNumber } from '@/lib/money'
 
 // Helper function to create slug from name
 function createSlug(name: string): string {
@@ -95,8 +96,8 @@ export async function POST(request: NextRequest) {
       const poItems: Array<{
         productId: number
         qty: number
-        costPaise: number
-        quotedCostPaise: number
+        cost: number
+        quotedCost: number
         receivedQty: number
       }> = []
 
@@ -188,15 +189,15 @@ export async function POST(request: NextRequest) {
         poItems.push({
           productId: product.id,
           qty: item.quantity,
-          costPaise: item.unitCost,
-          quotedCostPaise: item.unitCost, // Set quoted cost same as cost since already paid
+          cost: item.unitCost, // Price is now in rupees
+          quotedCost: item.unitCost, // Set quoted cost same as cost since already paid
           receivedQty: item.quantity, // Mark as fully received
         })
       }
 
       // Calculate subtotal from items
       const subtotal = poItems.reduce(
-        (sum, item) => sum + item.qty * item.costPaise,
+        (sum, item) => sum + item.qty * item.cost,
         0
       )
 
@@ -235,10 +236,10 @@ export async function POST(request: NextRequest) {
         // Update cost price (moving average)
         let newCostPrice = product.costPrice
         if (product.costPrice && product.stock > 0) {
-          const totalCost = (product.costPrice * product.stock) + (item.costPaise * item.qty)
-          newCostPrice = Math.round(totalCost / newStock)
+          const totalCost = (decimalToNumber(product.costPrice) * product.stock) + (decimalToNumber(item.cost) * item.qty)
+          newCostPrice = totalCost / newStock
         } else {
-          newCostPrice = item.costPaise
+          newCostPrice = item.cost
         }
 
         // Update product stock and cost price
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
             refType: 'PO_RECEIPT',
             refId: purchaseOrder.id,
             delta: item.qty,
-            unitCost: item.costPaise,
+            unitCost: item.cost,
           },
         })
       }

@@ -5,8 +5,8 @@ export const createProductSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   sku: z.string().optional(),
-  price: z.number().int().min(0, 'Price must be non-negative'),
-  costPrice: z.number().int().min(0).optional(),
+  price: z.number().min(0, 'Price must be non-negative'), // Now in rupees (decimal)
+  costPrice: z.number().min(0).optional(), // Now in rupees (decimal)
   stock: z.number().int().min(0, 'Stock must be non-negative'),
   reorderPoint: z.number().int().min(0, 'Reorder point must be non-negative'),
   reorderQty: z.number().int().min(0, 'Reorder quantity must be non-negative'),
@@ -89,8 +89,8 @@ export const csvProductSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   sku: z.string().optional(),
-  price: z.number().int().min(0, 'Price must be non-negative'),
-  costPrice: z.number().int().min(0).optional(),
+  price: z.number().min(0, 'Price must be non-negative'), // Now in rupees (decimal)
+  costPrice: z.number().min(0).optional(), // Now in rupees (decimal)
   stock: z.number().int().min(0, 'Stock must be non-negative'),
   reorderPoint: z.number().int().min(0, 'Reorder point must be non-negative'),
   reorderQty: z.number().int().min(0, 'Reorder quantity must be non-negative'),

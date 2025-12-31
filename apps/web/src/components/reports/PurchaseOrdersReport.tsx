@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import { 
   TruckIcon, 
   CurrencyDollarIcon,
@@ -127,11 +128,13 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrencyLocal = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-    }).format(amount / 100)
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
@@ -180,7 +183,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
       'PO Code': po.code,
       'Supplier': po.supplier.name,
       'Status': po.status,
-      'Total Cost': (po.total / 100).toFixed(2),
+      'Total Cost': decimalToNumber(po.total).toFixed(2),
       'Items Count': po.items.length,
       'Created Date': formatDate(po.createdAt),
       'Placed Date': po.placedAt ? formatDate(po.placedAt) : 'N/A'
@@ -234,7 +237,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
   // Chart data preparation
   const monthlyChartData = data?.summary.monthlyTrends.map(item => ({
     month: item.month,
-    cost: item.cost / 100,
+    cost: decimalToNumber(item.cost),
     orders: item.orders
   })) || []
 
@@ -253,7 +256,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
 
   const topSuppliersChartData = data?.summary.topSuppliers.slice(0, 5).map(supplier => ({
     name: supplier.name.length > 20 ? supplier.name.substring(0, 20) + '...' : supplier.name,
-    cost: supplier.totalCost / 100,
+    cost: decimalToNumber(supplier.totalCost),
     orders: supplier.totalOrders
   })) || []
 
@@ -366,7 +369,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
                     Average Order Value
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {formatCurrency(summary.averageOrderValue)}
+                    {formatCurrencyLocal(decimalToNumber(summary.averageOrderValue))}
                   </dd>
                 </dl>
               </div>
@@ -524,7 +527,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(supplier.totalCost)}
+                    {formatCurrencyLocal(decimalToNumber(supplier.totalCost))}
                   </div>
                 </div>
               </div>
@@ -561,7 +564,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(product.totalCost)}
+                    {formatCurrencyLocal(decimalToNumber(product.totalCost))}
                   </div>
                 </div>
               </div>
@@ -661,7 +664,7 @@ export default function PurchaseOrdersReport({ dateRange, customDateRange }: Pur
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatCurrency(order.total)}
+                      {formatCurrencyLocal(decimalToNumber(order.total))}
                     </div>
                   </td>
                 </tr>

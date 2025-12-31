@@ -156,7 +156,7 @@ export default function CustomerDetailPage() {
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount / 100)
+    }).format(amount)
   }
 
   if (status === 'loading' || loading) {

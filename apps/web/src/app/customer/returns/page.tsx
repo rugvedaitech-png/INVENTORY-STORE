@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import {
   ArrowPathIcon,
   PlusIcon,
@@ -365,7 +366,7 @@ export default function ReturnsPage() {
                           </p>
                           {request.refundAmount > 0 && (
                             <p className="text-sm text-gray-600">
-                              <strong>Refund Amount:</strong> ₹{(request.refundAmount / 100).toFixed(2)}
+                              <strong>Refund Amount:</strong> {formatCurrency(decimalToNumber(request.refundAmount))}
                             </p>
                           )}
                           {request.pickupDate && (

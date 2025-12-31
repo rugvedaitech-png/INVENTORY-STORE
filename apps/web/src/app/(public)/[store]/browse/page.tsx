@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
 import Pagination from '@/components/Pagination'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 
 interface Category {
   id: number
@@ -474,7 +475,7 @@ function ProductCardWithCart({ product, cartItems, onUpdateCart }: ProductCardWi
         )}
         <div className="flex items-center justify-between mb-4">
           <span className="text-2xl font-bold text-gray-900">
-            ₹{(product.price / 100).toFixed(2)}
+            {formatCurrency(decimalToNumber(product.price))}
           </span>
           <div className="flex items-center space-x-1">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>

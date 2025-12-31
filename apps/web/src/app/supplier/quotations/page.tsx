@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import {
   DocumentTextIcon, 
   BuildingOfficeIcon, 
@@ -38,8 +39,8 @@ interface QuotationRequest {
     id: number
     productId: number
     qty: number
-    costPaise: number
-    quotedCostPaise: number | null
+    cost: number
+    quotedCost: number | null
     product: {
       id: number
       title: string
@@ -109,8 +110,8 @@ export default function QuotationsPage() {
       data.quotationRequests?.forEach((request: QuotationRequest) => {
         initialQuotationData[request.id] = {}
         request.items.forEach((item) => {
-          if (item.quotedCostPaise) {
-            initialQuotationData[request.id][item.id] = item.quotedCostPaise / 100
+          if (item.quotedCost) {
+            initialQuotationData[request.id][item.id] = decimalToNumber(item.quotedCost)
           }
         })
       })
@@ -392,11 +393,11 @@ export default function QuotationsPage() {
                                       Qty: {item.qty}
                                     </div>
                                     <div className="text-sm text-gray-600">
-                                      Store Estimate: ₹{(item.costPaise / 100).toFixed(2)}
+                                      Store Estimate: {formatCurrency(decimalToNumber(item.cost))}
                                     </div>
-                                    {item.quotedCostPaise != null && (
+                                    {item.quotedCost != null && (
                                       <div className="text-sm text-green-600 font-semibold">
-                                        Quoted: ₹{(item.quotedCostPaise / 100).toFixed(2)}
+                                        Quoted: {formatCurrency(decimalToNumber(item.quotedCost))}
                                       </div>
                                     )}
                                   </div>
@@ -412,7 +413,7 @@ export default function QuotationsPage() {
                                         min="0"
                                         step="0.01"
                                         placeholder="0.00"
-                                        value={quotationData[request.id]?.[item.id] || (item.quotedCostPaise ? (item.quotedCostPaise / 100).toFixed(2) : '')}
+                                        value={quotationData[request.id]?.[item.id] || (item.quotedCost ? decimalToNumber(item.quotedCost).toFixed(2) : '')}
                                         onChange={(e) => handleQuotationChange(request.id, item.id, e.target.value)}
                                         className={`w-32 pl-10 pr-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                                           !editable

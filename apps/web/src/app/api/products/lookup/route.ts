@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { decimalToNumber } from '@/lib/money'
 
 // POST /api/products/lookup - Lookup product by SKU
 export async function POST(request: NextRequest) {
@@ -60,13 +61,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Convert Decimal price to number (prices are now in rupees)
+    const priceInRupees = decimalToNumber(product.price)
+
     return NextResponse.json({
       found: true,
       product: {
         id: product.id,
         title: product.title,
         sku: product.sku,
-        price: product.price,
+        price: priceInRupees,
         stock: product.stock,
         description: product.description,
         images: product.images,

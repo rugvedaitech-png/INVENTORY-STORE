@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import {
   TruckIcon,
   ClockIcon,
@@ -292,7 +293,7 @@ function OrderTrackingPageContent() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-gray-900">
-                            ₹{(order.totalAmount / 100).toFixed(2)}
+                            {formatCurrency(decimalToNumber(order.totalAmount))}
                           </span>
                           <span className="text-sm text-gray-500">
                             {order.items.length} item{order.items.length !== 1 ? 's' : ''}
@@ -338,7 +339,7 @@ function OrderTrackingPageContent() {
                         </div>
                         <div>
                           <span className="text-gray-500">Total Amount:</span>
-                          <p className="font-medium">₹{(selectedOrder.totalAmount / 100).toFixed(2)}</p>
+                          <p className="font-medium">{formatCurrency(decimalToNumber(selectedOrder.totalAmount))}</p>
                         </div>
                       </div>
                     </div>
@@ -389,7 +390,7 @@ function OrderTrackingPageContent() {
                             </div>
                             <div className="text-right">
                               <p className="font-medium text-gray-900">
-                                ₹{((item.product.price * item.quantity) / 100).toFixed(2)}
+                                {formatCurrency(decimalToNumber(item.product.price) * item.quantity)}
                               </p>
                             </div>
                           </div>

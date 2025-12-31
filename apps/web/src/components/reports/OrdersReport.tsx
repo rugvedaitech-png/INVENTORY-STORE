@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import { 
   ChartBarIcon, 
   ShoppingCartIcon, 
@@ -113,11 +114,13 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrencyLocal = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-    }).format(amount / 100)
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
@@ -167,7 +170,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
       'Customer Name': order.buyerName,
       'Phone': order.phone,
       'Status': order.status,
-      'Total Amount': (order.totalAmount / 100).toFixed(2),
+      'Total Amount': decimalToNumber(order.totalAmount).toFixed(2),
       'Items Count': order.items.length,
       'Created Date': formatDate(order.createdAt)
     }))
@@ -220,7 +223,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
   // Chart data preparation
   const chartData = data?.summary.dailyRevenue.map(item => ({
     date: new Date(item.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
-    revenue: item.revenue / 100,
+    revenue: decimalToNumber(item.revenue),
     orders: item.orders
   })) || []
 
@@ -239,7 +242,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
 
   const topProductsChartData = data?.summary.topProducts.slice(0, 5).map(product => ({
     name: product.title.length > 20 ? product.title.substring(0, 20) + '...' : product.title,
-    revenue: product.revenue / 100,
+    revenue: decimalToNumber(product.revenue),
     quantity: product.totalSold
   })) || []
 
@@ -332,7 +335,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
                     Total Revenue
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {formatCurrency(summary.totalRevenue)}
+                    {formatCurrencyLocal(decimalToNumber(summary.totalRevenue))}
                   </dd>
                 </dl>
               </div>
@@ -352,7 +355,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
                     Average Order Value
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {formatCurrency(summary.averageOrderValue)}
+                    {formatCurrencyLocal(decimalToNumber(summary.averageOrderValue))}
                   </dd>
                 </dl>
               </div>
@@ -510,7 +513,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(product.revenue)}
+                    {formatCurrencyLocal(decimalToNumber(product.revenue))}
                   </div>
                 </div>
               </div>
@@ -605,7 +608,7 @@ export default function OrdersReport({ dateRange, customDateRange }: OrdersRepor
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatCurrency(order.totalAmount)}
+                      {formatCurrencyLocal(decimalToNumber(order.totalAmount))}
                     </div>
                   </td>
                 </tr>

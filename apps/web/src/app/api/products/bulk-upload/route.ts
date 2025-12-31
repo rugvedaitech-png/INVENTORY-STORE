@@ -13,13 +13,13 @@ const csvProductSchema = z.object({
   price: z.string().transform((val) => {
     const num = parseFloat(val)
     if (isNaN(num) || num < 0) throw new Error('Invalid price')
-    return Math.round(num * 100) // Convert to paise
+    return num // Price is now in rupees (decimal)
   }),
   costPrice: z.string().optional().transform((val) => {
     if (!val) return null
     const num = parseFloat(val)
     if (isNaN(num) || num < 0) throw new Error('Invalid cost price')
-    return Math.round(num * 100) // Convert to paise
+    return num // Cost price is now in rupees (decimal)
   }),
   stock: z.string().transform((val) => {
     const num = parseInt(val)

@@ -56,8 +56,8 @@ interface PurchaseOrder {
     id: number
     productId: number
     qty: number
-    costPaise: number
-    quotedCostPaise: number | null
+    cost: number
+    quotedCost: number | null
     product: {
       id: number
       title: string
@@ -215,7 +215,7 @@ export default function PurchaseOrdersPage() {
     if (value === null || value === undefined) {
       return '₹0.00'
     }
-    return `₹${(value / 100).toFixed(2)}`
+    return `₹${value.toFixed(2)}`
   }
 
   const openRevisionModal = (po: PurchaseOrder) => {
@@ -955,8 +955,8 @@ export default function PurchaseOrdersPage() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                               {po.items.map((item) => {
-                                const quoted = item.quotedCostPaise ?? null
-                                const lineTotal = (quoted ?? item.costPaise) * item.qty
+                                const quoted = item.quotedCost ?? null
+                                const lineTotal = (quoted ?? item.cost) * item.qty
 
                                 return (
                                   <tr key={item.id} className="bg-white">
@@ -967,7 +967,7 @@ export default function PurchaseOrdersPage() {
                                       )}
                                     </td>
                                     <td className="px-4 py-2 text-center font-semibold text-gray-700">{item.qty}</td>
-                                    <td className="px-4 py-2 text-right text-gray-700">{formatCurrency(item.costPaise)}</td>
+                                    <td className="px-4 py-2 text-right text-gray-700">{formatCurrency(item.cost)}</td>
                                     <td className="px-4 py-2 text-right text-gray-900 font-semibold">
                                       {quoted !== null ? formatCurrency(quoted) : 'Awaiting quote'}
                                     </td>

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { receivePurchaseOrderSchema } from '@/lib/validators'
+import { decimalToNumber } from '@/lib/money'
 
 export async function POST(
   request: NextRequest,
@@ -89,12 +90,12 @@ export async function POST(
         
         let newCostPrice = product.costPrice
         if (product.costPrice && product.stock > 0) {
-          // Moving average calculation
-          const totalCost = (product.costPrice * product.stock) + (poItem.costPaise * receiveItem.receivedQty)
-          newCostPrice = Math.round(totalCost / newStock)
-        } else {
-          newCostPrice = poItem.costPaise
-        }
+        // Moving average calculation
+        const totalCost = (decimalToNumber(product.costPrice) * product.stock) + (decimalToNumber(poItem.cost) * receiveItem.receivedQty)
+        newCostPrice = totalCost / newStock
+      } else {
+        newCostPrice = poItem.cost
+      }
 
         await tx.product.update({
           where: { id: product.id },
@@ -112,7 +113,7 @@ export async function POST(
             refType: 'PO_RECEIPT',
             refId: purchaseOrder.id,
             delta: receiveItem.receivedQty,
-            unitCost: poItem.costPaise,
+            unitCost: poItem.cost,
           },
         })
 

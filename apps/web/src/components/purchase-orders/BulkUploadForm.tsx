@@ -416,14 +416,14 @@ Stationery,STAT002,Ball Pen Blue,200,5.00,Blue ink ball pen,7.50`
                               <input
                                 type="number"
                                 step="0.01"
-                                value={(item.unitCost / 100).toFixed(2)}
+                                value={item.unitCost.toFixed(2)}
                                 onChange={(e) => handleItemChange(index, 'unitCost', e.target.value)}
                                 className="w-24 px-2 py-1 border border-gray-300 rounded"
                                 min="0"
                               />
                             </td>
                             <td className="px-3 py-2 text-sm">
-                              ₹{((item.quantity * item.unitCost) / 100).toFixed(2)}
+                              ₹{(item.quantity * item.unitCost).toFixed(2)}
                             </td>
                             <td className="px-3 py-2 text-sm">
                               <button
@@ -440,7 +440,7 @@ Stationery,STAT002,Ball Pen Blue,200,5.00,Blue ink ball pen,7.50`
                     </table>
                   </div>
                   <p className="mt-2 text-sm text-gray-600">
-                    Total: ₹{(items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0) / 100).toFixed(2)}
+                    Total: ₹{items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0).toFixed(2)}
                   </p>
                 </div>
               )}

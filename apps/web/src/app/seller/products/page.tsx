@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { parseImages } from '@/lib/utils'
+import { formatCurrency } from '@/lib/money'
 
 // Helper function to check if image URL is from an allowed domain
 const isAllowedImageDomain = (url: string): boolean => {
@@ -491,7 +492,7 @@ export default function ProductsPage() {
                               </span>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              ₹{(product.price / 100).toFixed(2)}
+                              {formatCurrency(product.price)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10
@@ -592,7 +593,7 @@ export default function ProductsPage() {
                             <div className="mt-3 flex items-center justify-between">
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 <span className="font-mono">{product.sku || '-'}</span>
-                                <span className="font-medium text-gray-900">₹{(product.price / 100).toFixed(2)}</span>
+                                <span className="font-medium text-gray-900">{formatCurrency(product.price)}</span>
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.stock > 10
                                   ? 'bg-green-100 text-green-800'
                                   : product.stock > 0
@@ -745,8 +746,8 @@ function ProductForm({
     title: product?.title || '',
     description: product?.description || '',
     sku: product?.sku || '',
-    price: product ? (product.price / 100).toString() : '',
-    costPrice: product ? ((product.costPrice || 0) / 100).toString() : '',
+    price: product ? product.price.toString() : '',
+    costPrice: product ? (product.costPrice || 0).toString() : '',
     stock: product?.stock?.toString() || '',
     images: product ? product.images : '[]',
     active: product?.active ?? true,
@@ -866,8 +867,8 @@ function ProductForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          price: Math.round(parseFloat(formData.price) * 100),
-          costPrice: formData.costPrice ? Math.round(parseFloat(formData.costPrice) * 100) : null,
+          price: parseFloat(formData.price),
+          costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
           stock: parseInt(formData.stock),
           categoryId: formData.categoryId ? parseInt(formData.categoryId) : null
         })

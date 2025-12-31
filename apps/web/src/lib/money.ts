@@ -1,38 +1,48 @@
 /**
- * Money utilities for handling paise (cents) to currency conversion
+ * Money utilities for handling currency in rupees
  */
 
-export function formatCurrency(paise: number, currency = 'INR'): string {
-  const rupees = paise / 100
+// Type for Prisma Decimal
+type Decimal = {
+  toNumber(): number
+  toString(): string
+}
+
+export function formatCurrency(rupees: number | string | Decimal, currency = 'INR'): string {
+  const amount = typeof rupees === 'string' 
+    ? parseFloat(rupees) 
+    : typeof rupees === 'number'
+    ? rupees
+    : rupees.toNumber()
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(rupees)
+  }).format(amount)
 }
 
-export function paiseToRupees(paise: number): number {
-  return paise / 100
+// Helper to convert Decimal to number
+export function decimalToNumber(decimal: number | string | Decimal): number {
+  if (typeof decimal === 'number') return decimal
+  if (typeof decimal === 'string') return parseFloat(decimal)
+  return decimal.toNumber()
 }
 
-export function rupeesToPaise(rupees: number): number {
-  return Math.round(rupees * 100)
+// Helper to convert price from database (handles both paise and rupees)
+// If price > 1000, assume it's in paise and convert to rupees
+export function convertPriceToRupees(price: number | string | Decimal): number {
+  const priceValue = decimalToNumber(price)
+  // If price is very large (> 1000), it's likely still in paise
+  // This is a temporary fix until migration is complete
+  if (priceValue > 1000) {
+    return priceValue / 100
+  }
+  return priceValue
 }
 
-export function addPaise(a: number, b: number): number {
-  return a + b
-}
-
-export function subtractPaise(a: number, b: number): number {
-  return a - b
-}
-
-export function multiplyPaise(paise: number, multiplier: number): number {
-  return Math.round(paise * multiplier)
-}
-
-export function dividePaise(paise: number, divisor: number): number {
-  return Math.round(paise / divisor)
+// Helper to convert number to Decimal string for Prisma
+export function numberToDecimal(value: number): string {
+  return value.toFixed(2)
 }
 

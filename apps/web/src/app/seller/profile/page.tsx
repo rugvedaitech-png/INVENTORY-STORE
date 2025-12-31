@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import { 
   UserIcon, 
   EnvelopeIcon, 
@@ -162,7 +163,7 @@ export default async function SellerProfilePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-900">
-                        ₹{(order.totalAmount / 100).toFixed(2)}
+                        {formatCurrency(decimalToNumber(order.totalAmount))}
                       </p>
                       <p className="text-xs text-gray-600">
                         {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}
@@ -189,7 +190,7 @@ export default async function SellerProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-gray-900">
-                  ₹{((totalRevenue._sum.totalAmount || 0) / 100).toFixed(2)}
+                  {formatCurrency(decimalToNumber(totalRevenue._sum.totalAmount || 0))}
                 </p>
                 <p className="text-sm text-gray-600">Total Revenue</p>
               </div>

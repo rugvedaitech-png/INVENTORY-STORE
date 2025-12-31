@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 
 // Temporary fix for UserRole import issue
 enum UserRole {
@@ -190,7 +191,7 @@ export default async function SellerDashboard() {
                     Total Revenue
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    ₹{((totalRevenue._sum.totalAmount || 0) / 100).toFixed(2)}
+                    {formatCurrency(decimalToNumber(totalRevenue._sum.totalAmount || 0))}
                   </dd>
                 </dl>
               </div>
@@ -212,7 +213,7 @@ export default async function SellerDashboard() {
                     This Month
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    ₹{((monthlyRevenue._sum.totalAmount || 0) / 100).toFixed(2)}
+                    {formatCurrency(decimalToNumber(monthlyRevenue._sum.totalAmount || 0))}
                   </dd>
                 </dl>
               </div>
@@ -325,7 +326,7 @@ export default async function SellerDashboard() {
                       {order.status}
                     </span>
                     <div className="ml-4 text-sm text-gray-900">
-                      ₹{((order.totalAmount || 0) / 100).toFixed(2)}
+                      {formatCurrency(decimalToNumber(order.totalAmount || 0))}
                     </div>
                   </div>
                 </div>
@@ -402,7 +403,7 @@ export default async function SellerDashboard() {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium text-gray-900">
-                    ₹{((customer.totalAmount || 0) / 100).toFixed(2)}
+                    {formatCurrency(decimalToNumber(customer.totalAmount || 0))}
                   </div>
                   <div className="text-sm text-gray-500">
                     {new Date(customer.createdAt).toLocaleDateString()}

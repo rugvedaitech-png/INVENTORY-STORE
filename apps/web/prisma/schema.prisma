@@ -90,8 +90,8 @@ model Product {
   title              String
   description        String?
   sku                String?
-  price              Int // selling price (paise)
-  costPrice          Int? // moving-average cost (paise)
+  price              Decimal @db.Decimal(10, 2) // selling price (rupees)
+  costPrice          Decimal? @db.Decimal(10, 2) // moving-average cost (rupees)
   stock              Int                 @default(0)
   reorderPoint       Int                 @default(0)
   reorderQty         Int                 @default(0)
@@ -139,10 +139,13 @@ model Order {
   status         OrderStatus      @default(PENDING)
   paymentMethod  PaymentMethod
   paymentRef     String?
-  subtotal       Int // paise - amount before discount
-  discountAmount Int              @default(0) // paise - discount amount
+  subtotal       Decimal @db.Decimal(10, 2) // rupees - amount before discount
+  discountAmount Decimal              @default(0) @db.Decimal(10, 2) // rupees - discount amount
   discountType   DiscountType     @default(AMOUNT) // AMOUNT or PERCENTAGE
-  totalAmount    Int // paise - final amount after discount
+  taxRate        Decimal? @db.Decimal(5, 2) // tax rate percentage (e.g., 18.00 for 18%)
+  taxableAmount  Decimal? @db.Decimal(10, 2) // taxable amount (before tax) in rupees
+  taxAmount      Decimal? @db.Decimal(10, 2) // tax amount in rupees
+  totalAmount    Decimal @db.Decimal(10, 2) // rupees - final amount after discount (tax-inclusive)
   items          OrderItem[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -155,7 +158,7 @@ model OrderItem {
   productId Int
   product   Product @relation(fields: [productId], references: [id])
   qty       Int
-  priceSnap Int // price at purchase (paise)
+  priceSnap Decimal @db.Decimal(10, 2) // price at purchase (rupees)
 }
 
 model Supplier {
@@ -184,9 +187,9 @@ model PurchaseOrder {
   code                 String                  @unique // e.g., PO-2025-0001
   status               POStatus                @default(DRAFT)
   notes                String?
-  subtotal             Int                     @default(0)
-  taxTotal             Int                     @default(0)
-  total                Int                     @default(0)
+  subtotal             Decimal                 @default(0) @db.Decimal(10, 2)
+  taxTotal             Decimal                 @default(0) @db.Decimal(10, 2)
+  total                Decimal                 @default(0) @db.Decimal(10, 2)
   placedAt             DateTime?
   quotationRequestedAt DateTime?
   quotationSubmittedAt DateTime?
@@ -206,8 +209,8 @@ model PurchaseOrderItem {
   productId       Int
   product         Product       @relation(fields: [productId], references: [id])
   qty             Int
-  costPaise       Int // Store owner's estimated cost
-  quotedCostPaise Int? // Supplier's quoted cost
+  cost             Decimal @db.Decimal(10, 2) // Store owner's estimated cost (rupees)
+  quotedCost       Decimal? @db.Decimal(10, 2) // Supplier's quoted cost (rupees)
   receivedQty     Int           @default(0)
 }
 
@@ -220,7 +223,7 @@ model StockLedger {
   refType   StockRef
   refId     Int // orderId or poId
   delta     Int // +in, -out
-  unitCost  Int?
+  unitCost  Decimal? @db.Decimal(10, 2) // unit cost in rupees
   createdAt DateTime @default(now())
 }
 

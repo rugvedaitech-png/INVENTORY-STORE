@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { db } from '@/lib/db'
+import { formatCurrency, decimalToNumber } from '@/lib/money'
 import {
   ShoppingBagIcon,
   CheckCircleIcon,
@@ -144,7 +145,7 @@ export default async function CustomerDashboard() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Spent</p>
-              <p className="text-2xl font-bold text-gray-900">₹{(totalSpent / 100).toFixed(2)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalSpent)}</p>
             </div>
           </div>
         </div>
@@ -218,7 +219,7 @@ export default async function CustomerDashboard() {
                         <span className="hidden sm:inline">•</span>
                         <span>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
                         <span className="hidden sm:inline">•</span>
-                        <span className="font-semibold text-gray-900">₹{(order.totalAmount / 100).toFixed(2)}</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(decimalToNumber(order.totalAmount))}</span>
                       </div>
                       <div className="mt-1 text-xs text-gray-400">
                         {order.createdAt instanceof Date ? order.createdAt.toLocaleDateString() : new Date(order.createdAt).toLocaleDateString()}

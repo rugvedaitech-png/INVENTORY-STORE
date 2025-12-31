@@ -101,7 +101,9 @@ export default function AnalyticsPage() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-    }).format(amount / 100)
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)
   }
 
   const getDateRangeLabel = (range: string) => {
