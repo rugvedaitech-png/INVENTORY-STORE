@@ -62,15 +62,27 @@ export async function POST(
 
     // In a real implementation, you'd store this in a dedicated invitations table
     // For demo purposes, we'll return the invite link directly
-    // Use the request origin to ensure we use the correct domain (not IP address)
-    const requestUrl = new URL(request.url)
-    // Prefer NEXTAUTH_URL if it's set and contains a domain (not IP), otherwise use request origin
-    let baseUrl = process.env.NEXTAUTH_URL
+    // Use request headers to get the actual domain the user is accessing from
+    const host = request.headers.get('host') || request.headers.get('x-forwarded-host')
+    const protocol = request.headers.get('x-forwarded-proto') || (request.url.startsWith('https') ? 'https' : 'http')
+    
+    // Build base URL from headers (this ensures we use the domain, not IP)
+    let baseUrl = `${protocol}://${host}`
+    
+    // Fallback: if headers don't have domain info, check NEXTAUTH_URL
     const ipAddressPattern = /^https?:\/\/(\d{1,3}\.){3}\d{1,3}/
-    if (!baseUrl || baseUrl.includes('localhost') || ipAddressPattern.test(baseUrl)) {
-      // Use request origin if NEXTAUTH_URL is not set, is localhost, or is an IP address
-      baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+    if (!host || ipAddressPattern.test(baseUrl)) {
+      // Use NEXTAUTH_URL if it's a valid domain (not IP)
+      const nextAuthUrl = process.env.NEXTAUTH_URL
+      if (nextAuthUrl && !ipAddressPattern.test(nextAuthUrl) && !nextAuthUrl.includes('localhost')) {
+        baseUrl = nextAuthUrl
+      } else {
+        // Last resort: use request URL
+        const requestUrl = new URL(request.url)
+        baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+      }
     }
+    
     const inviteLink = `${baseUrl}/auth/register?invite=${inviteToken}&email=${encodeURIComponent(customer.email)}&name=${encodeURIComponent(customer.name)}&phone=${encodeURIComponent(customer.phone)}&storeId=${customer.storeId}&customerId=${customer.id}`
 
     return NextResponse.json({
