@@ -8,12 +8,12 @@ echo "Running tax fields migration..."
 # Check if MySQL is available
 if command -v mysql &> /dev/null; then
     echo "MySQL command found. Running migration..."
-    mysql -u root -p inventory_store < run-tax-fields-migration.sql
+    mysql -u inventory_user -pinventory_root_password inventory_store < run-tax-fields-migration.sql
     echo "Migration completed!"
 elif docker ps | grep -q mysql; then
     echo "MySQL container found. Running migration via Docker..."
     MYSQL_CONTAINER=$(docker ps | grep mysql | awk '{print $1}' | head -n 1)
-    docker exec -i $MYSQL_CONTAINER mysql -u root -p inventory_store < run-tax-fields-migration.sql
+    docker exec -i $MYSQL_CONTAINER mysql -u inventory_user -pinventory_root_password inventory_store < run-tax-fields-migration.sql
     echo "Migration completed!"
 else
     echo "Error: MySQL not found. Please run the migration manually."
@@ -23,5 +23,5 @@ fi
 
 echo ""
 echo "Verifying migration..."
-mysql -u root -p inventory_store -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" && echo "✓ Migration successful!" || echo "⚠ Migration may have failed. Please check manually."
+mysql -u inventory_user -pinventory_root_password inventory_store -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" && echo "✓ Migration successful!" || echo "⚠ Migration may have failed. Please check manually."
 
