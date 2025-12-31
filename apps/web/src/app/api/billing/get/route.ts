@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
             whatsapp: true,
             upiId: true,
             address: true,
+            gstin: true,
             billLayout: true,
           },
         },

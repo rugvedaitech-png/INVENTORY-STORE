@@ -68,6 +68,7 @@ model Store {
   whatsapp       String? // digits only, e.g., 9198xxxxxx
   upiId          String?
   address        String? // Store address to display on bills
+  gstin          String? // GST Identification Number
   currency       String          @default("INR")
   billLayout     BillLayout      @default(REGULAR)
   products       Product[]

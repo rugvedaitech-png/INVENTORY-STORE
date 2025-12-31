@@ -74,6 +74,7 @@ export const updateStoreSchema = z.object({
   whatsapp: z.string().optional(),
   upiId: z.string().optional(),
   address: z.string().nullable().optional(),
+  gstin: z.string().nullable().optional(),
   currency: z.string().default('INR').optional(),
   billLayout: z.enum(['VERTICAL', 'REGULAR']).optional(),
 }).refine((data) => Object.keys(data).length > 0, {

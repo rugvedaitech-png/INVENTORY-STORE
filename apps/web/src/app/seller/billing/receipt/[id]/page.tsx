@@ -38,6 +38,7 @@ interface Order {
     whatsapp: string | null
     upiId: string | null
     address: string | null
+    gstin: string | null
     billLayout: 'VERTICAL' | 'REGULAR'
   }
   items: OrderItem[]
@@ -239,9 +240,9 @@ function ReceiptPageContent() {
         </div>
       )}
 
-      {/* GSTIN and FSSAI - Placeholders */}
+      {/* GSTIN and FSSAI */}
       <div className="text-center text-xs text-gray-700 mb-4 border-t border-gray-300 pt-2">
-        <p>GSTIN: -</p>
+        <p>GSTIN: {order.store.gstin || '-'}</p>
         <p>FSSAI: -</p>
       </div>
 
@@ -451,7 +452,7 @@ function ReceiptPageContent() {
               {order.store.whatsapp && (
                 <p>Phone: {formatPhone(order.store.whatsapp)}</p>
               )}
-              <p>GSTIN: - | FSSAI: -</p>
+              <p>GSTIN: {order.store.gstin || '-'} | FSSAI: -</p>
             </div>
           </div>
 

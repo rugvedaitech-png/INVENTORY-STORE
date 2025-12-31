@@ -10,6 +10,7 @@ interface Store {
   whatsapp: string | null
   upiId: string | null
   address: string | null
+  gstin: string | null
   currency: string
   billLayout: 'VERTICAL' | 'REGULAR'
 }
@@ -22,6 +23,7 @@ export default function StoreSettings() {
   const [success, setSuccess] = useState(false)
   const [billLayout, setBillLayout] = useState<'VERTICAL' | 'REGULAR'>('REGULAR')
   const [address, setAddress] = useState<string>('')
+  const [gstin, setGstin] = useState<string>('')
 
   useEffect(() => {
     fetchStore()
@@ -40,6 +42,7 @@ export default function StoreSettings() {
         setStore(storeData)
         setBillLayout(storeData.billLayout || 'REGULAR')
         setAddress(storeData.address || '')
+        setGstin(storeData.gstin || '')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch store')
@@ -64,6 +67,7 @@ export default function StoreSettings() {
         body: JSON.stringify({
           billLayout,
           address: address || null,
+          gstin: gstin || null,
         }),
       })
 
@@ -122,6 +126,25 @@ export default function StoreSettings() {
           placeholder="Enter store address&#10;Line 1&#10;Line 2, City - PIN Code"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
+      </div>
+
+      {/* GSTIN Setting */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          GSTIN (GST Identification Number)
+        </label>
+        <p className="text-sm text-gray-500 mb-4">
+          Enter your 15-character GST Identification Number. This will be displayed on all invoices and bills.
+        </p>
+        <input
+          type="text"
+          value={gstin}
+          onChange={(e) => setGstin(e.target.value.toUpperCase())}
+          placeholder="e.g., 27AABCU9603R1ZX"
+          maxLength={15}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+        />
+        <p className="text-xs text-gray-400 mt-1">Format: 15 characters (2 state code + 10 PAN + 3 entity number + 1 check digit)</p>
       </div>
 
       {/* Bill Layout Setting */}
@@ -190,7 +213,7 @@ export default function StoreSettings() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          disabled={saving || (billLayout === store.billLayout && address === (store.address || ''))}
+          disabled={saving || (billLayout === store.billLayout && address === (store.address || '') && gstin === (store.gstin || ''))}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? 'Saving...' : 'Save Settings'}
