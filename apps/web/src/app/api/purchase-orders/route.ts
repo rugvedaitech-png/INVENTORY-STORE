@@ -194,17 +194,11 @@ export async function POST(request: NextRequest) {
 
     console.error('Error creating purchase order:', error)
     
-    // Return more detailed error information for debugging
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    const errorName = error instanceof Error ? error.name : 'Unknown'
-    
+    // SECURITY: Never expose error details or stack traces in production
+    // Only log internally, return generic error to client
     return NextResponse.json(
       { 
-        error: 'Failed to create purchase order',
-        details: errorMessage,
-        errorType: errorName,
-        // Only include stack in development
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error ? { stack: error.stack } : {})
+        error: 'Failed to create purchase order. Please try again or contact support.'
       },
       { status: 500 }
     )
