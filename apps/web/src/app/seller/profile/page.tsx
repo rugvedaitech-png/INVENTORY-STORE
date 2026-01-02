@@ -31,15 +31,20 @@ export default async function SellerProfilePage() {
     redirect('/unauthorized')
   }
 
-  // Get store details
-  const store = await db.store.findFirst({
-    where: { ownerId: parseInt(session.user.id) }
+  // Get user details first to ensure we have valid user ID
+  const user = await db.user.findUnique({
+    where: { id: parseInt(session.user.id) }
   })
 
-  // Get user details
-  const user = await db.user.findUnique({
-    where: { id: parseInt(session.user.id) },
-    include: { store: true }
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  // Get store details - use the store owned by this user (not user.store which is for customers/suppliers)
+  // Order by most recent to ensure we get the primary store if multiple exist
+  const store = await db.store.findFirst({
+    where: { ownerId: user.id },
+    orderBy: { createdAt: 'desc' }
   })
 
   // Get recent orders
@@ -133,10 +138,22 @@ export default async function SellerProfilePage() {
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <BuildingStorefrontIcon className="h-5 w-5 text-green-500" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">Store Name</p>
-                    <p className="text-sm text-gray-600">{store.name}</p>
-                    <p className="text-xs text-gray-500">Store ID: {store.slug}</p>
+                    <p className="text-sm text-gray-600 font-semibold">{store.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">Store ID: {store.slug}</p>
+                    {store.address && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Address</p>
+                        <p className="text-xs text-gray-600 whitespace-pre-line">{store.address}</p>
+                      </div>
+                    )}
+                    {store.gstin && (
+                      <div className="mt-2">
+                        <p className="text-xs font-medium text-gray-700 mb-1">GSTIN</p>
+                        <p className="text-xs text-gray-600">{store.gstin}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
