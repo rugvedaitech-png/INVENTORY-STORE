@@ -25,11 +25,17 @@ export default function LoginPage() {
     setError('')
 
     try {
+      // Get the current origin to ensure we use the domain, not IP
+      const callbackUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/seller` // Default redirect after login
+        : '/seller'
+      
       const result = await signIn('credentials', {
         email,
         password,
         role,
         redirect: false,
+        callbackUrl: callbackUrl,
       })
 
       if (result?.error) {
