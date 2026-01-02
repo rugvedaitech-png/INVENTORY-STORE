@@ -20,7 +20,9 @@ declare module 'next-auth' {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  // Type assertion needed due to version mismatch between @auth/prisma-adapter and next-auth
+  // This is safe as both packages are compatible at runtime
+  adapter: PrismaAdapter(db) as any,
   providers: [
     EmailProvider({
       server: {
