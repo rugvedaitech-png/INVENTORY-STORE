@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Install ALL dependencies (including devDependencies needed for build)
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
