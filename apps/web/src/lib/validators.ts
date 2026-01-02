@@ -48,10 +48,18 @@ export const updateSupplierSchema = createSupplierSchema.partial()
 
 // Purchase Order validators
 export const createPurchaseOrderSchema = z.object({
-  supplierId: z.string().transform((val) => parseInt(val, 10)),
+  supplierId: z.string().transform((val) => {
+    const num = parseInt(val, 10)
+    if (isNaN(num)) throw new Error('Invalid supplier ID')
+    return num
+  }),
   notes: z.string().optional(),
   items: z.array(z.object({
-    productId: z.string().transform((val) => parseInt(val, 10)),
+    productId: z.string().transform((val) => {
+      const num = parseInt(val, 10)
+      if (isNaN(num)) throw new Error('Invalid product ID')
+      return num
+    }),
     qty: z.number().int().min(1, 'Quantity must be at least 1'),
   })).min(1, 'At least one item is required'),
 })

@@ -43,46 +43,12 @@ fi
 
 echo ""
 echo "Verifying migration..."
-MIGRATION_SUCCESS=false
 if docker ps | grep -q mysql; then
     MYSQL_CONTAINER=$(docker ps | grep mysql | awk '{print $1}' | head -n 1)
-    if docker exec "$MYSQL_CONTAINER" mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" > /dev/null; then
-        echo "✓ Migration successful! Tax fields found in Order table."
-        MIGRATION_SUCCESS=true
-    else
-        echo "⚠ Migration may have failed. Please check manually."
-    fi
+    docker exec "$MYSQL_CONTAINER" mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" && echo "✓ Migration successful! Tax fields found in Order table." || echo "⚠ Migration may have failed. Please check manually."
 elif command -v mysql &> /dev/null; then
-    if mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" > /dev/null; then
-        echo "✓ Migration successful! Tax fields found in Order table."
-        MIGRATION_SUCCESS=true
-    else
-        echo "⚠ Migration may have failed. Please check manually."
-    fi
+    mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "DESCRIBE \`Order\`;" | grep -E "(taxRate|taxableAmount|taxAmount)" && echo "✓ Migration successful! Tax fields found in Order table." || echo "⚠ Migration may have failed. Please check manually."
 else
     echo "⚠ Cannot verify migration - MySQL command not found."
-fi
-
-# Automatically restart application if migration was successful
-if [ "$MIGRATION_SUCCESS" = true ]; then
-    echo ""
-    echo "Restarting application container..."
-    
-    # Try multiple restart methods
-    if command -v docker-compose &> /dev/null; then
-        docker-compose restart app && echo "✓ Application restarted using docker-compose" || {
-            echo "⚠ docker-compose restart failed, trying docker restart..."
-            docker restart inventory_app && echo "✓ Application restarted using docker restart" || echo "✗ Failed to restart application"
-        }
-    elif command -v docker &> /dev/null && docker compose version &> /dev/null 2>&1; then
-        docker compose restart app && echo "✓ Application restarted using docker compose" || {
-            echo "⚠ docker compose restart failed, trying docker restart..."
-            docker restart inventory_app && echo "✓ Application restarted using docker restart" || echo "✗ Failed to restart application"
-        }
-    elif docker ps | grep -q inventory_app; then
-        docker restart inventory_app && echo "✓ Application restarted using docker restart" || echo "✗ Failed to restart application"
-    else
-        echo "⚠ Application container 'inventory_app' not found. Please restart manually."
-    fi
 fi
 

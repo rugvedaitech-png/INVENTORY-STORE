@@ -14,3 +14,17 @@ export function parseImages(imagesString: string): string[] {
     return []
   }
 }
+
+// Safe integer parsing - throws error if invalid instead of returning NaN
+export function safeParseInt(value: string | number | undefined | null, defaultValue?: number): number {
+  if (value === undefined || value === null) {
+    if (defaultValue !== undefined) return defaultValue
+    throw new Error('Value is required')
+  }
+  const num = typeof value === 'number' ? value : parseInt(String(value), 10)
+  if (isNaN(num)) {
+    if (defaultValue !== undefined) return defaultValue
+    throw new Error(`Invalid integer: ${value}`)
+  }
+  return num
+}
