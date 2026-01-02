@@ -43,10 +43,10 @@ export default function LoginPage() {
 
     try {
       // Get the current origin to ensure we use the domain, not IP
-      const callbackUrl = typeof window !== 'undefined' 
+      const callbackUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/seller` // Default redirect after login
         : '/seller'
-      
+
       const result = await signIn('credentials', {
         email,
         password,
@@ -64,7 +64,7 @@ export default function LoginPage() {
       if (result?.ok) {
         // Get the session to check user role
         const session = await getSession()
-        
+
         if (session?.user) {
           // Redirect based on role
           switch (session.user.role) {
