@@ -81,7 +81,12 @@ docker-compose logs nginx | tail -100
 
 1. **Removed error detail exposure** - API routes no longer expose stack traces or error details
 2. **Hardened error handling** - Generic error messages only
-3. **Security headers** - CSP already in place
+3. **DELETED test/debug routes** - Removed all test routes that were exposing:
+   - `DATABASE_URL` (database credentials!)
+   - Stack traces
+   - User data
+   - System information
+4. **Security headers** - CSP already in place
 
 ## Root Cause Analysis
 
