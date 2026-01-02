@@ -30,16 +30,30 @@ echo "Step 2: Waiting for MySQL to be ready..."
 sleep 5
 
 echo ""
-echo "Step 3: Pushing database schema (creates all tables)..."
+echo "Step 3: Checking for existing data..."
+EXISTING_TABLES=$(docker-compose exec -T mysql mysql -u${MYSQL_USER:-inventory_user} -p${MYSQL_PASSWORD:-inventory_password} ${MYSQL_DATABASE:-inventory_store} -e "SHOW TABLES;" 2>/dev/null | wc -l || echo "0")
+
+if [ "$EXISTING_TABLES" -gt "1" ]; then
+  echo "⚠️  WARNING: Found existing tables! Creating backup first..."
+  BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).sql"
+  docker-compose exec -T mysql mysqldump -u${MYSQL_USER:-inventory_user} -p${MYSQL_PASSWORD:-inventory_password} ${MYSQL_DATABASE:-inventory_store} > "$BACKUP_FILE" 2>/dev/null || echo "⚠️  Could not create backup"
+  if [ -f "$BACKUP_FILE" ]; then
+    echo "✅ Backup created: $BACKUP_FILE"
+  fi
+fi
+
+echo ""
+echo "Step 4: Pushing database schema (creates all tables)..."
 echo "This will create all tables from prisma/schema.prisma"
-docker-compose exec -T app npx prisma db push --accept-data-loss || {
-  echo ""
-  echo "Warning: db push failed. Trying alternative method..."
-  echo "Step 3b: Using migrate deploy instead..."
-  docker-compose exec -T app npx prisma migrate deploy || {
+echo "⚠️  Using SAFE mode - will NOT delete existing data"
+# Try migrate deploy first (safest)
+docker-compose exec -T app npx prisma migrate deploy 2>/dev/null || {
+  # If migrate deploy fails, try db push WITHOUT --accept-data-loss
+  # This will fail if it would cause data loss (which is what we want)
+  docker-compose exec -T app npx prisma db push --skip-generate || {
     echo ""
-    echo "Error: Both db push and migrate deploy failed."
-    echo "Please check the database connection and try again."
+    echo "Error: Could not create schema."
+    echo "If you have existing data, use safe-init-database-vps.sh instead."
     exit 1
   }
 }

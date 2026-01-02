@@ -9,20 +9,26 @@ The table `User` does not exist in the current database.
 
 This means the database schema hasn't been initialized. The database is empty and needs to be set up.
 
-## Quick Fix
+## ⚠️ IMPORTANT: Use the SAFE Script
 
-Run the initialization script on your VPS:
+**If you have existing data, use the SAFE script:**
 
 ```bash
 cd /opt/inventory-store/apps/web
 
-# Pull the latest code (includes the init script)
+# Pull the latest code
 git pull origin main
 
-# Make the script executable
-chmod +x init-database-vps.sh
+# Make the safe script executable
+chmod +x safe-init-database-vps.sh
 
-# Run the initialization script
+# Run the SAFE initialization script (creates backups, preserves data)
+./safe-init-database-vps.sh
+```
+
+**Only use the regular script if the database is completely empty:**
+```bash
+chmod +x init-database-vps.sh
 ./init-database-vps.sh
 ```
 
