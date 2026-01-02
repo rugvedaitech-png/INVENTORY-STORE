@@ -21,7 +21,6 @@ declare module 'next-auth' {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
-  trustHost: true, // Trust host from X-Forwarded-Host header (needed behind nginx reverse proxy)
   providers: [
     EmailProvider({
       server: {
