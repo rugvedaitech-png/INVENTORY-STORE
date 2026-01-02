@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
@@ -18,6 +18,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  // Clear old callback-url cookie if it contains IP address
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cookies = document.cookie.split(';')
+      cookies.forEach(cookie => {
+        const [name] = cookie.trim().split('=')
+        if (name === 'next-auth.callback-url') {
+          const value = cookie.split('=')[1]
+          // If cookie contains IP address, clear it
+          if (value && (value.includes('66.116.199.29') || value.includes('http://') || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(decodeURIComponent(value)))) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+          }
+        }
+      })
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
