@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { createPurchaseOrderSchema } from '@/lib/validators'
+import { numberToDecimal } from '@/lib/money'
 
 export async function GET(request: NextRequest) {
   try {
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
       items.push({
         productId: item.productId,
         qty: item.qty,
-        cost: cost, // Price is now in rupees
+        cost: numberToDecimal(cost), // Convert to Decimal format for Prisma
       })
     }
 
@@ -192,8 +193,19 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Error creating purchase order:', error)
+    
+    // Return more detailed error information for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorName = error instanceof Error ? error.name : 'Unknown'
+    
     return NextResponse.json(
-      { error: 'Failed to create purchase order' },
+      { 
+        error: 'Failed to create purchase order',
+        details: errorMessage,
+        errorType: errorName,
+        // Only include stack in development
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error ? { stack: error.stack } : {})
+      },
       { status: 500 }
     )
   }
