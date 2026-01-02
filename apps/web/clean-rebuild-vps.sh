@@ -36,7 +36,7 @@ echo -e "${YELLOW}Step 5: Clearing Docker build cache...${NC}"
 docker system prune -f
 docker builder prune -f
 
-echo -e "${YELLOW}Step 6: Rebuilding application with --no-cache...${NC}"
+echo -e "${YELLOW}Step 6: Rebuilding application with --no-cache (this will regenerate Prisma client)...${NC}"
 docker-compose build --no-cache app
 
 echo -e "${YELLOW}Step 7: Starting containers...${NC}"
