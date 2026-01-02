@@ -20,6 +20,7 @@ import {
 import Pagination from '@/components/Pagination'
 import BulkUploadForm from '@/components/purchase-orders/BulkUploadForm'
 import SingleProductForm from '@/components/purchase-orders/SingleProductForm'
+import { formatCurrency } from '@/lib/money'
 
 interface PurchaseOrder {
   id: number
@@ -209,13 +210,6 @@ export default function PurchaseOrdersPage() {
 
   const togglePurchaseOrderDetails = (poId: number) => {
     setExpandedPoId(prev => (prev === poId ? null : poId))
-  }
-
-  const formatCurrency = (value?: number | null) => {
-    if (value === null || value === undefined) {
-      return '₹0.00'
-    }
-    return `₹${value.toFixed(2)}`
   }
 
   const openRevisionModal = (po: PurchaseOrder) => {

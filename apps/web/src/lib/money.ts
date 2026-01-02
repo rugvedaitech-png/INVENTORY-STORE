@@ -8,7 +8,16 @@ type Decimal = {
   toString(): string
 }
 
-export function formatCurrency(rupees: number | string | Decimal, currency = 'INR'): string {
+export function formatCurrency(rupees: number | string | Decimal | null | undefined, currency = 'INR'): string {
+  if (rupees === null || rupees === undefined) {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0)
+  }
+  
   const amount = typeof rupees === 'string' 
     ? parseFloat(rupees) 
     : typeof rupees === 'number'
