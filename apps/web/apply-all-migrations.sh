@@ -14,6 +14,20 @@ echo "Applying All Database Migrations"
 echo "=========================================="
 echo ""
 
+echo "Step 0: Creating backup before migrations..."
+if [ -f "create-db-backup.sh" ]; then
+    chmod +x create-db-backup.sh
+    ./create-db-backup.sh "backup_before_migrations"
+    echo ""
+else
+    echo "⚠️  Warning: create-db-backup.sh not found. Creating manual backup..."
+    BACKUP_FILE="backup_before_migrations_$(date +%Y%m%d_%H%M%S).sql"
+    docker-compose exec -T mysql mysqldump -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$BACKUP_FILE" 2>/dev/null && {
+        echo "✅ Backup created: $BACKUP_FILE"
+    } || echo "⚠️  Could not create backup"
+    echo ""
+fi
+
 echo "Step 1: Checking current database schema..."
 echo "----------------------------------------"
 CURRENT_COLUMNS=$(docker-compose exec -T mysql mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "
